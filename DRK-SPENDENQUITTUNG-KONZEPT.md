@@ -3,7 +3,7 @@
 > **App-Name:** DRK Spendenquittung
 > **Domain:** `drk-spendenquittung.de`
 > **GitHub:** `AFielen/DRK-Spendenquittung`
-> **Deployment:** Variante A (Zero-Data, statisch, `output: 'export'`)
+> **Deployment:** Variante B (Docker/Standalone auf Hetzner, aber OHNE Datenbank — Zero-Data bleibt im Browser)
 > **Stand:** März 2026 · DRK Kreisverband StädteRegion Aachen e.V.
 
 ---
@@ -270,31 +270,111 @@ Für Zuwendungen **bis 300 €** (seit 01.01.2021, vorher 200 €) reicht dem Sp
 
 ## 3. Architektur & Tech-Stack
 
-### Deployment: Variante A (Zero-Data)
+### Deployment: Variante B Standalone (Docker, aber OHNE Datenbank)
 
 ```
-next.config.ts → output: 'export'
+next.config.ts → output: 'standalone'
 ```
 
-**Begründung:** Keine serverseitige Datenverarbeitung nötig. Alle Daten (Vereinsdaten, Spenderliste, Spendeneinträge) verbleiben im `localStorage` des Browsers. DOCX-Generierung erfolgt clientseitig.
+**Begründung:** Die App braucht kein Backend und keine Datenbank — alle Daten bleiben im `localStorage` des Browsers, DOCX-Generierung erfolgt clientseitig. Trotzdem wird Variante B (standalone + Docker) gewählt, weil alle DRK-Tools einheitlich als Docker-Container auf dem Hetzner-VPS hinter Caddy betrieben werden. Das vereinfacht das Deployment und die Wartung.
 
 ### Tech-Stack (DRK-Goldstandard)
 
 | Technologie | Version | Zweck |
 |---|---|---|
-| Next.js | 16 | App-Framework (App Router, `output: 'export'`) |
+| Next.js | 16 | App-Framework (App Router, `output: 'standalone'`) |
 | React | 19 | UI-Library |
 | TypeScript | strict | Typisierung (keine `any`) |
 | Tailwind CSS | 4 | Styling (Layout) + DRK-CSS-Variablen (Farben) |
 | docx (npm) | latest | DOCX-Generierung clientseitig |
 | file-saver | latest | Download-Trigger im Browser |
+| Docker | — | Container-Deployment auf Hetzner VPS |
 
-### Hosting
+### Hosting & Infrastruktur
 
-**Option 1 (empfohlen):** GitHub Pages — keine personenbezogenen Daten serverseitig, rein statisch
-**Option 2:** Hetzner + Caddy — für Konsistenz mit anderen DRK-Tools
+**Hetzner VPS** hinter Caddy (wie alle DRK-Tools):
+
+```
+┌────────────────────────────────────────────┐
+│  Nutzer-Browser                            │
+│  https://drk-spendenquittung.de            │
+│  (localStorage: Vereins-/Spenderdaten)     │
+└──────────────────┬─────────────────────────┘
+                   │ HTTPS
+┌──────────────────▼─────────────────────────┐
+│  Hetzner VPS                               │
+│  ┌───────────────────────────────────────┐ │
+│  │  Caddy (Reverse Proxy + Let's Encrypt)│ │
+│  │  drk-spendenquittung.de → :3000       │ │
+│  └──────────────────┬────────────────────┘ │
+│  ┌──────────────────▼────────────────────┐ │
+│  │  Next.js Standalone (Docker)          │ │
+│  │  Port 3000 (intern)                   │ │
+│  │  Kein Backend, keine API-Routes       │ │
+│  │  Kein Dateisystem-Zugriff nötig       │ │
+│  └───────────────────────────────────────┘ │
+│                                            │
+│  KEINE Datenbank                           │
+│  KEIN Mailjet                              │
+└────────────────────────────────────────────┘
+```
+
+**Caddyfile (auf dem VPS):**
+
+```caddyfile
+drk-spendenquittung.de {
+    reverse_proxy localhost:3000
+}
+```
+
+### Docker-Setup
+
+**Dockerfile:**
+
+```dockerfile
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+**docker-compose.yml:**
+
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+```
+
+**Deployment:**
+
+```bash
+cd /opt/drk-spendenquittung
+git pull
+docker compose up -d --build
+```
 
 ### Kein Backend, keine Datenbank
+
+Trotz Variante B: Die App hat **keine API-Routes**, keine serverseitige Logik, keine Datenbank. Der Next.js-Server liefert lediglich die vorgerenderten Seiten aus. Alle Daten bleiben clientseitig:
 
 - Vereinsdaten: `localStorage` (Key: `drk-sq-verein`)
 - Spenderliste: `localStorage` (Key: `drk-sq-spender`)
@@ -725,7 +805,9 @@ DRK-Spendenquittung/
 ├── tsconfig.json
 ├── postcss.config.mjs
 ├── tailwind.config.ts
-└── next.config.ts                     # output: 'export'
+├── next.config.ts                     # output: 'standalone'
+├── Dockerfile                         # Multi-stage build → node:22-alpine
+└── docker-compose.yml                 # Port 3000, restart: unless-stopped
 ```
 
 ---
@@ -739,7 +821,8 @@ DRK-Spendenquittung/
 ```
 Erstelle eine neue Next.js 16 App aus dem DRK-App-Template (https://github.com/AFielen/drk-app-template.git).
 App-Name: "DRK Spendenquittung", Untertitel: "Zuwendungsbestätigungen für DRK-Verbände"
-Deployment: Variante A (output: 'export').
+Deployment: Variante B Standalone (output: 'standalone'), Docker.
+Erstelle Dockerfile (multi-stage: deps → builder → runner mit node:22-alpine) und docker-compose.yml (Port 3000).
 Erstelle die Grundstruktur mit allen Routen laut Projektstruktur.
 Installiere zusätzlich: docx, file-saver, jszip.
 @types/file-saver als devDependency.
@@ -1142,7 +1225,7 @@ Diese Mechanismen schützen den Vorstand vor persönlicher Haftung (§ 10b Abs. 
 - [x] Keine externen Requests an US-Dienste
 - [x] Keine Cookies
 - [x] Keine Datenbank (alles localStorage)
-- [x] Hosting: GitHub Pages oder Hetzner (Goldstandard)
+- [x] Hosting: Hetzner VPS + Docker + Caddy (Goldstandard)
 - [x] `/impressum` vorhanden
 - [x] `/datenschutz` vorhanden (mit tatsächlichem Zero-Data-Hinweis)
 - [x] `/hilfe` vorhanden
