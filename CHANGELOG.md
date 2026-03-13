@@ -9,6 +9,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `components/ThemeToggle.tsx`: Dark/Light/System-Farbschema-Umschalter im Header (Sonne/Mond/Monitor-Icons)
+- Dark Mode CSS-Variablen in `globals.css` via `.dark`-Klasse + System-Präferenz-Fallback
+- FOUC-Prevention-Script in `layout.tsx` für flackerfreien Themenwechsel
 - `lib/types.ts`: Interfaces `Verein`, `Spender`, `Zuwendung`, `AppSettings` nach Konzept-Datenmodell
 - `lib/storage.ts`: localStorage-Abstraktion mit CRUD für alle Entitäten, Export/Import, Backup-Tracking
 - `lib/freistellung-check.ts`: Prüfung der Freistellungsgültigkeit (5 Jahre / 3 Jahre) mit Ampel-Status

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HelpIcon, HeartIcon, RedCrossIcon } from '@/components/icons';
+import ThemeToggle from '@/components/ThemeToggle';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,7 +13,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('drk-sq-theme');if(t==='dark')document.documentElement.classList.add('dark');else if(t==='light')document.documentElement.classList.add('light');}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen flex flex-col">
         {/* ── Skip-to-Content (Barrierefreiheit) ── */}
         <a
@@ -39,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           {/* Rechte Seite: Spenden + Hilfe */}
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Link
               href="/spenden"
               className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors"
