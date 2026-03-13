@@ -167,7 +167,7 @@ export async function generateSammelbestaetigung(
   const bescheidDatum = formatDatum(verein.freistellungDatum);
   const freiText =
     verein.freistellungsart === 'freistellungsbescheid'
-      ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVeranlagungszeitraum, zwecke)
+      ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, bescheidDatum, zwecke);
 
   sections.push(

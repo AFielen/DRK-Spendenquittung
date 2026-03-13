@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Verein } from '@/lib/types';
-import { setVerein } from '@/lib/storage';
+import { apiPut } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
 
 const DRK_ZWECKE = [
@@ -16,7 +16,7 @@ const DRK_ZWECKE = [
 
 type Schritt = 1 | 2 | 3;
 
-export default function VereinsSetupWizard({ existingVerein }: { existingVerein?: Verein | null }) {
+export default function VereinsSetupWizard({ existingVerein, onSaved }: { existingVerein?: Verein | null; onSaved?: () => void }) {
   const router = useRouter();
   const [schritt, setSchritt] = useState<Schritt>(1);
 
@@ -35,8 +35,8 @@ export default function VereinsSetupWizard({ existingVerein }: { existingVerein?
     existingVerein?.freistellungsart ?? 'freistellungsbescheid'
   );
   const [freistellungDatum, setFreistellungDatum] = useState(existingVerein?.freistellungDatum ?? '');
-  const [letzterVeranlagungszeitraum, setLetzterVeranlagungszeitraum] = useState(
-    existingVerein?.letzterVeranlagungszeitraum ?? ''
+  const [letzterVZ, setLetzterVZ] = useState(
+    existingVerein?.letzterVZ ?? ''
   );
   const [beguenstigteZwecke, setBeguenstigteZwecke] = useState<string[]>(
     existingVerein?.beguenstigteZwecke ?? [DRK_ZWECKE[0]]
@@ -91,10 +91,8 @@ export default function VereinsSetupWizard({ existingVerein }: { existingVerein?
     beguenstigteZwecke.length > 0;
   const canFinish = unterschriftName.trim().length > 0 && unterschriftFunktion.trim().length > 0;
 
-  const handleSpeichern = () => {
-    const now = new Date().toISOString();
-    const verein: Verein = {
-      id: existingVerein?.id ?? crypto.randomUUID(),
+  const handleSpeichern = async () => {
+    await apiPut('/api/kreisverband', {
       name: name.trim(),
       strasse: strasse.trim(),
       plz: plz.trim(),
@@ -103,16 +101,15 @@ export default function VereinsSetupWizard({ existingVerein }: { existingVerein?
       steuernummer: steuernummer.trim(),
       freistellungsart,
       freistellungDatum,
-      letzterVeranlagungszeitraum: letzterVeranlagungszeitraum.trim(),
+      letzterVZ: letzterVZ.trim() || null,
       beguenstigteZwecke,
-      vereinsregister: vereinsregister.trim() || undefined,
+      vereinsregister: vereinsregister.trim() || null,
       unterschriftName: unterschriftName.trim(),
       unterschriftFunktion: unterschriftFunktion.trim(),
-      logoBase64: logoBase64 || undefined,
-      erstelltAm: existingVerein?.erstelltAm ?? now,
-      aktualisiertAm: now,
-    };
-    setVerein(verein);
+      logoBase64: logoBase64 || null,
+      laufendeNrFormat: existingVerein?.laufendeNrFormat || 'SQ-{JAHR}-{NR}',
+    });
+    onSaved?.();
     router.push('/');
   };
 
@@ -344,8 +341,8 @@ export default function VereinsSetupWizard({ existingVerein }: { existingVerein?
                 <input
                   type="text"
                   className="drk-input"
-                  value={letzterVeranlagungszeitraum}
-                  onChange={(e) => setLetzterVeranlagungszeitraum(e.target.value)}
+                  value={letzterVZ}
+                  onChange={(e) => setLetzterVZ(e.target.value)}
                   placeholder="z.B. 2023"
                 />
               </div>

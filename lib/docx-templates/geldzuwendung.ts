@@ -46,7 +46,7 @@ function freistellungAbsatz(verein: Verein): Paragraph {
           verein.finanzamt,
           verein.steuernummer,
           datum,
-          verein.letzterVeranlagungszeitraum,
+          verein.letzterVZ || '',
           zwecke
         )
       : freistellungTextB(verein.finanzamt, verein.steuernummer, datum, zwecke);

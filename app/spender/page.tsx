@@ -1,66 +1,48 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { Spender } from '@/lib/types';
-import {
-  getSpender,
-  addSpender,
-  updateSpender,
-  deleteSpender as deleteSpenderStorage,
-  getZuwendungen,
-} from '@/lib/storage';
+import AuthGuard from '@/components/AuthGuard';
 import SpenderTabelle from '@/components/SpenderTabelle';
 import SpenderFormular from '@/components/SpenderFormular';
 import CsvImport from '@/components/CsvImport';
+import type { Spender } from '@/lib/types';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 
-export default function SpenderPage() {
-  const [spenderList, setSpenderList] = useState<Spender[]>([]);
-  const [zuwendungen, setZuwendungen] = useState<ReturnType<typeof getZuwendungen>>([]);
-  const [showFormular, setShowFormular] = useState(false);
+function SpenderContent() {
+  const [spender, setSpender] = useState<Spender[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [showCsv, setShowCsv] = useState(false);
   const [editSpender, setEditSpender] = useState<Spender | undefined>();
-  const [showCsvImport, setShowCsvImport] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
-  const reload = useCallback(() => {
-    setSpenderList(getSpender());
-    setZuwendungen(getZuwendungen());
+  const loadSpender = useCallback(async () => {
+    const data = await apiGet<Spender[]>('/api/spender');
+    setSpender(data);
   }, []);
 
   useEffect(() => {
-    reload();
-    setLoaded(true);
-  }, [reload]);
+    loadSpender();
+  }, [loadSpender]);
 
-  if (!loaded) return null;
-
-  const handleSave = (spender: Spender) => {
+  async function handleSave(s: Spender) {
     if (editSpender) {
-      updateSpender(spender);
+      await apiPut<Spender>(`/api/spender/${editSpender.id}`, s);
     } else {
-      addSpender(spender);
+      await apiPost<Spender>('/api/spender', s);
     }
-    setShowFormular(false);
+    setShowForm(false);
     setEditSpender(undefined);
-    reload();
-  };
+    await loadSpender();
+  }
 
-  const handleEdit = (spender: Spender) => {
-    setEditSpender(spender);
-    setShowFormular(true);
-  };
+  async function handleDelete(s: Spender) {
+    await apiDelete(`/api/spender/${s.id}`, { confirm: true });
+    await loadSpender();
+  }
 
-  const handleDelete = (spender: Spender) => {
-    deleteSpenderStorage(spender.id);
-    reload();
-  };
-
-  const handleCsvImport = (newSpender: Spender[]) => {
-    for (const s of newSpender) {
-      addSpender(s);
-    }
-    setShowCsvImport(false);
-    reload();
-  };
+  function handleEdit(s: Spender) {
+    setEditSpender(s);
+    setShowForm(true);
+  }
 
   return (
     <div className="py-8 px-4" style={{ background: 'var(--bg)' }}>
@@ -71,17 +53,14 @@ export default function SpenderPage() {
               Spenderverwaltung
             </h2>
             <div className="flex gap-2">
-              <button
-                className="drk-btn-secondary text-sm"
-                onClick={() => setShowCsvImport(true)}
-              >
+              <button className="drk-btn-secondary text-sm" onClick={() => setShowCsv(true)}>
                 CSV-Import
               </button>
               <button
                 className="drk-btn-primary text-sm"
                 onClick={() => {
                   setEditSpender(undefined);
-                  setShowFormular(true);
+                  setShowForm(true);
                 }}
               >
                 + Neuer Spender
@@ -90,32 +69,38 @@ export default function SpenderPage() {
           </div>
 
           <SpenderTabelle
-            spender={spenderList}
-            zuwendungen={zuwendungen}
+            spender={spender}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
         </div>
       </div>
 
-      {showFormular && (
+      {showForm && (
         <SpenderFormular
           spender={editSpender}
           onSave={handleSave}
           onCancel={() => {
-            setShowFormular(false);
+            setShowForm(false);
             setEditSpender(undefined);
           }}
         />
       )}
 
-      {showCsvImport && (
+      {showCsv && (
         <CsvImport
-          existingSpender={spenderList}
-          onImport={handleCsvImport}
-          onCancel={() => setShowCsvImport(false)}
+          onImportDone={loadSpender}
+          onCancel={() => setShowCsv(false)}
         />
       )}
     </div>
+  );
+}
+
+export default function SpenderPage() {
+  return (
+    <AuthGuard>
+      <SpenderContent />
+    </AuthGuard>
   );
 }

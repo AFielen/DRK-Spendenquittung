@@ -19,9 +19,10 @@ export interface ApiError {
 
 // ── App-spezifische Typen ──
 
-/** Vereinsdaten (einmalig pro Verband/Ortsverein) */
+/** Vereinsdaten / Kreisverband (kommt aus DB via API) */
 export interface Verein {
   id: string;
+  slug?: string;
   name: string;
   strasse: string;
   plz: string;
@@ -32,35 +33,39 @@ export interface Verein {
   steuernummer: string;
   freistellungsart: 'freistellungsbescheid' | 'feststellungsbescheid';
   freistellungDatum: string; // ISO-Date
-  letzterVeranlagungszeitraum: string; // z.B. "2023" (nur bei Freistellungsbescheid)
+  letzterVZ?: string | null; // Letzter Veranlagungszeitraum
   beguenstigteZwecke: string[];
 
   // Optional
-  vereinsregister?: string;
-  unterschriftName?: string;
-  unterschriftFunktion?: string;
+  vereinsregister?: string | null;
+  unterschriftName: string;
+  unterschriftFunktion: string;
 
   // Anpassung
-  logoBase64?: string;
+  logoBase64?: string | null;
 
-  erstelltAm: string;
-  aktualisiertAm: string;
+  // Laufende Nummer
+  laufendeNrFormat?: string;
 }
 
 /** Spender */
 export interface Spender {
   id: string;
-  anrede?: 'Herr' | 'Frau' | '';
+  anrede?: string | null;
   vorname: string;
   nachname: string;
   strasse: string;
   plz: string;
   ort: string;
 
-  steuerIdNr?: string;
+  steuerIdNr?: string | null;
 
-  erstelltAm: string;
-  aktualisiertAm: string;
+  // Aggregierte Daten (von API)
+  zuwendungenCount?: number;
+  jahresSumme?: number;
+
+  erstelltAm?: string;
+  aktualisiertAm?: string;
 }
 
 /** Einzelne Zuwendung */
@@ -74,18 +79,18 @@ export interface Zuwendung {
   // Geldzuwendung
   betrag: number;
   datum: string; // ISO-Date
-  zahlungsart?: 'ueberweisung' | 'bar' | 'lastschrift' | 'paypal' | 'sonstige';
+  zahlungsart?: string | null;
 
   // Sachzuwendung (nur bei art === 'sach')
-  sachBezeichnung?: string;
-  sachAlter?: string;
-  sachZustand?: string;
-  sachKaufpreis?: number;
-  sachWert?: number;
-  sachHerkunft?: 'privatvermoegen' | 'betriebsvermoegen' | 'keine_angabe';
-  sachWertermittlung?: string;
-  sachEntnahmewert?: number;
-  sachUmsatzsteuer?: number;
+  sachBezeichnung?: string | null;
+  sachAlter?: string | null;
+  sachZustand?: string | null;
+  sachKaufpreis?: number | null;
+  sachWert?: number | null;
+  sachHerkunft?: 'privatvermoegen' | 'betriebsvermoegen' | 'keine_angabe' | null;
+  sachWertermittlung?: string | null;
+  sachEntnahmewert?: number | null;
+  sachUmsatzsteuer?: number | null;
   sachUnterlagenVorhanden: boolean;
 
   // Verwaltung
@@ -93,21 +98,22 @@ export interface Zuwendung {
 
   // Status
   bestaetigungErstellt: boolean;
-  bestaetigungDatum?: string;
-  bestaetigungTyp?: 'anlage3' | 'anlage4' | 'anlage14' | 'vereinfacht';
-  laufendeNr?: string;
+  bestaetigungDatum?: string | null;
+  bestaetigungTyp?: 'anlage3' | 'anlage4' | 'anlage14' | 'vereinfacht' | null;
+  laufendeNr?: string | null;
 
-  erstelltAm: string;
-  aktualisiertAm: string;
-}
+  // Spender-Info (von API mit include)
+  spender?: {
+    id: string;
+    vorname: string;
+    nachname: string;
+    strasse?: string;
+    plz?: string;
+    ort?: string;
+    anrede?: string | null;
+    steuerIdNr?: string | null;
+  };
 
-/** App-Einstellungen */
-export interface AppSettings {
-  laufendeNrFormat: string;
-  laufendeNrAktuell: number;
-  laufendeNrJahr: number;
-  sammelbestaetigungJahr: number;
-  showKleinspenden: boolean;
-  letztesBackup?: string;
-  letzterBatchExport?: string;
+  erstelltAm?: string;
+  aktualisiertAm?: string;
 }
