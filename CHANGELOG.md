@@ -9,37 +9,49 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- Print-Styles: Header, Footer und Buttons werden beim Drucken ausgeblendet, Cards brechen nicht um
-- Bottom-Sheet-Animationen (`.drk-sheet-enter`, `.drk-backdrop-enter`) als Template-Pattern
-- `favicon.svg` (Rotes Kreuz auf rotem Hintergrund) in `public/`
-- `CHANGELOG.md` erstellt
-- Skip-to-Content-Link für Tastaturnavigation im Root-Layout
-- `aria-label` auf allen Header-Buttons und Logo-Link für Screen-Reader
-- `aria-hidden="true"` auf allen dekorativen Emojis und SVG-Icons
-- `focus-visible`-Styles für Links, Buttons und interaktive Elemente (nicht nur `<details>`)
-- `.drk-summary` CSS-Klasse für FAQ-Elemente mit 44px Touch-Target
-- `prefers-reduced-motion` Media-Query: Animationen werden bei Bedarf deaktiviert
-- Per-Page Metadata-Exports für SEO (Impressum, Datenschutz, Hilfe, Spenden, 404)
-- Icon-Komponenten extrahiert: `components/icons/` (HelpIcon, HeartIcon, RedCrossIcon)
-- `app/loading.tsx` Skeleton-Loading-State als Template-Pattern
-- Dark Mode CSS-Vorbereitung via `prefers-color-scheme: dark` (nur CSS-Variablen, kein UI-Toggle)
-- Neue CSS-Variablen: `--bg-secondary`, `--bg-secondary-hover`, `--warning-dark`
+- `lib/types.ts`: Interfaces `Verein`, `Spender`, `Zuwendung`, `AppSettings` nach Konzept-Datenmodell
+- `lib/storage.ts`: localStorage-Abstraktion mit CRUD für alle Entitäten, Export/Import, Backup-Tracking
+- `lib/freistellung-check.ts`: Prüfung der Freistellungsgültigkeit (5 Jahre / 3 Jahre) mit Ampel-Status
+- `lib/docx-templates/shared.ts`: Alle BMF-Pflicht-Textbausteine als typisierte Konstanten (exakter Wortlaut)
+- `lib/docx-templates/betrag-in-worten.ts`: Deutsche Zahlwort-Konvertierung für Beträge
+- `lib/docx-templates/geldzuwendung.ts`: DOCX-Generator für Anlage 3 (Geldzuwendung/Mitgliedsbeitrag)
+- `lib/docx-templates/sachzuwendung.ts`: DOCX-Generator für Anlage 4 (Sachzuwendung)
+- `lib/docx-templates/sammelbestaetigung.ts`: DOCX-Generator für Anlage 14 (Sammelbestätigung mit Anlage-Tabelle)
+- `lib/docx-templates/vereinfachter-nachweis.ts`: DOCX-Generator für vereinfachten Spendennachweis (≤ 300 €)
+- `components/VereinsSetupWizard.tsx`: 3-Schritt-Wizard (Stammdaten, Steuer, Unterschrift) mit Logo-Upload
+- `components/SpenderTabelle.tsx`: Sortierbare Tabelle mit Suche, Mobile-Cards, Lösch-Bestätigung
+- `components/SpenderFormular.tsx`: Modal-Formular für Spender-CRUD
+- `components/CsvImport.tsx`: CSV-Import mit Semikolon/Komma-Erkennung, Duplikat-Prüfung, Vorschau
+- `components/ZuwendungTabelle.tsx`: Filterable Tabelle (Spender, Jahr, Art, Status) mit Summenzeile
+- `components/ZuwendungFormular.tsx`: Modal mit Geld/Sach-Toggle, Aufwandsverzicht-Info, Sachspenden-Hinweise
+- `components/FreistellungsBlocker.tsx`: Vollbild-Blocker bei abgelaufenem Bescheid, Warnung bei < 6 Monate
+- `components/UnterschriftHinweis.tsx`: Modal vor jedem Download mit Doppel-Checkbox
+- `components/BackupStatusAnzeige.tsx`: Ampel-Status (grün/gelb/rot) basierend auf letztem Backup-Datum
+- `components/StatistikKarten.tsx`: Dashboard-Karten (Spender, Jahressumme, Offene, Anzahl) + CSS-Balkendiagramm
+- `app/einrichtung/page.tsx`: Vereins-Setup-Seite
+- `app/spender/page.tsx`: Spenderverwaltung mit CSV-Import
+- `app/zuwendungen/page.tsx`: Zuwendungserfassung
+- `app/bestaetigung/page.tsx`: 3-Tab-Bestätigungsseite (Einzel, Sammel, Vereinfacht)
+- `app/export/page.tsx`: Batch-Export als ZIP mit Fortschrittsbalken und Pflichthinweis
+- `app/daten/page.tsx`: Backup (JSON-Export/Import), Statistik, Gefahrenzone (3-Schritt-Löschung)
+- `Dockerfile`: Multi-Stage Docker-Build (Node 22 Alpine)
+- `docker-compose.yml`: Docker Compose Service-Konfiguration
+- `.dockerignore`: Docker-Ausschluss-Patterns
+- Dependencies: `docx`, `file-saver`, `jszip`, `@types/file-saver`
 
 ### Changed
-- `CLAUDE.md`: Changelog-Abschnitt als eigene `###`-Section mit detaillierten Regeln formatiert
-- `CLAUDE.md`: README-Pflege-Regel ergänzt (Features, Enthalten-Tabelle, Installation aktuell halten)
-- Alle Pflichtseiten (Impressum, Datenschutz, Hilfe, Spenden, 404) nutzen jetzt konsequent CSS-Variablen statt Tailwind-Hardcoded-Farben (`bg-gray-50`, `text-gray-900` etc.)
-- Impressum vervollständigt: Telefonnummer, Vorstandsname, Umsatzsteuer-ID, Registernummer, Haftungsausschluss
-- Datenschutzerklärung erweitert auf 9 nummerierte Abschnitte (Hosting-Platzhalter, Änderungshinweis etc.)
-- Hilfe-Seite: Kontakt-E-Mail auf `digitalisierung@drk-aachen.de` aktualisiert, erweiterte Kontaktbox
-- Header-Subtitle responsive: Langversion ab `sm:`, Kurzversion auf Mobile
-- `tsconfig.json`: `jsx` auf `react-jsx` aktualisiert, `.next/dev/types/**/*.ts` in `include` ergänzt
-- `page.tsx`: Alle hardcoded Tailwind-Farben durch CSS-Variablen ersetzt
-- `hilfe/page.tsx`: FAQ-Summaries nutzen `.drk-summary`-Klasse statt Inline-Hover-Farben
-- `.drk-btn-secondary` und `.drk-badge-warning`: Hardcoded Farbwerte durch CSS-Variablen ersetzt
-- `.drk-input:focus` → `.drk-input:focus-visible` (kein Outline bei Mausklick)
-- Logo im Header: `<img>` → Next.js `<Image>` mit `priority`-Prop
-- `next.config.ts`: `images: { unoptimized: true }` für statischen Export
+- `app/layout.tsx`: Template-Platzhalter durch "DRK Spendenquittung" ersetzt
+- `app/page.tsx`: Dashboard mit 3 Zuständen (Erststart, kein Spender, regulärer Betrieb)
+- `app/datenschutz/page.tsx`: Zero-Data-Architektur-Erklärung, Hetzner-Hosting, spezifische localStorage-Beschreibung
+- `app/hilfe/page.tsx`: 10 spezifische FAQ-Einträge zu Zuwendungsbestätigungen, BMF-Mustern, Freistellung etc.
+- `app/impressum/page.tsx`: Metadata-Platzhalter ersetzt
+- `app/spenden/page.tsx`: Metadata-Platzhalter ersetzt
+- `lib/types.ts`: Template-Typen durch app-spezifische Interfaces ersetzt
+- `lib/i18n.ts`: Template-Platzhalter durch app-spezifische Übersetzungen ersetzt
+- `lib/version.ts`: Version auf 0.1.0, Name auf "DRK Spendenquittung"
+- `next.config.ts`: Output von `'export'` auf `'standalone'` geändert
+- `package.json`: Name `drk-spendenquittung`, Version 0.1.0, Beschreibung angepasst
+- `README.md`: Vollständig neu geschrieben für DRK Spendenquittung
 
 ---
 

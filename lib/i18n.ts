@@ -49,16 +49,14 @@ const shared = {
 // ── App-spezifische Übersetzungen (hier pro App erweitern) ──
 const appTranslations = {
   de: {
-    'app.title': 'APP_TITEL',
-    'app.subtitle': 'APP_UNTERTITEL',
-    'app.description': 'APP_BESCHREIBUNG',
-    // Hier app-spezifische Keys ergänzen
+    'app.title': 'DRK Spendenquittung',
+    'app.subtitle': 'Zuwendungsbestätigungen für DRK-Verbände',
+    'app.description': 'Erstellen Sie BMF-konforme Zuwendungsbestätigungen – direkt im Browser, ohne Server, DSGVO-konform.',
   },
   en: {
-    'app.title': 'APP_TITLE_EN',
-    'app.subtitle': 'APP_SUBTITLE_EN',
-    'app.description': 'APP_DESCRIPTION_EN',
-    // Add app-specific keys here
+    'app.title': 'DRK Donation Receipt',
+    'app.subtitle': 'Tax Donation Receipts for DRK Associations',
+    'app.description': 'Create BMF-compliant donation receipts – directly in your browser, no server, GDPR-compliant.',
   },
 } as const;
 

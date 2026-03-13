@@ -5,8 +5,8 @@ import { HelpIcon, HeartIcon, RedCrossIcon } from '@/components/icons';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'DRK APP_TITEL',
-  description: 'APP_BESCHREIBUNG – DRK Kreisverband StädteRegion Aachen e.V.',
+  title: 'DRK Spendenquittung',
+  description: 'Zuwendungsbestätigungen nach BMF-Muster für DRK-Verbände – DRK Kreisverband StädteRegion Aachen e.V.',
   icons: { icon: '/favicon.svg' },
 };
 
@@ -31,9 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link href="/" className="flex items-center gap-3" aria-label="Zur Startseite">
             <Image src="/logo.png" alt="DRK Logo" width={42} height={42} priority />
             <div>
-              <h1 className="text-[1.4rem] font-bold leading-tight">APP_TITEL</h1>
-              <div className="text-[0.8rem] opacity-85 hidden sm:block">APP_UNTERTITEL</div>
-              <div className="text-[0.8rem] opacity-85 sm:hidden">APP_UNTERTITEL_KURZ</div>
+              <h1 className="text-[1.4rem] font-bold leading-tight">DRK Spendenquittung</h1>
+              <div className="text-[0.8rem] opacity-85 hidden sm:block">Zuwendungsbestätigungen für DRK-Verbände</div>
+              <div className="text-[0.8rem] opacity-85 sm:hidden">Spendenquittungen</div>
             </div>
           </Link>
 
