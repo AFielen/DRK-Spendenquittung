@@ -12,8 +12,25 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `components/ThemeToggle.tsx`: Dark/Light/System-Farbschema-Umschalter im Header (Sonne/Mond/Monitor-Icons)
 - Dark Mode CSS-Variablen in `globals.css` via `.dark`-Klasse + System-Präferenz-Fallback
 - FOUC-Prevention-Script in `layout.tsx` für flackerfreien Themenwechsel
-- `lib/types.ts`: Interfaces `Verein`, `Spender`, `Zuwendung`, `AppSettings` nach Konzept-Datenmodell
-- `lib/storage.ts`: localStorage-Abstraktion mit CRUD für alle Entitäten, Export/Import, Backup-Tracking
+- `prisma/schema.prisma`: PostgreSQL-Schema mit 4 Modellen (Kreisverband, Nutzer, Spender, Zuwendung)
+- `lib/db.ts`: PrismaClient-Singleton mit `@prisma/adapter-pg` und `pg` Pool
+- `lib/auth.ts`: iron-session-basierte Session-Verwaltung (getSession, createSession, destroySession)
+- `lib/mail.ts`: Magic-Link E-Mail-Versand via Mailjet SMTP (nodemailer)
+- `lib/api-client.ts`: Client-seitige API-Abstraction (apiGet, apiPost, apiPut, apiDelete) mit 401-Redirect
+- `components/AuthProvider.tsx`: React Context für Auth-State (nutzer, kreisverband, loading, logout, refresh)
+- `components/AuthGuard.tsx`: Route-Protection — Redirect zu /login bei fehlender Authentifizierung
+- `components/Navigation.tsx`: Horizontale Sub-Navigation mit 7 Routes und SVG-Icons
+- `components/AppShell.tsx`: Client-Wrapper für Header, Navigation, UserMenu, ThemeToggle
+- `components/UserMenu.tsx`: Initialen-Badge + Dropdown mit Nutzer/KV-Info und Logout
+- `app/login/page.tsx`: Zwei-Schritt-Login (E-Mail → 6-stelliger Code) mit Auto-Advance
+- API-Routes: auth/login, auth/verify, auth/logout, auth/me
+- API-Routes: kreisverband (GET/PUT), kreisverband/laufendeNr (POST, atomare Transaction)
+- API-Routes: spender (GET mit Aggregation, POST), spender/[id] (GET/PUT/DELETE), spender/import (POST)
+- API-Routes: zuwendungen (GET mit Filter, POST), zuwendungen/[id] (GET/PUT/DELETE), zuwendungen/[id]/bestaetigen (POST)
+- API-Routes: nutzer (GET/POST/DELETE, admin-only)
+- `prisma/seed.ts`: Seed-Script mit Demo-Kreisverband und Admin-Nutzer
+- `.env.example`: Vorlage für Umgebungsvariablen (DB, Session, SMTP)
+- Dependencies: `@prisma/adapter-pg`, `pg`, `@types/pg`, `iron-session`, `nodemailer`, `prisma`, `tsx`
 - `lib/freistellung-check.ts`: Prüfung der Freistellungsgültigkeit (5 Jahre / 3 Jahre) mit Ampel-Status
 - `lib/docx-templates/shared.ts`: Alle BMF-Pflicht-Textbausteine als typisierte Konstanten (exakter Wortlaut)
 - `lib/docx-templates/betrag-in-worten.ts`: Deutsche Zahlwort-Konvertierung für Beträge
@@ -24,37 +41,33 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `components/VereinsSetupWizard.tsx`: 3-Schritt-Wizard (Stammdaten, Steuer, Unterschrift) mit Logo-Upload
 - `components/SpenderTabelle.tsx`: Sortierbare Tabelle mit Suche, Mobile-Cards, Lösch-Bestätigung
 - `components/SpenderFormular.tsx`: Modal-Formular für Spender-CRUD
-- `components/CsvImport.tsx`: CSV-Import mit Semikolon/Komma-Erkennung, Duplikat-Prüfung, Vorschau
+- `components/CsvImport.tsx`: CSV-Import (server-seitig) mit Duplikat-Erkennung
 - `components/ZuwendungTabelle.tsx`: Filterable Tabelle (Spender, Jahr, Art, Status) mit Summenzeile
 - `components/ZuwendungFormular.tsx`: Modal mit Geld/Sach-Toggle, Aufwandsverzicht-Info, Sachspenden-Hinweise
 - `components/FreistellungsBlocker.tsx`: Vollbild-Blocker bei abgelaufenem Bescheid, Warnung bei < 6 Monate
 - `components/UnterschriftHinweis.tsx`: Modal vor jedem Download mit Doppel-Checkbox
-- `components/BackupStatusAnzeige.tsx`: Ampel-Status (grün/gelb/rot) basierend auf letztem Backup-Datum
 - `components/StatistikKarten.tsx`: Dashboard-Karten (Spender, Jahressumme, Offene, Anzahl) + CSS-Balkendiagramm
-- `app/einrichtung/page.tsx`: Vereins-Setup-Seite
-- `app/spender/page.tsx`: Spenderverwaltung mit CSV-Import
-- `app/zuwendungen/page.tsx`: Zuwendungserfassung
-- `app/bestaetigung/page.tsx`: 3-Tab-Bestätigungsseite (Einzel, Sammel, Vereinfacht)
-- `app/export/page.tsx`: Batch-Export als ZIP mit Fortschrittsbalken und Pflichthinweis
-- `app/daten/page.tsx`: Backup (JSON-Export/Import), Statistik, Gefahrenzone (3-Schritt-Löschung)
-- `Dockerfile`: Multi-Stage Docker-Build (Node 22 Alpine)
-- `docker-compose.yml`: Docker Compose Service-Konfiguration
-- `.dockerignore`: Docker-Ausschluss-Patterns
-- Dependencies: `docx`, `file-saver`, `jszip`, `@types/file-saver`
 
 ### Changed
-- `app/layout.tsx`: Template-Platzhalter durch "DRK Spendenquittung" ersetzt
-- `app/page.tsx`: Dashboard mit 3 Zuständen (Erststart, kein Spender, regulärer Betrieb)
-- `app/datenschutz/page.tsx`: Zero-Data-Architektur-Erklärung, Hetzner-Hosting, spezifische localStorage-Beschreibung
-- `app/hilfe/page.tsx`: 10 spezifische FAQ-Einträge zu Zuwendungsbestätigungen, BMF-Mustern, Freistellung etc.
-- `app/impressum/page.tsx`: Metadata-Platzhalter ersetzt
-- `app/spenden/page.tsx`: Metadata-Platzhalter ersetzt
-- `lib/types.ts`: Template-Typen durch app-spezifische Interfaces ersetzt
-- `lib/i18n.ts`: Template-Platzhalter durch app-spezifische Übersetzungen ersetzt
-- `lib/version.ts`: Version auf 0.1.0, Name auf "DRK Spendenquittung"
-- `next.config.ts`: Output von `'export'` auf `'standalone'` geändert
-- `package.json`: Name `drk-spendenquittung`, Version 0.1.0, Beschreibung angepasst
-- `README.md`: Vollständig neu geschrieben für DRK Spendenquittung
+- `app/layout.tsx`: AuthProvider + AppShell-Wrapper, Header/Navigation in Client-Komponente verschoben
+- `app/page.tsx`: Dashboard mit API-Anbindung statt localStorage, AuthGuard
+- `app/spender/page.tsx`: Spenderverwaltung mit API-Anbindung
+- `app/zuwendungen/page.tsx`: Zuwendungserfassung mit API-Anbindung
+- `app/bestaetigung/page.tsx`: Bestätigungen mit API-Anbindung, laufende Nr. via API-Transaction
+- `app/export/page.tsx`: Batch-Export mit API-Datenquelle, DOCX weiterhin clientseitig
+- `app/daten/page.tsx`: Vereinfacht auf Statistik + Admin-Löschfunktion
+- `app/einrichtung/page.tsx`: Admin-only mit Tabs: Vereinsdaten + Nutzerverwaltung
+- `app/datenschutz/page.tsx`: Aktualisiert für DB-Architektur, Session-Cookie, Mailjet, Mandantenisolation
+- `app/hilfe/page.tsx`: Neue FAQs zu Login, Datenspeicherung, Mehrbenutzer-Betrieb
+- `lib/types.ts`: `AppSettings` entfernt, `Verein.letzterVZ` (vorher `letzterVeranlagungszeitraum`), nullable Felder
+- `Dockerfile`: Prisma-Generate-Step hinzugefügt, Prisma-Dateien in Runner-Stage kopiert
+- `docker-compose.yml`: PostgreSQL-Service, Health-Check, Umgebungsvariablen
+- `package.json`: Neue Scripts (db:migrate, db:seed), prisma seed-Konfiguration
+- DOCX-Templates: `letzterVeranlagungszeitraum` → `letzterVZ` in allen Templates
+
+### Removed
+- `lib/storage.ts`: localStorage-Abstraktion (ersetzt durch PostgreSQL + API)
+- `components/BackupStatusAnzeige.tsx`: Backup-Ampel (nicht mehr nötig mit serverseitiger DB)
 
 ---
 

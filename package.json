@@ -7,13 +7,25 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "npx prisma migrate deploy",
+    "db:seed": "npx tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "@types/pg": "^8.18.0",
     "docx": "^9.6.1",
     "file-saver": "^2.0.5",
+    "iron-session": "^8.0.4",
     "jszip": "^3.10.1",
     "next": "^16.0.0",
+    "nodemailer": "^8.0.2",
+    "pg": "^8.20.0",
+    "prisma": "^7.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -21,9 +33,11 @@
     "@tailwindcss/postcss": "^4.0.0",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "^7.0.11",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   }
 }

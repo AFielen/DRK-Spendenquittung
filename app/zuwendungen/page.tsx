@@ -1,56 +1,51 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { Zuwendung } from '@/lib/types';
-import {
-  getSpender,
-  getZuwendungen,
-  addZuwendung,
-  updateZuwendung,
-  deleteZuwendung as deleteZuwendungStorage,
-} from '@/lib/storage';
+import AuthGuard from '@/components/AuthGuard';
 import ZuwendungTabelle from '@/components/ZuwendungTabelle';
 import ZuwendungFormular from '@/components/ZuwendungFormular';
+import type { Zuwendung, Spender } from '@/lib/types';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 
-export default function ZuwendungenPage() {
-  const [spenderList, setSpenderList] = useState<ReturnType<typeof getSpender>>([]);
+function ZuwendungenContent() {
+  const [spenderList, setSpenderList] = useState<Spender[]>([]);
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [showFormular, setShowFormular] = useState(false);
   const [editZuwendung, setEditZuwendung] = useState<Zuwendung | undefined>();
-  const [loaded, setLoaded] = useState(false);
 
-  const reload = useCallback(() => {
-    setSpenderList(getSpender());
-    setZuwendungen(getZuwendungen());
+  const reload = useCallback(async () => {
+    const [sp, zw] = await Promise.all([
+      apiGet<Spender[]>('/api/spender'),
+      apiGet<Zuwendung[]>('/api/zuwendungen'),
+    ]);
+    setSpenderList(sp);
+    setZuwendungen(zw.map((z) => ({ ...z, betrag: Number(z.betrag) })));
   }, []);
 
   useEffect(() => {
     reload();
-    setLoaded(true);
   }, [reload]);
 
-  if (!loaded) return null;
-
-  const handleSave = (zuwendung: Zuwendung) => {
+  async function handleSave(zuwendung: Zuwendung) {
     if (editZuwendung) {
-      updateZuwendung(zuwendung);
+      await apiPut(`/api/zuwendungen/${editZuwendung.id}`, zuwendung);
     } else {
-      addZuwendung(zuwendung);
+      await apiPost('/api/zuwendungen', zuwendung);
     }
     setShowFormular(false);
     setEditZuwendung(undefined);
-    reload();
-  };
+    await reload();
+  }
 
-  const handleEdit = (zuwendung: Zuwendung) => {
+  function handleEdit(zuwendung: Zuwendung) {
     setEditZuwendung(zuwendung);
     setShowFormular(true);
-  };
+  }
 
-  const handleDelete = (zuwendung: Zuwendung) => {
-    deleteZuwendungStorage(zuwendung.id);
-    reload();
-  };
+  async function handleDelete(zuwendung: Zuwendung) {
+    await apiDelete(`/api/zuwendungen/${zuwendung.id}`);
+    await reload();
+  }
 
   return (
     <div className="py-8 px-4" style={{ background: 'var(--bg)' }}>
@@ -92,5 +87,13 @@ export default function ZuwendungenPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function ZuwendungenPage() {
+  return (
+    <AuthGuard>
+      <ZuwendungenContent />
+    </AuthGuard>
   );
 }

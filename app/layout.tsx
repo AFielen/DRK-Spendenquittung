@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
-import { HelpIcon, HeartIcon, RedCrossIcon } from '@/components/icons';
-import ThemeToggle from '@/components/ThemeToggle';
+import { RedCrossIcon } from '@/components/icons';
+import AuthProvider from '@/components/AuthProvider';
+import AppShell from '@/components/AppShell';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -31,44 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Zum Inhalt springen
         </a>
 
-        {/* ── DRK Header ── */}
-        <header
-          className="flex items-center justify-between gap-3 px-6 py-4"
-          style={{ background: '#e30613', color: '#fff' }}
-        >
-          <Link href="/" className="flex items-center gap-3" aria-label="Zur Startseite">
-            <Image src="/logo.png" alt="DRK Logo" width={42} height={42} priority />
-            <div>
-              <h1 className="text-[1.4rem] font-bold leading-tight">DRK Spendenquittung</h1>
-              <div className="text-[0.8rem] opacity-85 hidden sm:block">Zuwendungsbestätigungen für DRK-Verbände</div>
-              <div className="text-[0.8rem] opacity-85 sm:hidden">Spendenquittungen</div>
-            </div>
-          </Link>
-
-          {/* Rechte Seite: Spenden + Hilfe */}
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <Link
-              href="/spenden"
-              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors"
-              title="Unterstützen"
-              aria-label="Unterstützen"
-            >
-              <HeartIcon />
-            </Link>
-            <Link
-              href="/hilfe"
-              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors"
-              title="Hilfe"
-              aria-label="Hilfe"
-            >
-              <HelpIcon />
-            </Link>
-          </div>
-        </header>
-
-        {/* ── Main Content ── */}
-        <main id="main-content" className="flex-1">{children}</main>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
 
         {/* ── DRK Footer ── */}
         <footer

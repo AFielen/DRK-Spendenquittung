@@ -92,17 +92,27 @@ export default function Hilfe() {
             <details className="group">
               <summary className="drk-summary">Wo sind meine Daten gespeichert?</summary>
               <p className="mt-2 text-sm pl-4" style={{ color: 'var(--text-light)' }}>
-                Im localStorage Ihres Browsers. <strong>ACHTUNG:</strong> Wenn Sie Ihre
-                Browserdaten löschen, sind alle Daten weg. Erstellen Sie regelmäßig JSON-Backups
-                über die Daten-Seite.
+                Alle Daten werden sicher in einer PostgreSQL-Datenbank auf dem Server gespeichert.
+                Im Gegensatz zu einer Browser-Lösung gehen Ihre Daten nicht verloren, wenn Sie den
+                Browser wechseln oder den Cache leeren. Zugriff erfolgt über Ihr persönliches Login.
               </p>
             </details>
 
             <details className="group">
-              <summary className="drk-summary">Kann ich die Daten auf ein anderes Gerät übertragen?</summary>
+              <summary className="drk-summary">Wie melde ich mich an?</summary>
               <p className="mt-2 text-sm pl-4" style={{ color: 'var(--text-light)' }}>
-                Ja, über JSON-Export und -Import auf der Daten-Seite. Exportieren Sie die Daten
-                als JSON-Datei und importieren Sie diese auf dem anderen Gerät.
+                Sie geben Ihre E-Mail-Adresse ein und erhalten einen 6-stelligen Anmeldecode per E-Mail.
+                Es gibt kein Passwort — der Code ist 10 Minuten gültig. Ein Administrator muss Ihre
+                E-Mail-Adresse vorab als Nutzer angelegt haben.
+              </p>
+            </details>
+
+            <details className="group">
+              <summary className="drk-summary">Können mehrere Personen gleichzeitig arbeiten?</summary>
+              <p className="mt-2 text-sm pl-4" style={{ color: 'var(--text-light)' }}>
+                Ja. Da die Daten zentral gespeichert werden, können mehrere Nutzer gleichzeitig auf
+                die Anwendung zugreifen. Jeder Nutzer hat ein eigenes Login mit einer zugewiesenen Rolle
+                (Admin, Schatzmeister oder Leser).
               </p>
             </details>
 

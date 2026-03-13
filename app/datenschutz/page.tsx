@@ -28,75 +28,85 @@ export default function Datenschutz() {
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>2. Zero-Data-Architektur</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>2. Datenverarbeitung</h3>
               <p>
-                Diese Anwendung speichert <strong>KEINE Daten auf einem Server</strong>. Alle Daten
-                (Vereinsdaten, Spenderinformationen, Zuwendungen) werden ausschließlich im localStorage
-                Ihres Browsers gespeichert und verlassen Ihr Gerät zu keinem Zeitpunkt.
+                Diese Anwendung speichert personenbezogene Daten (Vereinsdaten, Spenderinformationen,
+                Zuwendungen) in einer PostgreSQL-Datenbank auf einem selbst gehosteten Server. Die Daten
+                werden ausschließlich zur Erstellung von Zuwendungsbestätigungen nach BMF-Muster verwendet.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>3. Keine Cookies</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>3. Authentifizierung &amp; Cookies</h3>
               <p>
-                Diese Anwendung verwendet keine Cookies — weder technisch notwendige noch Tracking-Cookies.
+                Für die Anmeldung wird ein Magic-Link-Verfahren verwendet: Sie erhalten per E-Mail
+                einen 6-stelligen Code. Nach erfolgreicher Anmeldung wird ein <strong>HttpOnly-Session-Cookie</strong> gesetzt,
+                das ausschließlich der Authentifizierung dient. Es werden keine Tracking-Cookies verwendet.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>4. Keine externen Dienste</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>4. E-Mail-Versand</h3>
               <p>
-                Es werden keine externen Dienste, keine Analytics- oder Tracking-Tools, keine externen
-                Schriftarten und keine CDNs eingebunden. Alle Ressourcen werden lokal bereitgestellt.
+                Für den Versand der Anmelde-Codes wird Mailjet (Mailgun Technologies Inc., EU-Server)
+                als SMTP-Relay genutzt. Dabei wird ausschließlich Ihre E-Mail-Adresse und der
+                Anmeldecode übermittelt. Es werden keine weiteren personenbezogenen Daten an
+                Mailjet übertragen.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>5. Keine Datenübertragung an Dritte</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>5. Keine externen Dienste</h3>
               <p>
-                Es findet keine Datenübertragung an Dritte statt. Die DOCX-Dateien
+                Es werden keine Analytics- oder Tracking-Tools, keine externen Schriftarten und
+                keine CDNs eingebunden. Alle Ressourcen werden lokal bereitgestellt. Die DOCX-Dateien
                 (Zuwendungsbestätigungen) werden vollständig clientseitig im Browser generiert.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>6. Lokale Speicherung</h3>
-              <p>
-                Die Anwendung nutzt den localStorage Ihres Browsers zur Speicherung von:
-              </p>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>6. Gespeicherte Daten</h3>
+              <p>Die Anwendung speichert serverseitig:</p>
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Vereinsdaten (Steuerdaten, Adresse, Logo)</li>
+                <li>Kreisverbandsdaten (Adresse, Steuerdaten, Logo)</li>
+                <li>Nutzerdaten (Name, E-Mail, Rolle)</li>
                 <li>Spenderkontaktdaten</li>
                 <li>Zuwendungsinformationen</li>
-                <li>App-Einstellungen</li>
               </ul>
               <p className="mt-2">
-                Diese Daten können jederzeit über die Daten-Seite der App oder über die
-                Browser-Einstellungen gelöscht werden.
+                Im Browser werden lediglich die Theme-Einstellung (Hell/Dunkel) im localStorage gespeichert.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>7. Hosting</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>7. Mandantenisolation</h3>
               <p>
-                Die Anwendung wird auf einem Hetzner-VPS (Hetzner Online GmbH, Industriestr. 25,
-                91710 Gunzenhausen, Deutschland) betrieben. Der Server liefert lediglich die
-                vorgerenderten HTML-Seiten aus — es werden keine Nutzerdaten übertragen oder
-                gespeichert.
+                Die Daten sind strikt nach Kreisverband getrennt (Mandantenfähigkeit). Nutzer eines
+                Kreisverbands haben keinen Zugriff auf Daten anderer Kreisverbände.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>8. Betroffenenrechte (Art. 15–21 DSGVO)</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>8. Hosting</h3>
               <p>
-                Da keine serverseitige Speicherung personenbezogener Daten erfolgt, haben Sie
-                volle Kontrolle über Ihre Daten. Löschen Sie die Browserdaten, sind alle Daten
-                entfernt. Bei Fragen wenden Sie sich an den oben genannten Verantwortlichen.
+                Die Anwendung und die Datenbank werden auf einem Hetzner-VPS (Hetzner Online GmbH,
+                Industriestr. 25, 91710 Gunzenhausen, Deutschland) betrieben. Alle Daten verbleiben
+                in Deutschland.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>9. Open Source</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>9. Betroffenenrechte (Art. 15–21 DSGVO)</h3>
+              <p>
+                Sie haben das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der
+                Verarbeitung Ihrer personenbezogenen Daten. Administratoren können Spenderdaten und
+                Zuwendungen in der App löschen. Bei Fragen wenden Sie sich an den oben genannten
+                Verantwortlichen.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>10. Open Source</h3>
               <p>
                 Der gesamte Quellcode dieser Anwendung ist öffentlich einsehbar und überprüfbar.
               </p>

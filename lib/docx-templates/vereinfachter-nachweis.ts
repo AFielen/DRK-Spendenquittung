@@ -84,12 +84,12 @@ export async function generateVereinfachterNachweis(
       children: [new TextRun({ text: `Datum des Bescheids: ${bescheidDatum}`, font: 'Arial', size: 20 })],
     })
   );
-  if (verein.freistellungsart === 'freistellungsbescheid' && verein.letzterVeranlagungszeitraum) {
+  if (verein.freistellungsart === 'freistellungsbescheid' && verein.letzterVZ) {
     sections.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: `Letzter Veranlagungszeitraum: ${verein.letzterVeranlagungszeitraum}`,
+            text: `Letzter Veranlagungszeitraum: ${verein.letzterVZ}`,
             font: 'Arial', size: 20,
           }),
         ],

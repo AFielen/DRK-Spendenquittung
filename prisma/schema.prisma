@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Mandant (Kreisverband) ──
+model Kreisverband {
+  id                   String   @id @default(uuid())
+  slug                 String   @unique
+  name                 String
+  strasse              String
+  plz                  String
+  ort                  String
+  vereinsregister      String?
+
+  logoBase64           String?  @db.Text
+
+  // Steuerliche Daten
+  finanzamt            String
+  steuernummer         String
+  freistellungsart     String   // 'freistellungsbescheid' | 'feststellungsbescheid'
+  freistellungDatum    DateTime
+  letzterVZ            String?
+  beguenstigteZwecke   String[]
+
+  // Unterschrift
+  unterschriftName     String
+  unterschriftFunktion String
+
+  // Laufende Nummer
+  laufendeNrFormat     String   @default("SQ-{JAHR}-{NR}")
+  laufendeNrAktuell    Int      @default(1)
+  laufendeNrJahr       Int      @default(2026)
+
+  // Relations
+  nutzer               Nutzer[]
+  spender              Spender[]
+  zuwendungen          Zuwendung[]
+
+  erstelltAm           DateTime @default(now())
+  aktualisiertAm       DateTime @updatedAt
+}
+
+// ── Nutzer (gehört zu genau einem KV) ──
+model Nutzer {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  name            String
+  rolle           String    @default("schatzmeister") // 'admin' | 'schatzmeister' | 'leser'
+
+  kreisverbandId  String
+  kreisverband    Kreisverband @relation(fields: [kreisverbandId], references: [id])
+
+  // Auth
+  magicCode       String?
+  magicCodeExpiry DateTime?
+  letztesLogin    DateTime?
+
+  erstelltAm      DateTime @default(now())
+  aktualisiertAm  DateTime @updatedAt
+
+  @@index([kreisverbandId])
+}
+
+// ── Spender ──
+model Spender {
+  id             String   @id @default(uuid())
+  anrede         String?
+  vorname        String
+  nachname       String
+  strasse        String
+  plz            String
+  ort            String
+  steuerIdNr     String?
+
+  kreisverbandId String
+  kreisverband   Kreisverband @relation(fields: [kreisverbandId], references: [id])
+  zuwendungen    Zuwendung[]
+
+  erstelltAm     DateTime @default(now())
+  aktualisiertAm DateTime @updatedAt
+
+  @@index([kreisverbandId])
+}
+
+// ── Zuwendung ──
+model Zuwendung {
+  id                     String    @id @default(uuid())
+  art                    String    // 'geld' | 'sach'
+  verwendung             String    // 'spende' | 'mitgliedsbeitrag'
+
+  betrag                 Decimal   @db.Decimal(10, 2)
+  datum                  DateTime
+  zahlungsart            String?
+
+  // Sachzuwendung
+  sachBezeichnung        String?
+  sachAlter              String?
+  sachZustand            String?
+  sachKaufpreis          Decimal?  @db.Decimal(10, 2)
+  sachWert               Decimal?  @db.Decimal(10, 2)
+  sachHerkunft           String?   // 'privatvermoegen' | 'betriebsvermoegen' | 'keine_angabe'
+  sachWertermittlung     String?
+  sachEntnahmewert       Decimal?  @db.Decimal(10, 2)
+  sachUmsatzsteuer       Decimal?  @db.Decimal(10, 2)
+  sachUnterlagenVorhanden Boolean  @default(false)
+
+  verzicht               Boolean   @default(false)
+
+  // Status
+  bestaetigungErstellt   Boolean   @default(false)
+  bestaetigungDatum      DateTime?
+  bestaetigungTyp        String?   // 'anlage3' | 'anlage4' | 'anlage14' | 'vereinfacht'
+  laufendeNr             String?
+
+  spenderId              String
+  spender                Spender   @relation(fields: [spenderId], references: [id], onDelete: Cascade)
+  kreisverbandId         String
+  kreisverband           Kreisverband @relation(fields: [kreisverbandId], references: [id])
+
+  erstelltAm             DateTime  @default(now())
+  aktualisiertAm         DateTime  @updatedAt
+
+  @@index([kreisverbandId])
+  @@index([spenderId])
+  @@index([kreisverbandId, datum])
+}

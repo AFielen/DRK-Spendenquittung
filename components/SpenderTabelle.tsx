@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { Spender, Zuwendung } from '@/lib/types';
+import type { Spender } from '@/lib/types';
 
 interface SpenderTabelleProps {
   spender: Spender[];
-  zuwendungen: Zuwendung[];
   onEdit: (spender: Spender) => void;
   onDelete: (spender: Spender) => void;
 }
@@ -13,21 +12,11 @@ interface SpenderTabelleProps {
 type SortKey = 'name' | 'ort';
 type SortDir = 'asc' | 'desc';
 
-export default function SpenderTabelle({ spender, zuwendungen, onEdit, onDelete }: SpenderTabelleProps) {
+export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTabelleProps) {
   const [suche, setSuche] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-
-  const zuwendungenBySpender = useMemo(() => {
-    const map: Record<string, { count: number; summe: number }> = {};
-    for (const z of zuwendungen) {
-      if (!map[z.spenderId]) map[z.spenderId] = { count: 0, summe: 0 };
-      map[z.spenderId].count++;
-      map[z.spenderId].summe += z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
-    }
-    return map;
-  }, [zuwendungen]);
 
   const filtered = useMemo(() => {
     const q = suche.toLowerCase();
@@ -115,133 +104,127 @@ export default function SpenderTabelle({ spender, zuwendungen, onEdit, onDelete 
             </tr>
           </thead>
           <tbody>
-            {filtered.map((s) => {
-              const stats = zuwendungenBySpender[s.id] ?? { count: 0, summe: 0 };
-              return (
-                <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
-                    {s.anrede ? `${s.anrede} ` : ''}
-                    {s.vorname} {s.nachname}
-                  </td>
-                  <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
-                    {s.strasse}, {s.plz} {s.ort}
-                  </td>
-                  <td className="py-2 px-3 text-right" style={{ color: 'var(--text)' }}>
-                    {stats.count}
-                  </td>
-                  <td className="py-2 px-3 text-right" style={{ color: 'var(--text)' }}>
-                    {stats.summe.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-                  </td>
-                  <td className="py-2 px-3 text-right">
-                    <button
-                      className="text-sm underline mr-3"
-                      style={{ color: 'var(--drk)' }}
-                      onClick={() => onEdit(s)}
-                    >
-                      Bearbeiten
-                    </button>
-                    {deleteConfirm === s.id ? (
-                      <span className="text-sm">
-                        <button
-                          className="underline font-bold mr-2"
-                          style={{ color: '#dc2626' }}
-                          onClick={() => {
-                            onDelete(s);
-                            setDeleteConfirm(null);
-                          }}
-                        >
-                          Bestätigen
-                        </button>
-                        <button
-                          className="underline"
-                          style={{ color: 'var(--text-light)' }}
-                          onClick={() => setDeleteConfirm(null)}
-                        >
-                          Abbrechen
-                        </button>
-                      </span>
-                    ) : (
+            {filtered.map((s) => (
+              <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
+                  {s.anrede ? `${s.anrede} ` : ''}
+                  {s.vorname} {s.nachname}
+                </td>
+                <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
+                  {s.strasse}, {s.plz} {s.ort}
+                </td>
+                <td className="py-2 px-3 text-right" style={{ color: 'var(--text)' }}>
+                  {s.zuwendungenCount ?? 0}
+                </td>
+                <td className="py-2 px-3 text-right" style={{ color: 'var(--text)' }}>
+                  {(s.jahresSumme ?? 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
+                </td>
+                <td className="py-2 px-3 text-right">
+                  <button
+                    className="text-sm underline mr-3"
+                    style={{ color: 'var(--drk)' }}
+                    onClick={() => onEdit(s)}
+                  >
+                    Bearbeiten
+                  </button>
+                  {deleteConfirm === s.id ? (
+                    <span className="text-sm">
                       <button
-                        className="text-sm underline"
+                        className="underline font-bold mr-2"
                         style={{ color: '#dc2626' }}
-                        onClick={() => setDeleteConfirm(s.id)}
+                        onClick={() => {
+                          onDelete(s);
+                          setDeleteConfirm(null);
+                        }}
                       >
-                        Löschen
+                        Bestätigen
                       </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+                      <button
+                        className="underline"
+                        style={{ color: 'var(--text-light)' }}
+                        onClick={() => setDeleteConfirm(null)}
+                      >
+                        Abbrechen
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      className="text-sm underline"
+                      style={{ color: '#dc2626' }}
+                      onClick={() => setDeleteConfirm(s.id)}
+                    >
+                      Löschen
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* Mobile-Cards */}
       <div className="md:hidden space-y-3">
-        {filtered.map((s) => {
-          const stats = zuwendungenBySpender[s.id] ?? { count: 0, summe: 0 };
-          return (
-            <div
-              key={s.id}
-              className="p-4 rounded-xl"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <div className="font-bold mb-1" style={{ color: 'var(--text)' }}>
-                {s.anrede ? `${s.anrede} ` : ''}
-                {s.vorname} {s.nachname}
-              </div>
-              <div className="text-sm mb-2" style={{ color: 'var(--text-light)' }}>
-                {s.strasse}, {s.plz} {s.ort}
-              </div>
-              <div className="text-sm mb-3" style={{ color: 'var(--text-light)' }}>
-                {stats.count} Zuwendungen · {stats.summe.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-              </div>
-              <div className="flex gap-3">
-                <button
-                  className="drk-btn-secondary text-sm flex-1"
-                  onClick={() => onEdit(s)}
-                >
-                  Bearbeiten
-                </button>
-                {deleteConfirm === s.id ? (
-                  <div className="flex gap-2">
-                    <button
-                      className="text-sm px-3 py-2 rounded font-bold"
-                      style={{ background: '#dc2626', color: '#fff' }}
-                      onClick={() => {
-                        onDelete(s);
-                        setDeleteConfirm(null);
-                      }}
-                    >
-                      Ja, löschen
-                    </button>
-                    <button
-                      className="drk-btn-secondary text-sm"
-                      onClick={() => setDeleteConfirm(null)}
-                    >
-                      Nein
-                    </button>
-                  </div>
-                ) : (
+        {filtered.map((s) => (
+          <div
+            key={s.id}
+            className="p-4 rounded-xl"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          >
+            <div className="font-bold mb-1" style={{ color: 'var(--text)' }}>
+              {s.anrede ? `${s.anrede} ` : ''}
+              {s.vorname} {s.nachname}
+            </div>
+            <div className="text-sm mb-2" style={{ color: 'var(--text-light)' }}>
+              {s.strasse}, {s.plz} {s.ort}
+            </div>
+            <div className="text-sm mb-3" style={{ color: 'var(--text-light)' }}>
+              {s.zuwendungenCount ?? 0} Zuwendungen · {(s.jahresSumme ?? 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
+            </div>
+            <div className="flex gap-3">
+              <button
+                className="drk-btn-secondary text-sm flex-1"
+                onClick={() => onEdit(s)}
+              >
+                Bearbeiten
+              </button>
+              {deleteConfirm === s.id ? (
+                <div className="flex gap-2">
                   <button
-                    className="text-sm px-3 py-2 rounded"
-                    style={{ background: '#fef2f2', color: '#dc2626' }}
-                    onClick={() => setDeleteConfirm(s.id)}
+                    className="text-sm px-3 py-2 rounded font-bold"
+                    style={{ background: '#dc2626', color: '#fff' }}
+                    onClick={() => {
+                      onDelete(s);
+                      setDeleteConfirm(null);
+                    }}
                   >
-                    Löschen
+                    Ja, löschen
                   </button>
-                )}
-              </div>
-              {deleteConfirm === s.id && stats.count > 0 && (
-                <div className="text-xs mt-2 p-2 rounded" style={{ background: '#fef2f2', color: '#991b1b' }}>
-                  Dieser Spender hat {stats.count} Zuwendungen. Beim Löschen werden auch alle
-                  zugehörigen Zuwendungen gelöscht.
+                  <button
+                    className="drk-btn-secondary text-sm"
+                    onClick={() => setDeleteConfirm(null)}
+                  >
+                    Nein
+                  </button>
                 </div>
+              ) : (
+                <button
+                  className="text-sm px-3 py-2 rounded"
+                  style={{ background: '#fef2f2', color: '#dc2626' }}
+                  onClick={() => setDeleteConfirm(s.id)}
+                >
+                  Löschen
+                </button>
               )}
             </div>
-          );
-        })}
+            {deleteConfirm === s.id && (s.zuwendungenCount ?? 0) > 0 && (
+              <div className="text-xs mt-2 p-2 rounded" style={{ background: '#fef2f2', color: '#991b1b' }}>
+                Dieser Spender hat {s.zuwendungenCount} Zuwendungen. Beim Löschen werden auch alle
+                zugehörigen Zuwendungen gelöscht.
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

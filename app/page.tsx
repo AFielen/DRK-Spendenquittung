@@ -2,53 +2,47 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import type { Verein, Zuwendung } from '@/lib/types';
-import { getVerein, getSpender, getZuwendungen, getSettings } from '@/lib/storage';
+import { useAuth } from '@/components/AuthProvider';
+import AuthGuard from '@/components/AuthGuard';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
-import BackupStatusAnzeige from '@/components/BackupStatusAnzeige';
 import StatistikKarten from '@/components/StatistikKarten';
+import type { Verein, Zuwendung } from '@/lib/types';
+import { apiGet } from '@/lib/api-client';
 
-export default function Home() {
-  const [verein, setVereinState] = useState<Verein | null>(null);
+function DashboardContent() {
+  const { kreisverband } = useAuth();
   const [spenderCount, setSpenderCount] = useState(0);
-  const [zuwendungen, setZuwendungenState] = useState<Zuwendung[]>([]);
+  const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setVereinState(getVerein());
-    setSpenderCount(getSpender().length);
-    setZuwendungenState(getZuwendungen());
-    setLoaded(true);
+    async function load() {
+      try {
+        const [spenderData, zuwendungenData] = await Promise.all([
+          apiGet<{ id: string }[]>('/api/spender'),
+          apiGet<Zuwendung[]>('/api/zuwendungen'),
+        ]);
+        setSpenderCount(spenderData.length);
+        setZuwendungen(zuwendungenData.map((z) => ({ ...z, betrag: Number(z.betrag) })));
+      } catch {
+        // Fehler werden im api-client behandelt
+      } finally {
+        setLoaded(true);
+      }
+    }
+    load();
   }, []);
 
-  if (!loaded) return null;
+  if (!loaded || !kreisverband) return null;
 
-  // Zustand 1 — Erststart
-  if (!verein) {
-    return (
-      <div className="min-h-[calc(100vh-200px)] py-8 px-4" style={{ background: 'var(--bg)' }}>
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="drk-card drk-fade-in text-center">
-            <div className="p-3 rounded-xl inline-block mb-4" style={{ background: 'var(--drk-bg)' }}>
-              <span className="text-4xl" aria-hidden="true">🧾</span>
-            </div>
-            <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text)' }}>
-              Willkommen bei DRK Spendenquittung
-            </h2>
-            <p className="mb-6" style={{ color: 'var(--text-light)' }}>
-              Erstellen Sie Zuwendungsbestätigungen nach den verbindlichen BMF-Mustern — direkt
-              im Browser, ohne Server, DSGVO-konform.
-            </p>
-            <Link href="/einrichtung" className="drk-btn-primary inline-block">
-              Jetzt einrichten →
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const verein: Verein = {
+    ...kreisverband,
+    freistellungsart: kreisverband.freistellungsart as Verein['freistellungsart'],
+    unterschriftName: kreisverband.unterschriftName,
+    unterschriftFunktion: kreisverband.unterschriftFunktion,
+  };
 
-  // Zustand 2 — Verein konfiguriert, keine Spender
+  // Wenn noch keine Spender vorhanden
   if (spenderCount === 0) {
     return (
       <div className="min-h-[calc(100vh-200px)] py-8 px-4" style={{ background: 'var(--bg)' }}>
@@ -56,7 +50,7 @@ export default function Home() {
           <FreistellungsBlocker verein={verein} />
           <div className="drk-card drk-fade-in">
             <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-              Hallo, {verein.name}
+              Hallo, {kreisverband.name}
             </h2>
             <p className="mb-6" style={{ color: 'var(--text-light)' }}>
               Legen Sie Ihren ersten Spender an, um Zuwendungsbestätigungen zu erstellen.
@@ -70,57 +64,32 @@ export default function Home() {
     );
   }
 
-  // Zustand 3 — Regulärer Betrieb
-  const settings = getSettings();
+  // Regulärer Betrieb
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // 1-12
-  const letzterExport = settings.letzterBatchExport ? new Date(settings.letzterBatchExport) : null;
-  const vorjahrExportiert = letzterExport
-    ? letzterExport.getFullYear() >= currentYear - 1
-    : false;
+  const currentMonth = now.getMonth() + 1;
 
   return (
     <div className="min-h-[calc(100vh-200px)] py-8 px-4" style={{ background: 'var(--bg)' }}>
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Ampel-Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FreistellungsBlocker verein={verein} />
-          <BackupStatusAnzeige settings={settings} />
-        </div>
+        {/* Freistellungs-Status */}
+        <FreistellungsBlocker verein={verein} />
 
         {/* Jahresabschluss-Erinnerung */}
         {currentMonth >= 11 && (
           <div
             className="p-4 rounded-xl"
-            style={{ background: '#fffbeb', border: '1px solid #fcd34d' }}
+            style={{ background: 'var(--warning-bg)', border: '1px solid #fcd34d' }}
           >
-            <div className="text-sm font-bold" style={{ color: '#92400e' }}>
-              ⚠️ Jahresabschluss-Export für {currentYear} empfohlen
+            <div className="text-sm font-bold" style={{ color: 'var(--warning-dark)' }}>
+              Jahresabschluss-Export für {currentYear} empfohlen
             </div>
             <Link
               href="/export"
               className="text-sm underline mt-1 inline-block"
-              style={{ color: '#92400e' }}
+              style={{ color: 'var(--warning-dark)' }}
             >
               Export starten →
-            </Link>
-          </div>
-        )}
-        {currentMonth >= 2 && !vorjahrExportiert && (
-          <div
-            className="p-4 rounded-xl"
-            style={{ background: '#fef2f2', border: '2px solid #fca5a5' }}
-          >
-            <div className="text-sm font-bold" style={{ color: '#991b1b' }}>
-              ❌ Jahresabschluss {currentYear - 1} noch nicht erstellt!
-            </div>
-            <Link
-              href="/export"
-              className="text-sm underline mt-1 inline-block"
-              style={{ color: '#991b1b' }}
-            >
-              Jetzt exportieren →
             </Link>
           </div>
         )}
@@ -167,11 +136,19 @@ export default function Home() {
               className="p-3 rounded-lg text-center text-sm font-semibold transition-colors hover:shadow-md"
               style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
             >
-              Backup
+              Statistik
             </Link>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   );
 }
