@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Datenschutz – DRK APP_TITEL',
+  title: 'Datenschutz – DRK Spendenquittung',
   description: 'Datenschutzerklärung – DRK Kreisverband StädteRegion Aachen e.V.',
 };
 
@@ -28,71 +28,77 @@ export default function Datenschutz() {
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>2. Grundsatz</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>2. Zero-Data-Architektur</h3>
               <p>
-                Diese Anwendung wurde nach dem Prinzip der Datensparsamkeit entwickelt.
-                Es werden <strong>keine personenbezogenen Daten</strong> erhoben, gespeichert oder an Dritte
-                übermittelt.
+                Diese Anwendung speichert <strong>KEINE Daten auf einem Server</strong>. Alle Daten
+                (Vereinsdaten, Spenderinformationen, Zuwendungen) werden ausschließlich im localStorage
+                Ihres Browsers gespeichert und verlassen Ihr Gerät zu keinem Zeitpunkt.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>3. Datenverarbeitung</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>3. Keine Cookies</h3>
               <p>
-                <strong>Keine Cookies:</strong> Diese Anwendung verwendet keine Cookies.<br />
-                <strong>Keine Tracking-Dienste:</strong> Es werden keine Analytics- oder Tracking-Tools eingesetzt.<br />
-                <strong>Keine externen Dienste:</strong> Es werden keine externen Schriftarten, CDNs oder Dienste geladen.
-                Alle Ressourcen werden lokal bereitgestellt.
+                Diese Anwendung verwendet keine Cookies — weder technisch notwendige noch Tracking-Cookies.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>4. Lokale Speicherung</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>4. Keine externen Dienste</h3>
               <p>
-                Falls die App Daten zwischenspeichert, geschieht dies ausschließlich im lokalen
-                Browser-Speicher (localStorage) Ihres Geräts. Diese Daten verlassen Ihr Gerät nicht
-                und können jederzeit über die Browser-Einstellungen gelöscht werden.
+                Es werden keine externen Dienste, keine Analytics- oder Tracking-Tools, keine externen
+                Schriftarten und keine CDNs eingebunden. Alle Ressourcen werden lokal bereitgestellt.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>5. Hosting</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>5. Keine Datenübertragung an Dritte</h3>
               <p>
-                {/* Hosting-Provider hier anpassen, z.B. GitHub Pages, Cloudflare Pages, eigener Server */}
-                Informationen zum Hosting-Provider und dessen Datenschutzbestimmungen werden
-                bei Bedarf hier ergänzt.
+                Es findet keine Datenübertragung an Dritte statt. Die DOCX-Dateien
+                (Zuwendungsbestätigungen) werden vollständig clientseitig im Browser generiert.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>6. Keine dauerhafte Speicherung</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>6. Lokale Speicherung</h3>
               <p>
-                Es werden keine Daten dauerhaft gespeichert. Alle Eingaben verbleiben lokal in Ihrem Browser
-                und werden beim Löschen des Browserspeichers entfernt.
+                Die Anwendung nutzt den localStorage Ihres Browsers zur Speicherung von:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Vereinsdaten (Steuerdaten, Adresse, Logo)</li>
+                <li>Spenderkontaktdaten</li>
+                <li>Zuwendungsinformationen</li>
+                <li>App-Einstellungen</li>
+              </ul>
+              <p className="mt-2">
+                Diese Daten können jederzeit über die Daten-Seite der App oder über die
+                Browser-Einstellungen gelöscht werden.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>7. Ihre Rechte</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>7. Hosting</h3>
               <p>
-                Da diese Anwendung keine personenbezogenen Daten verarbeitet, sind die Betroffenenrechte
-                (Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch)
-                in der Regel nicht betroffen. Bei Fragen wenden Sie sich an den oben genannten Verantwortlichen.
+                Die Anwendung wird auf einem Hetzner-VPS (Hetzner Online GmbH, Industriestr. 25,
+                91710 Gunzenhausen, Deutschland) betrieben. Der Server liefert lediglich die
+                vorgerenderten HTML-Seiten aus — es werden keine Nutzerdaten übertragen oder
+                gespeichert.
               </p>
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>8. Open Source</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>8. Betroffenenrechte (Art. 15–21 DSGVO)</h3>
+              <p>
+                Da keine serverseitige Speicherung personenbezogener Daten erfolgt, haben Sie
+                volle Kontrolle über Ihre Daten. Löschen Sie die Browserdaten, sind alle Daten
+                entfernt. Bei Fragen wenden Sie sich an den oben genannten Verantwortlichen.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>9. Open Source</h3>
               <p>
                 Der gesamte Quellcode dieser Anwendung ist öffentlich einsehbar und überprüfbar.
-              </p>
-            </section>
-
-            <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>9. Änderungen</h3>
-              <p>
-                Diese Datenschutzerklärung kann bei Änderungen an der Anwendung angepasst werden.
-                Die aktuelle Version ist stets unter /datenschutz abrufbar.
               </p>
             </section>
           </div>

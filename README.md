@@ -1,6 +1,6 @@
-# 🏥 DRK App Template
+# 🧾 DRK Spendenquittung
 
-**Starter-Template für alle DRK-Digitalisierungstools.**
+**Zuwendungsbestätigungen nach BMF-Muster für DRK-Verbände.**
 
 Open Source · Kostenlos · DSGVO-konform
 
@@ -8,74 +8,131 @@ Open Source · Kostenlos · DSGVO-konform
 
 ## Was ist das?
 
-Dieses Repository ist der Ausgangspunkt für neue Web-Apps im DRK-Kontext. Es enthält das einheitliche Design-System, die Projektstruktur und alle Konventionen – damit jede neue App vom ersten Moment an wie eine DRK-App aussieht und funktioniert.
+Jeder DRK-Kreisverband und Ortsverein muss Spendern steuerlich anerkannte Zuwendungsbestätigungen ausstellen. Das BMF schreibt verbindliche Muster vor — diese App generiert sie automatisch als DOCX-Dokument. Alle Daten bleiben im Browser (Zero-Data-Architektur), keine Datenbank, kein Server-Speicher.
+
+**Zielgruppe:** Schatzmeister, Kassenführer und Verwaltungskräfte in DRK-Kreisverbänden und Ortsvereinen.
 
 ## ✨ Features
 
-* **DRK-Header + Footer** — Rote Leiste mit Logo, Hilfe- und Spenden-Icons
-* **Box-basiertes Layout** — Konsistente Karten-Optik auf grauem Hintergrund
-* **Zweisprachig (DE/EN)** — i18n-System von Tag 1
-* **Pflichtseiten** — Impressum, Datenschutz, Hilfe, Spenden fertig eingebaut
-* **CLAUDE.md** — Claude Code kennt sofort alle Konventionen
-* **Flexibles Deployment** — Statisch (GitHub Pages) oder Server (Docker)
-* **DSGVO-konform** — Keine Cookies, keine externen Dienste, keine Tracker
+### Web-App
+- **BMF-konforme DOCX-Generierung** — Anlagen 3, 4 und 14 des BMF-Schreibens vom 07.11.2013
+- **Vereins-Setup-Wizard** — Stammdaten, steuerliche Angaben, Unterschrift in 3 Schritten
+- **Spenderverwaltung** — CRUD mit Suche, Sortierung und CSV-Import
+- **Zuwendungen erfassen** — Geldspenden, Sachspenden, Mitgliedsbeiträge, Aufwandsverzicht
+- **Einzelbestätigungen** — Geldzuwendung (Anlage 3) und Sachzuwendung (Anlage 4)
+- **Sammelbestätigungen** — Jahressammelbestätigung (Anlage 14) mit Anlage-Tabelle
+- **Vereinfachter Nachweis** — Für Zuwendungen ≤ 300 € (§ 50 Abs. 4 EStDV)
+- **Batch-Export** — ZIP mit allen Bestätigungen + Doppel + CSV-Übersicht
+- **Freistellungs-Blocker** — Automatische Prüfung und Blockierung bei abgelaufenem Bescheid
+- **Doppel-Pflicht** — Automatische Erzeugung von Doppeln für die Vereinsakte
+- **Backup-Ampel** — Visueller Status im Dashboard, JSON-Export/Import
+- **Mobile-First** — Cards statt Tabellen auf Mobilgeräten, 44px Touch-Targets
 
-## 🚀 Schnellstart
+### Steuerrechtliche Sicherheitsmechanismen
+- Exakte BMF-Pflicht-Textbausteine (keine Umformulierungen)
+- Freistellungs-Prüfung mit automatischer Blockierung
+- Unterschrifts-Hinweis vor jedem Download
+- Sachspenden: Unterlagen-Checkbox erzwungen
+- Aufwandsverzicht: Warnhinweis zu Voraussetzungen
+- Doppel im Batch-Export nicht abwählbar (§ 50 Abs. 7 EStDV)
+- Pflicht-Hinweis nach Download mit 5-Sekunden-Timer
 
-### Neues Projekt erstellen
+## 🚀 Installation
 
-1. Auf GitHub: **"Use this template"** → "Create a new repository"
-2. Repository-Name wählen (z.B. `drk-rundlauf`, `drk-protokoll`)
-3. Klonen und loslegen:
+### Docker (empfohlen)
 
 ```bash
-git clone https://github.com/AFielen/[neuer-name].git
-cd [neuer-name]
+git clone https://github.com/AFielen/DRK-Spendenquittung.git
+cd DRK-Spendenquittung
+docker compose up -d --build
+```
+
+Die App ist unter `http://localhost:3000` erreichbar.
+
+### Lokal entwickeln
+
+```bash
+git clone https://github.com/AFielen/DRK-Spendenquittung.git
+cd DRK-Spendenquittung
 npm install
 npm run dev
 ```
 
-### Mit Claude Code entwickeln
-
-```bash
-# Im Projektverzeichnis – Claude liest CLAUDE.md automatisch:
-claude
-```
-
-### Anpassen
-
-1. **Suche & Ersetze** `APP_TITEL` → tatsächlicher App-Name
-2. **Suche & Ersetze** `APP_BESCHREIBUNG` → Beschreibung
-3. **Logo-Dateien** in `public/` ergänzen (logo.svg, logo.png, favicon.svg)
-4. **`lib/i18n.ts`** mit app-spezifischen Übersetzungen erweitern
-5. **`next.config.ts`** → `'export'` (statisch) oder `'standalone'` (Server)
-6. **README.md** nach dem Pflicht-Format anpassen (siehe CLAUDE.md)
-
 ## 🛠️ Tech-Stack
 
-* [Next.js 16](https://nextjs.org/) + [React 19](https://react.dev/)
-* [TypeScript](https://www.typescriptlang.org/)
-* [Tailwind CSS 4](https://tailwindcss.com/)
+| Technologie | Version | Zweck |
+|---|---|---|
+| [Next.js](https://nextjs.org/) | 16 | App-Framework (App Router, standalone) |
+| [React](https://react.dev/) | 19 | UI-Library |
+| [TypeScript](https://www.typescriptlang.org/) | strict | Typisierung |
+| [Tailwind CSS](https://tailwindcss.com/) | 4 | Styling |
+| [docx](https://www.npmjs.com/package/docx) | latest | DOCX-Generierung clientseitig |
+| [file-saver](https://www.npmjs.com/package/file-saver) | latest | Download-Trigger |
+| [JSZip](https://www.npmjs.com/package/jszip) | latest | ZIP-Erstellung |
 
-## 📐 Enthalten
+## 📐 Projektstruktur
 
-| Datei | Zweck |
-|---|---|
-| `CLAUDE.md` | Konventionen für Claude Code |
-| `app/layout.tsx` | DRK-Header (❓ Hilfe + ❤️ Spenden) + Footer |
-| `app/globals.css` | DRK-Farben, Box-Klassen, Button-Styles |
-| `app/page.tsx` | Beispiel-Startseite |
-| `app/impressum/` | Impressum |
-| `app/datenschutz/` | Datenschutzerklärung |
-| `app/hilfe/` | Hilfe & FAQ |
-| `app/spenden/` | Spenden-/Unterstützungsseite |
-| `app/not-found.tsx` | Custom 404 |
-| `lib/i18n.ts` | Zweisprachigkeit DE/EN |
+```
+DRK-Spendenquittung/
+├── app/
+│   ├── layout.tsx               # Root-Layout: DRK-Header + Footer
+│   ├── page.tsx                 # Dashboard (3 Zustände)
+│   ├── globals.css              # DRK CSS-Variablen + Basis-Styles
+│   ├── einrichtung/page.tsx     # Vereins-Setup-Wizard
+│   ├── spender/page.tsx         # Spenderverwaltung
+│   ├── zuwendungen/page.tsx     # Zuwendungen erfassen
+│   ├── bestaetigung/page.tsx    # Bestätigungen erstellen (3 Tabs)
+│   ├── export/page.tsx          # Batch-Export (ZIP)
+│   ├── daten/page.tsx           # Backup, Statistik, Daten löschen
+│   ├── impressum/page.tsx       # Pflicht
+│   ├── datenschutz/page.tsx     # Pflicht
+│   ├── hilfe/page.tsx           # Pflicht (10 FAQ)
+│   └── spenden/page.tsx         # Pflicht
+├── components/
+│   ├── VereinsSetupWizard.tsx   # 3-Schritt-Wizard
+│   ├── SpenderTabelle.tsx       # Tabelle + Mobile-Cards
+│   ├── SpenderFormular.tsx      # Modal
+│   ├── CsvImport.tsx            # CSV-Import mit Duplikat-Erkennung
+│   ├── ZuwendungTabelle.tsx     # Tabelle + Filter
+│   ├── ZuwendungFormular.tsx    # Modal mit Geld/Sach-Toggle
+│   ├── FreistellungsBlocker.tsx # Ampel + Vollbild-Blocker
+│   ├── UnterschriftHinweis.tsx  # Modal vor Download
+│   ├── BackupStatusAnzeige.tsx  # Ampel-Status
+│   ├── StatistikKarten.tsx      # Dashboard-Karten + Balkendiagramm
+│   └── icons/                   # Inline-SVG-Icons
+├── lib/
+│   ├── types.ts                 # Verein, Spender, Zuwendung, AppSettings
+│   ├── storage.ts               # localStorage-Abstraktion
+│   ├── freistellung-check.ts    # Freistellungs-Prüfung
+│   ├── i18n.ts                  # DE/EN Übersetzungen
+│   ├── version.ts               # App-Version
+│   └── docx-templates/
+│       ├── shared.ts            # BMF-Pflicht-Textbausteine
+│       ├── betrag-in-worten.ts  # Zahlwort-Konverter
+│       ├── geldzuwendung.ts     # Anlage 3
+│       ├── sachzuwendung.ts     # Anlage 4
+│       ├── sammelbestaetigung.ts # Anlage 14
+│       └── vereinfachter-nachweis.ts
+├── Dockerfile
+├── docker-compose.yml
+└── package.json
+```
 
-## 🔗 Referenz-Apps
+## 🔒 Datenschutz & Sicherheit
 
-* [abstimmung](https://github.com/AFielen/abstimmung) — Digitales Abstimmungssystem
-* [auskunft](https://github.com/AFielen/auskunft) — Digitale Compliance-Selbstauskunft
+- **Keine Datenbank** — Alle Daten im localStorage des Browsers
+- **Keine Cookies** — Keine Tracking-Cookies, keine technischen Cookies
+- **Keine externen Dienste** — Keine Analytics, keine CDNs, keine externen Fonts
+- **DOCX clientseitig** — Dokumente werden im Browser generiert, kein Server-Upload
+- **Open Source** — Vollständig einsehbarer Quellcode
+
+## 🤝 Beitragen
+
+1. Fork erstellen
+2. Feature-Branch anlegen (`git checkout -b feature/mein-feature`)
+3. Änderungen committen (`git commit -m 'feat: mein Feature'`)
+4. Push (`git push origin feature/mein-feature`)
+5. Pull Request erstellen
 
 ## 📄 Lizenz
 
