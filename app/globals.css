@@ -273,9 +273,40 @@ details summary:focus-visible {
   }
 }
 
-/* ── Dark Mode Vorbereitung ── */
+/* ── Dark Mode ── */
+html.dark {
+  --text: #e5e7eb;
+  --text-light: #9ca3af;
+  --text-muted: #6b7280;
+  --bg: #111827;
+  --bg-card: #1f2937;
+  --border: #374151;
+  --bg-secondary: #374151;
+  --bg-secondary-hover: #4b5563;
+  --drk-bg: #2d1215;
+  --info-bg: #1e293b;
+  --success-bg: #0f2419;
+  --warning-bg: #2d2305;
+  --warning-dark: #fbbf24;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
+}
+
+html.dark .drk-input {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+html.dark select {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+/* System-Präferenz als Fallback wenn keine manuelle Wahl */
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not(.light) {
     --text: #e5e7eb;
     --text-light: #9ca3af;
     --text-muted: #6b7280;
@@ -292,5 +323,16 @@ details summary:focus-visible {
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    color-scheme: dark;
+  }
+
+  html:not(.light) .drk-input {
+    background: var(--bg-card);
+    color: var(--text);
+  }
+
+  html:not(.light) select {
+    background: var(--bg-card);
+    color: var(--text);
   }
 }
