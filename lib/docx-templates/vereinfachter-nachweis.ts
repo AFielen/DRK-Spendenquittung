@@ -6,6 +6,7 @@ import {
   AlignmentType,
 } from 'docx';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 import { betragInWorten } from './betrag-in-worten';
 
 function formatDatum(iso: string): string {
@@ -129,7 +130,7 @@ export async function generateVereinfachterNachweis(
       children: [
         new TextRun({ text: 'Name des Spenders: ', font: 'Arial', size: 20, bold: true }),
         new TextRun({
-          text: `${spender.vorname} ${spender.nachname}`,
+          text: spenderAnzeigename(spender),
           font: 'Arial', size: 20,
         }),
       ],

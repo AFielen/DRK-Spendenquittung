@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { Spender } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 
 interface SpenderTabelleProps {
   spender: Spender[];
@@ -24,14 +25,15 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
     if (q) {
       list = list.filter(
         (s) =>
-          `${s.vorname} ${s.nachname}`.toLowerCase().includes(q) ||
+          spenderAnzeigename(s).toLowerCase().includes(q) ||
+          (s.firmenname && s.firmenname.toLowerCase().includes(q)) ||
           s.ort.toLowerCase().includes(q)
       );
     }
     list = [...list].sort((a, b) => {
       let cmp = 0;
       if (sortKey === 'name') {
-        cmp = `${a.nachname} ${a.vorname}`.localeCompare(`${b.nachname} ${b.vorname}`, 'de');
+        cmp = spenderAnzeigename(a).localeCompare(spenderAnzeigename(b), 'de');
       } else {
         cmp = a.ort.localeCompare(b.ort, 'de');
       }
@@ -107,8 +109,21 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
             {filtered.map((s) => (
               <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
                 <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
-                  {s.anrede ? `${s.anrede} ` : ''}
-                  {s.vorname} {s.nachname}
+                  {s.istFirma ? (
+                    <span>
+                      {s.firmenname}
+                      {(s.vorname || s.nachname) && s.firmenname && (
+                        <span className="text-xs ml-1" style={{ color: 'var(--text-light)' }}>
+                          ({s.vorname ? `${s.vorname} ` : ''}{s.nachname})
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span>
+                      {s.anrede ? `${s.anrede} ` : ''}
+                      {s.vorname} {s.nachname}
+                    </span>
+                  )}
                 </td>
                 <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
                   {s.strasse}, {s.plz} {s.ort}
@@ -172,8 +187,21 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           >
             <div className="font-bold mb-1" style={{ color: 'var(--text)' }}>
-              {s.anrede ? `${s.anrede} ` : ''}
-              {s.vorname} {s.nachname}
+              {s.istFirma ? (
+                <>
+                  {s.firmenname}
+                  {(s.vorname || s.nachname) && s.firmenname && (
+                    <div className="text-xs font-normal" style={{ color: 'var(--text-light)' }}>
+                      Ansprechpartner: {s.vorname ? `${s.vorname} ` : ''}{s.nachname}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {s.anrede ? `${s.anrede} ` : ''}
+                  {s.vorname} {s.nachname}
+                </>
+              )}
             </div>
             <div className="text-sm mb-2" style={{ color: 'var(--text-light)' }}>
               {s.strasse}, {s.plz} {s.ort}

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     select: { vorname: true, nachname: true, plz: true },
   });
   const existingKeys = new Set(
-    existing.map((s) => `${s.vorname.toLowerCase()}|${s.nachname.toLowerCase()}|${s.plz}`),
+    existing.map((s) => `${(s.vorname ?? '').toLowerCase()}|${s.nachname.toLowerCase()}|${s.plz}`),
   );
 
   let erstellt = 0;

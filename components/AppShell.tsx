@@ -25,17 +25,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <>
       {/* ── DRK Header ── */}
       <header
-        className="flex items-center justify-between gap-3 px-6 py-4"
+        className="flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 py-4"
         style={{ background: '#e30613', color: '#fff' }}
       >
-        <Link href="/" className="flex items-center gap-3" aria-label="Zur Startseite">
-          <Image src="/logo.png" alt="DRK Logo" width={42} height={42} priority />
-          <div>
-            <h1 className="text-[1.4rem] font-bold leading-tight">DRK Spendenquittung</h1>
+        <Link href="/" className="flex items-center gap-3 min-w-0" aria-label="Zur Startseite">
+          <Image src="/logo.png" alt="DRK Logo" width={42} height={42} priority className="flex-shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-[1.1rem] sm:text-[1.4rem] font-bold leading-tight truncate">DRK Spendenquittung</h1>
             <div className="text-[0.8rem] opacity-85 hidden sm:block">
               Zuwendungsbestätigungen für DRK-Verbände
             </div>
-            <div className="text-[0.8rem] opacity-85 sm:hidden">Spendenquittungen</div>
+            <div className="text-[0.8rem] opacity-85 sm:hidden truncate">Spendenquittungen</div>
           </div>
         </Link>
 

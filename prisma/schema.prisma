@@ -69,8 +69,10 @@ model Nutzer {
 // ── Spender ──
 model Spender {
   id             String   @id @default(uuid())
+  istFirma       Boolean  @default(false)
+  firmenname     String?
   anrede         String?
-  vorname        String
+  vorname        String?
   nachname       String
   strasse        String
   plz            String

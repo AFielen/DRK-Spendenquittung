@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Verein } from '@/lib/types';
 import { apiPut } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
+import HilfeHint from './HilfeHint';
 
 const DRK_ZWECKE = [
   'Förderung des Wohlfahrtswesens',
@@ -203,7 +204,9 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
 
             <div>
-              <label className="drk-label">Vereinslogo (optional, max. 200 KB)</label>
+              <label className="drk-label">Vereinslogo (optional, max. 200 KB)
+                <HilfeHint text="Wenn Sie kein eigenes Logo hochladen, wird automatisch das DRK-Kompaktlogo auf den Spendenquittungen verwendet. Laden Sie nur dann ein Logo hoch, wenn Sie ein anderes verwenden möchten." />
+              </label>
               <input
                 type="file"
                 accept="image/*"
@@ -252,7 +255,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
 
           <div className="space-y-4">
             <div>
-              <label className="drk-label">Finanzamt *</label>
+              <label className="drk-label">
+                Finanzamt *
+                <HilfeHint text="Das Finanzamt, das für Ihren Verein zuständig ist. Sie finden es auf Ihrem letzten Steuerbescheid oder Freistellungsbescheid ganz oben." />
+              </label>
               <input
                 type="text"
                 className="drk-input"
@@ -263,7 +269,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
 
             <div>
-              <label className="drk-label">Steuernummer *</label>
+              <label className="drk-label">
+                Steuernummer *
+                <HilfeHint text="Die Steuernummer Ihres Vereins (nicht die Steuer-ID). Sie steht auf dem Freistellungsbescheid und hat üblicherweise das Format: 201/5909/1234." />
+              </label>
               <input
                 type="text"
                 className="drk-input"
@@ -274,7 +283,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
 
             <div>
-              <label className="drk-label">Freistellungsart *</label>
+              <label className="drk-label">
+                Freistellungsart *
+                <HilfeHint text="Ihr Verein hat vom Finanzamt einen Bescheid erhalten, der bestätigt, dass er gemeinnützig ist. Es gibt zwei Arten: Der Freistellungsbescheid wird regelmäßig nach der Steuererklärung erteilt und gilt 5 Jahre. Der Feststellungsbescheid nach § 60a AO wird bei neu gegründeten Vereinen ausgestellt und gilt 3 Jahre." />
+              </label>
               <div className="space-y-2 mt-1">
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input
@@ -285,9 +297,14 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                     onChange={() => setFreistellungsart('freistellungsbescheid')}
                     className="mt-1"
                   />
-                  <span className="text-sm" style={{ color: 'var(--text)' }}>
-                    Freistellungsbescheid / Anlage zum KSt-Bescheid
-                  </span>
+                  <div>
+                    <span className="text-sm" style={{ color: 'var(--text)' }}>
+                      Freistellungsbescheid / Anlage zum KSt-Bescheid
+                    </span>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      Der Regelfall für bestehende Vereine. Sie erhalten ihn nach Abgabe Ihrer Steuererklärung. Gültig für 5 Jahre.
+                    </div>
+                  </div>
                 </label>
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input
@@ -298,15 +315,23 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                     onChange={() => setFreistellungsart('feststellungsbescheid')}
                     className="mt-1"
                   />
-                  <span className="text-sm" style={{ color: 'var(--text)' }}>
-                    Feststellungsbescheid nach § 60a AO
-                  </span>
+                  <div>
+                    <span className="text-sm" style={{ color: 'var(--text)' }}>
+                      Feststellungsbescheid nach § 60a AO
+                    </span>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      Für neu gegründete Vereine, die noch keine Steuererklärung abgegeben haben. Gültig für 3 Jahre.
+                    </div>
+                  </div>
                 </label>
               </div>
             </div>
 
             <div>
-              <label className="drk-label">Datum des Bescheids *</label>
+              <label className="drk-label">
+                Datum des Bescheids *
+                <HilfeHint text="Das Datum, an dem Ihr Freistellungs- oder Feststellungsbescheid ausgestellt wurde. Es steht ganz oben auf dem Bescheid. Anhand dieses Datums wird geprüft, ob der Bescheid noch gültig ist." />
+              </label>
               <input
                 type="date"
                 className="drk-input"
@@ -337,7 +362,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
 
             {freistellungsart === 'freistellungsbescheid' && (
               <div>
-                <label className="drk-label">Letzter Veranlagungszeitraum</label>
+                <label className="drk-label">
+                  Letzter Veranlagungszeitraum
+                  <HilfeHint text="Das Jahr, für das Ihr Verein zuletzt eine Steuererklärung abgegeben hat und einen Bescheid erhalten hat. Steht im Freistellungsbescheid. Beispiel: 2023." />
+                </label>
                 <input
                   type="text"
                   className="drk-input"
@@ -349,7 +377,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             )}
 
             <div>
-              <label className="drk-label">Begünstigte Zwecke * (mindestens einer)</label>
+              <label className="drk-label">
+                Begünstigte Zwecke * (mindestens einer)
+                <HilfeHint text="Die gemeinnützigen Zwecke, für die Ihr Verein vom Finanzamt anerkannt ist. Diese stehen in Ihrem Freistellungsbescheid. Wählen Sie alle zutreffenden Zwecke aus – sie erscheinen auf der Spendenquittung." />
+              </label>
               <div className="space-y-2 mt-1">
                 {DRK_ZWECKE.map((zweck) => (
                   <label key={zweck} className="flex items-center gap-2 cursor-pointer">
@@ -423,7 +454,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
 
           <div className="space-y-4">
             <div>
-              <label className="drk-label">Name des Unterzeichners *</label>
+              <label className="drk-label">
+                Name des Unterzeichners *
+                <HilfeHint text="Die Person, die die Spendenquittungen unterschreiben wird. Das muss ein vertretungsberechtigtes Vorstandsmitglied sein – in der Regel der Vorsitzende oder der Schatzmeister." />
+              </label>
               <input
                 type="text"
                 className="drk-input"
@@ -434,7 +468,10 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
 
             <div>
-              <label className="drk-label">Funktion *</label>
+              <label className="drk-label">
+                Funktion *
+                <HilfeHint text="Die Rolle der unterzeichnenden Person im Verein, z.B. 'Vorstandsvorsitzender', 'Schatzmeister' oder 'Geschäftsführer'. Diese Angabe erscheint unter der Unterschriftszeile auf der Spendenquittung." />
+              </label>
               <input
                 type="text"
                 className="drk-input"

@@ -14,7 +14,9 @@ import {
   PageBreak,
 } from 'docx';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 import { betragInWorten } from './betrag-in-worten';
+import { getLogoBytes } from './default-logo';
 import {
   TITEL_SAMMELBESTAETIGUNG,
   freistellungTextA,
@@ -38,8 +40,11 @@ function formatBetrag(n: number): string {
 }
 
 function spenderAnschrift(spender: Spender): string {
+  if (spender.istFirma && spender.firmenname) {
+    return `${spender.firmenname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
+  }
   const anrede = spender.anrede ? `${spender.anrede} ` : '';
-  return `${anrede}${spender.vorname} ${spender.nachname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
+  return `${anrede}${spender.vorname ?? ''} ${spender.nachname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
 }
 
 const cellBorder = {
@@ -88,19 +93,14 @@ export async function generateSammelbestaetigung(
     );
   }
 
-  // Aussteller
+  // Aussteller (DRK-Kompaktlogo als Standard)
   const ausstellerChildren: (TextRun | ImageRun)[] = [];
-  if (verein.logoBase64) {
-    try {
-      const base64Data = verein.logoBase64.split(',')[1];
-      const binaryString = atob(base64Data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-      ausstellerChildren.push(
-        new ImageRun({ data: bytes, transformation: { width: 57, height: 57 }, type: 'png' })
-      );
-      ausstellerChildren.push(new TextRun({ text: '  ', font: 'Arial', size: 20 }));
-    } catch { /* ignore */ }
+  const logoBytes = await getLogoBytes(verein.logoBase64);
+  if (logoBytes) {
+    ausstellerChildren.push(
+      new ImageRun({ data: logoBytes, transformation: { width: 57, height: 57 }, type: 'png' })
+    );
+    ausstellerChildren.push(new TextRun({ text: '  ', font: 'Arial', size: 20 }));
   }
 
   sections.push(
@@ -270,7 +270,7 @@ export async function generateSammelbestaetigung(
     new Paragraph({
       children: [
         new TextRun({
-          text: `${spender.vorname} ${spender.nachname}`,
+          text: spenderAnzeigename(spender),
           font: 'Arial', size: 20,
         }),
       ],

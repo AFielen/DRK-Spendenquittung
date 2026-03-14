@@ -33,11 +33,15 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   const body = await req.json();
 
+  const istFirma = body.istFirma === true;
+
   const spender = await prisma.spender.update({
     where: { id },
     data: {
-      vorname: body.vorname,
-      nachname: body.nachname,
+      istFirma,
+      firmenname: istFirma ? body.firmenname : null,
+      vorname: body.vorname || null,
+      nachname: istFirma ? (body.nachname || body.firmenname) : body.nachname,
       strasse: body.strasse,
       plz: body.plz,
       ort: body.ort,
