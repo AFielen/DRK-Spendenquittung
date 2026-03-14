@@ -9,6 +9,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `app/registrierung/page.tsx`: Selbstregistrierungsseite mit 4-Schritt-Wizard (Konto → Stammdaten → Steuer → Unterschrift)
+- `app/api/auth/registrierung/route.ts`: API-Route für Selbstregistrierung (send-code + verify-and-create)
+- `lib/domain-check.ts`: Domain-Validierung für `@drk-*.de` E-Mail-Adressen
+- `lib/mail.ts`: `sendInvitationEmail()` für Einladungs-E-Mails via Mailjet
+- `prisma/schema.prisma`: `RegistrierungCode`-Modell für temporäre Verifizierungscodes
+- Link von `/login` zu `/registrierung` ("Verband registrieren")
+- Domain-Validierung `@drk-*.de` bei Nutzereinladung (`POST /api/nutzer`)
+- Einladungs-E-Mail wird automatisch bei Nutzeranlage versendet
 - `components/ThemeToggle.tsx`: Dark/Light/System-Farbschema-Umschalter im Header (Sonne/Mond/Monitor-Icons)
 - Dark Mode CSS-Variablen in `globals.css` via `.dark`-Klasse + System-Präferenz-Fallback
 - FOUC-Prevention-Script in `layout.tsx` für flackerfreien Themenwechsel
