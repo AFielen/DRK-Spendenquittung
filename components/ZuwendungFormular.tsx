@@ -29,6 +29,7 @@ export default function ZuwendungFormular({
   const [datum, setDatum] = useState(zuwendung?.datum ?? new Date().toISOString().split('T')[0]);
   const [zahlungsart, setZahlungsart] = useState(zuwendung?.zahlungsart ?? '');
   const [verzicht, setVerzicht] = useState(zuwendung?.verzicht ?? false);
+  const [bemerkung, setBemerkung] = useState(zuwendung?.bemerkung ?? '');
 
   // Sach
   const [sachBezeichnung, setSachBezeichnung] = useState(zuwendung?.sachBezeichnung ?? '');
@@ -84,6 +85,7 @@ export default function ZuwendungFormular({
       datum,
       zahlungsart: art === 'geld' && zahlungsart ? (zahlungsart as Zuwendung['zahlungsart']) : undefined,
       verzicht,
+      bemerkung: bemerkung.trim() || undefined,
       sachBezeichnung: art === 'sach' ? sachBezeichnung.trim() : undefined,
       sachAlter: art === 'sach' ? sachAlter.trim() || undefined : undefined,
       sachZustand: art === 'sach' ? sachZustand.trim() || undefined : undefined,
@@ -130,7 +132,10 @@ export default function ZuwendungFormular({
               className="drk-input mb-1"
               placeholder="Spender suchen..."
               value={spenderSuche}
-              onChange={(e) => setSpenderSuche(e.target.value)}
+              onChange={(e) => {
+                setSpenderSuche(e.target.value);
+                if (e.target.value) setSpenderId('');
+              }}
             />
             <select
               className="drk-input"
@@ -428,6 +433,21 @@ export default function ZuwendungFormular({
               </div>
             </>
           )}
+
+          {/* Verwendungszweck / Bemerkung (intern) */}
+          <div>
+            <label className="drk-label">Verwendungszweck / Bemerkung (intern, optional)</label>
+            <textarea
+              className="drk-input"
+              rows={2}
+              value={bemerkung}
+              onChange={(e) => setBemerkung(e.target.value)}
+              placeholder="z.B. für die Jugendarbeit, Katastrophenhilfe..."
+            />
+            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+              Nur für Ihre interne Verwaltung — erscheint nicht auf der Spendenquittung.
+            </div>
+          </div>
 
           {effectiveBetrag > 0 && effectiveBetrag <= 300 && (
             <div

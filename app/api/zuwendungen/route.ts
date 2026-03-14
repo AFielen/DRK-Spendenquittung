@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     where,
     include: {
       spender: {
-        select: { id: true, vorname: true, nachname: true },
+        select: { id: true, istFirma: true, firmenname: true, vorname: true, nachname: true },
       },
     },
     orderBy: { datum: 'desc' },
@@ -87,11 +87,12 @@ export async function POST(req: NextRequest) {
       sachUmsatzsteuer: body.sachUmsatzsteuer ?? null,
       sachUnterlagenVorhanden: body.sachUnterlagenVorhanden ?? false,
       verzicht: body.verzicht ?? false,
+      bemerkung: body.bemerkung ?? null,
       spenderId: body.spenderId,
       kreisverbandId: session.kreisverbandId,
     },
     include: {
-      spender: { select: { id: true, vorname: true, nachname: true } },
+      spender: { select: { id: true, istFirma: true, firmenname: true, vorname: true, nachname: true } },
     },
   });
 

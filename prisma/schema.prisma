@@ -113,6 +113,9 @@ model Zuwendung {
 
   verzicht               Boolean   @default(false)
 
+  // Interne Notiz (nicht auf Zuwendungsbestätigung)
+  bemerkung              String?
+
   // Status
   bestaetigungErstellt   Boolean   @default(false)
   bestaetigungDatum      DateTime?

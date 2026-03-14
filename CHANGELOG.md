@@ -17,6 +17,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `lib/docx-templates/default-logo.ts`: DRK-Kompaktlogo als Standard-Logo für Zuwendungsbestätigungen
 - `lib/types.ts`: `spenderAnzeigename()` Hilfsfunktion für einheitliche Namensanzeige
 - `prisma/migrations/20260314_add_company_donors/migration.sql`: DB-Migration für Firmenspender
+- Optionales `bemerkung`-Feld auf Zuwendung für interne Notizen/Verwendungszweck (Schema, Types, API, Formular, Tabelle)
+- `prisma/migrations/20260314_add_bemerkung/migration.sql`: DB-Migration für Bemerkungsfeld
+
+### Fixed
+- `HilfeHint.tsx`: Mobile-Darstellung als Bottom-Sheet-Overlay statt absolut positioniertem Tooltip (verhindert Viewport-Overflow)
+- `ZuwendungFormular.tsx`: Spendersuche setzt Auswahl korrekt zurück beim Tippen (State-Management-Bug)
 
 ### Changed
 - Header: Responsive Anpassung für Mobile (kleinere Schrift, `truncate`, reduziertes Padding)
