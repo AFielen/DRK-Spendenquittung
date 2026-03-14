@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -101,7 +99,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push('/');
+      window.location.href = '/';
     } catch {
       setError('Verbindungsfehler. Bitte versuchen Sie es erneut.');
     } finally {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { isValidDrkEmail, DRK_DOMAIN_HINT } from '@/lib/domain-check';
@@ -19,7 +18,6 @@ const DRK_ZWECKE = [
 type Schritt = 1 | 2 | 3 | 4;
 
 export default function RegistrierungPage() {
-  const router = useRouter();
   const [schritt, setSchritt] = useState<Schritt>(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -213,7 +211,7 @@ export default function RegistrierungPage() {
         return;
       }
 
-      router.push('/');
+      window.location.href = '/';
     } catch {
       setError('Verbindungsfehler. Bitte versuchen Sie es erneut.');
     } finally {
