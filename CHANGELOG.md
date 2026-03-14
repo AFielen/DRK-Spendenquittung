@@ -23,6 +23,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ### Fixed
 - `HilfeHint.tsx`: Mobile-Darstellung als Bottom-Sheet-Overlay statt absolut positioniertem Tooltip (verhindert Viewport-Overflow)
 - `ZuwendungFormular.tsx`: Spendersuche setzt Auswahl korrekt zurück beim Tippen (State-Management-Bug)
+- DOCX-Datumsformatierung: ISO-Datetime-Strings (`2026-03-14T00:00:00.000Z`) werden korrekt auf `14.03.2026` formatiert (alle 4 Templates)
+- Bestätigungsseite: Tab-Buttons überlappen nicht mehr auf Mobile (`min-w-0` statt `whitespace-nowrap`)
+- Bestätigungsseite: DOCX-Download funktioniert jetzt auf iOS Safari (eigene `downloadBlob`-Funktion statt `file-saver`)
 
 ### Changed
 - Header: Responsive Anpassung für Mobile (kleinere Schrift, `truncate`, reduziertes Padding)

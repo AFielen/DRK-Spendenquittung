@@ -24,7 +24,8 @@ import {
 } from './shared';
 
 function formatDatum(iso: string): string {
-  const [y, m, d] = iso.split('-');
+  const dateOnly = iso.substring(0, 10);
+  const [y, m, d] = dateOnly.split('-');
   return `${d}.${m}.${y}`;
 }
 
