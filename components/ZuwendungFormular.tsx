@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { Spender, Zuwendung } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 
 interface ZuwendungFormularProps {
   spenderList: Spender[];
@@ -53,7 +54,7 @@ export default function ZuwendungFormular({
     if (!spenderSuche) return spenderList;
     const q = spenderSuche.toLowerCase();
     return spenderList.filter(
-      (s) => `${s.vorname} ${s.nachname}`.toLowerCase().includes(q) || s.ort.toLowerCase().includes(q)
+      (s) => spenderAnzeigename(s).toLowerCase().includes(q) || (s.firmenname && s.firmenname.toLowerCase().includes(q)) || s.ort.toLowerCase().includes(q)
     );
   }, [spenderList, spenderSuche]);
 
@@ -139,7 +140,7 @@ export default function ZuwendungFormular({
               <option value="">– Bitte wählen –</option>
               {filteredSpender.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.vorname} {s.nachname} ({s.plz} {s.ort})
+                  {spenderAnzeigename(s)} ({s.plz} {s.ort})
                 </option>
               ))}
             </select>

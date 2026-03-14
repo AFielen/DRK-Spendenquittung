@@ -9,6 +9,27 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Firmenspender: `istFirma` und `firmenname` Felder in `Spender`-Modell, Formular, Tabelle, API und DOCX-Templates
+- `components/HilfeHint.tsx`: Wiederverwendbare Hilfe-Hinweis-Komponente mit Toggle
+- Hilfe-Hints bei allen steuerlichen Feldern im `VereinsSetupWizard` (Finanzamt, Steuernummer, Freistellungsart, Bescheiddatum, Veranlagungszeitraum, Begünstigte Zwecke, Unterschrift)
+- Erklärungstexte unter Freistellungsart-Optionen (Freistellungsbescheid vs. Feststellungsbescheid)
+- Archivierte Belege: Aufklappbare Ansicht bestätigter Zuwendungen auf der Bestätigungsseite (read-only)
+- `lib/docx-templates/default-logo.ts`: DRK-Kompaktlogo als Standard-Logo für Zuwendungsbestätigungen
+- `lib/types.ts`: `spenderAnzeigename()` Hilfsfunktion für einheitliche Namensanzeige
+- `prisma/migrations/20260314_add_company_donors/migration.sql`: DB-Migration für Firmenspender
+
+### Changed
+- Header: Responsive Anpassung für Mobile (kleinere Schrift, `truncate`, reduziertes Padding)
+- Bestätigungsseite: Tabs responsive mit `overflow-x-auto`, kleinere Schrift auf Mobile
+- DOCX-Templates: Verwenden DRK-Kompaktlogo als Standard wenn kein eigenes Logo hochgeladen
+- DOCX-Templates: Unterstützung für Firmenspender (Firmenname statt Vor-/Nachname)
+- `SpenderFormular.tsx`: Toggle Privatperson/Firma mit angepassten Pflichtfeldern
+- `SpenderTabelle.tsx`: Firmenname-Anzeige mit Ansprechpartner-Info
+- `ZuwendungTabelle.tsx`, `ZuwendungFormular.tsx`: Verwenden `spenderAnzeigename()`
+- `app/export/page.tsx`: Dateinamen und CSV mit `spenderAnzeigename()`
+- `VereinsSetupWizard.tsx`: Hinweis bei Logo-Upload dass DRK-Kompaktlogo Standard ist
+
+### Added (vorherige Einträge)
 - `app/registrierung/page.tsx`: Selbstregistrierungsseite mit 4-Schritt-Wizard (Konto → Stammdaten → Steuer → Unterschrift)
 - `app/api/auth/registrierung/route.ts`: API-Route für Selbstregistrierung (send-code + verify-and-create)
 - `lib/domain-check.ts`: Domain-Validierung für `@drk-*.de` E-Mail-Adressen

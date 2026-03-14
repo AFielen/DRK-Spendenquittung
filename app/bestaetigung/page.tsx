@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/components/AuthProvider';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 import { apiGet, apiPost } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
 import { generateGeldzuwendung } from '@/lib/docx-templates/geldzuwendung';
@@ -117,11 +118,12 @@ function BestaetigungContent() {
     const generator = isGeld ? generateGeldzuwendung : generateSachzuwendung;
     const blob = await generator(verein, spender, selectedZuwendung, lfdNr, false);
     const typ = isGeld ? 'Geldzuwendung' : 'Sachzuwendung';
-    saveAs(blob, `${spender.nachname}_${spender.vorname}_${typ}.docx`);
+    const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
+    saveAs(blob, `${dateiName}_${typ}.docx`);
 
     if (mitDoppel) {
       const doppelBlob = await generator(verein, spender, selectedZuwendung, lfdNr, true);
-      saveAs(doppelBlob, `${spender.nachname}_${spender.vorname}_${typ}_DOPPEL.docx`);
+      saveAs(doppelBlob, `${dateiName}_${typ}_DOPPEL.docx`);
     }
 
     await markBestaetigt([selectedZuwendung.id], isGeld ? 'anlage3' : 'anlage4', lfdNr);
@@ -139,13 +141,14 @@ function BestaetigungContent() {
       verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, false
     );
     const jahr = sammelVon.substring(0, 4);
-    saveAs(blob, `${spender.nachname}_${spender.vorname}_Sammelbestaetigung_${jahr}.docx`);
+    const sammelDateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
+    saveAs(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.docx`);
 
     if (mitDoppel) {
       const doppelBlob = await generateSammelbestaetigung(
         verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, true
       );
-      saveAs(doppelBlob, `${spender.nachname}_${spender.vorname}_Sammelbestaetigung_${jahr}_DOPPEL.docx`);
+      saveAs(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.docx`);
     }
 
     await markBestaetigt(sammelZuwendungen.map((z) => z.id), 'anlage14', lfdNr);
@@ -159,7 +162,7 @@ function BestaetigungContent() {
     if (!spender) return;
 
     const blob = await generateVereinfachterNachweis(verein, spender, vereinfachtSelected);
-    saveAs(blob, `${spender.nachname}_${spender.vorname}_Nachweis.docx`);
+    saveAs(blob, `${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.docx`);
 
     await markBestaetigt([vereinfachtSelected.id], 'vereinfacht', '');
     setVereinfachtZuwendungId('');
@@ -173,7 +176,7 @@ function BestaetigungContent() {
   ];
 
   return (
-    <div className="py-8 px-4" style={{ background: 'var(--bg)' }}>
+    <div className="py-8 px-4 overflow-x-hidden" style={{ background: 'var(--bg)' }}>
       <div className="max-w-4xl mx-auto">
         {freistellungStatus.status === 'warnung' && <FreistellungsBlocker verein={verein} />}
 
@@ -182,11 +185,11 @@ function BestaetigungContent() {
             Bestätigungen erstellen
           </h2>
 
-          <div className="flex gap-0 mb-6">
+          <div className="flex gap-0 mb-6 overflow-x-auto">
             {tabs.map((t) => (
               <button
                 key={t.key}
-                className="flex-1 py-2 px-3 text-sm font-semibold transition-colors"
+                className="flex-1 py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
                 style={{
                   background: tab === t.key ? 'var(--drk)' : 'var(--bg)',
                   color: tab === t.key ? '#fff' : 'var(--text)',
@@ -211,7 +214,7 @@ function BestaetigungContent() {
                 >
                   <option value="">– Bitte wählen –</option>
                   {spenderList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.vorname} {s.nachname}</option>
+                    <option key={s.id} value={s.id}>{spenderAnzeigename(s)}</option>
                   ))}
                 </select>
               </div>
@@ -261,7 +264,7 @@ function BestaetigungContent() {
                 <select className="drk-input" value={sammelSpenderId} onChange={(e) => setSammelSpenderId(e.target.value)}>
                   <option value="">– Bitte wählen –</option>
                   {spenderList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.vorname} {s.nachname}</option>
+                    <option key={s.id} value={s.id}>{spenderAnzeigename(s)}</option>
                   ))}
                 </select>
               </div>
@@ -298,7 +301,7 @@ function BestaetigungContent() {
                 <select className="drk-input" value={vereinfachtSpenderId} onChange={(e) => { setVereinfachtSpenderId(e.target.value); setVereinfachtZuwendungId(''); }}>
                   <option value="">– Bitte wählen –</option>
                   {spenderList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.vorname} {s.nachname}</option>
+                    <option key={s.id} value={s.id}>{spenderAnzeigename(s)}</option>
                   ))}
                 </select>
               </div>
@@ -324,10 +327,79 @@ function BestaetigungContent() {
             </div>
           )}
         </div>
+
+        {/* ── Archivierte Belege ── */}
+        <ArchivierteBestaetigung zuwendungen={zuwendungen} spenderList={spenderList} />
       </div>
 
       {showUnterschrift && <UnterschriftHinweis onDownload={handleEinzelDownload} onCancel={() => setShowUnterschrift(false)} />}
       {showSammelUnterschrift && <UnterschriftHinweis onDownload={handleSammelDownload} onCancel={() => setShowSammelUnterschrift(false)} />}
+    </div>
+  );
+}
+
+function bestaetigungTypLabel(typ?: string | null): string {
+  switch (typ) {
+    case 'anlage3': return 'Geldzuwendung';
+    case 'anlage4': return 'Sachzuwendung';
+    case 'anlage14': return 'Sammelbestätigung';
+    case 'vereinfacht': return 'Vereinfacht';
+    default: return typ ?? '–';
+  }
+}
+
+function ArchivierteBestaetigung({ zuwendungen, spenderList }: { zuwendungen: Zuwendung[]; spenderList: Spender[] }) {
+  const [showArchiv, setShowArchiv] = useState(false);
+  const archiviert = zuwendungen.filter((z) => z.bestaetigungErstellt);
+
+  if (archiviert.length === 0) return null;
+
+  return (
+    <div className="drk-card mt-6">
+      <button
+        onClick={() => setShowArchiv(!showArchiv)}
+        className="w-full flex items-center justify-between"
+      >
+        <h2 className="text-lg font-bold" style={{ color: 'var(--text)' }}>
+          Archivierte Belege ({archiviert.length})
+        </h2>
+        <span className="text-sm" style={{ color: 'var(--text-light)' }}>
+          {showArchiv ? 'Ausblenden' : 'Anzeigen'}
+        </span>
+      </button>
+
+      {showArchiv && (
+        <div className="mt-4 space-y-2">
+          {archiviert.map((z) => {
+            const spender = spenderList.find((s) => s.id === z.spenderId);
+            return (
+              <div
+                key={z.id}
+                className="p-3 rounded-lg text-sm"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+              >
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <span className="font-semibold" style={{ color: 'var(--text)' }}>
+                      {spender ? spenderAnzeigename(spender) : '–'}
+                    </span>
+                    <span className="mx-2" style={{ color: 'var(--text-muted)' }}>·</span>
+                    <span style={{ color: 'var(--text)' }}>
+                      {formatBetrag(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag)} €
+                    </span>
+                  </div>
+                  <span className="drk-badge-success">{bestaetigungTypLabel(z.bestaetigungTyp)}</span>
+                </div>
+                <div className="text-xs mt-1" style={{ color: 'var(--text-light)' }}>
+                  Spende vom {formatDatum(z.datum)}
+                  {z.bestaetigungDatum && ` · Bestätigt am ${formatDatum(z.bestaetigungDatum)}`}
+                  {z.laufendeNr && ` · Nr. ${z.laufendeNr}`}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

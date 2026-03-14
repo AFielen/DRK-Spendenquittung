@@ -26,6 +26,8 @@ export async function GET() {
 
     return {
       id: s.id,
+      istFirma: s.istFirma,
+      firmenname: s.firmenname,
       anrede: s.anrede,
       vorname: s.vorname,
       nachname: s.nachname,
@@ -49,14 +51,24 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
-  if (!body.vorname || !body.nachname || !body.strasse || !body.plz || !body.ort) {
-    return NextResponse.json({ error: 'Pflichtfelder: Vorname, Nachname, Straße, PLZ, Ort.' }, { status: 400 });
+  const istFirma = body.istFirma === true;
+
+  if (istFirma) {
+    if (!body.firmenname || !body.strasse || !body.plz || !body.ort) {
+      return NextResponse.json({ error: 'Pflichtfelder für Firmen: Firmenname, Straße, PLZ, Ort.' }, { status: 400 });
+    }
+  } else {
+    if (!body.vorname || !body.nachname || !body.strasse || !body.plz || !body.ort) {
+      return NextResponse.json({ error: 'Pflichtfelder: Vorname, Nachname, Straße, PLZ, Ort.' }, { status: 400 });
+    }
   }
 
   const spender = await prisma.spender.create({
     data: {
-      vorname: body.vorname,
-      nachname: body.nachname,
+      istFirma,
+      firmenname: istFirma ? body.firmenname : null,
+      vorname: body.vorname || null,
+      nachname: istFirma ? (body.nachname || body.firmenname) : body.nachname,
       strasse: body.strasse,
       plz: body.plz,
       ort: body.ort,

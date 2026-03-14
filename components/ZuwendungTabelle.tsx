@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { Spender, Zuwendung } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 
 interface ZuwendungTabelleProps {
   zuwendungen: Zuwendung[];
@@ -80,7 +81,7 @@ export default function ZuwendungTabelle({
           <option value="">Alle Spender</option>
           {spenderList.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.vorname} {s.nachname}
+              {spenderAnzeigename(s)}
             </option>
           ))}
         </select>
@@ -138,7 +139,7 @@ export default function ZuwendungTabelle({
                     {formatDatum(z.datum)}
                   </td>
                   <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
-                    {spender ? `${spender.vorname} ${spender.nachname}` : '–'}
+                    {spender ? spenderAnzeigename(spender) : '–'}
                   </td>
                   <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
                     {z.art === 'geld' ? 'Geld' : 'Sach'}
@@ -244,7 +245,7 @@ export default function ZuwendungTabelle({
                 </span>
               </div>
               <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                {spender ? `${spender.vorname} ${spender.nachname}` : '–'}
+                {spender ? spenderAnzeigename(spender) : '–'}
               </div>
               <div className="text-sm mb-3" style={{ color: 'var(--text-light)' }}>
                 {formatDatum(z.datum)} · {z.art === 'geld' ? 'Geld' : 'Sach'} ·{' '}

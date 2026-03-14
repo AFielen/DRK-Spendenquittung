@@ -51,8 +51,10 @@ export interface Verein {
 /** Spender */
 export interface Spender {
   id: string;
+  istFirma?: boolean;
+  firmenname?: string | null;
   anrede?: string | null;
-  vorname: string;
+  vorname?: string | null;
   nachname: string;
   strasse: string;
   plz: string;
@@ -66,6 +68,12 @@ export interface Spender {
 
   erstelltAm?: string;
   aktualisiertAm?: string;
+}
+
+/** Helper: Anzeigename eines Spenders */
+export function spenderAnzeigename(s: { istFirma?: boolean; firmenname?: string | null; vorname?: string | null; nachname: string }): string {
+  if (s.istFirma && s.firmenname) return s.firmenname;
+  return s.vorname ? `${s.vorname} ${s.nachname}` : s.nachname;
 }
 
 /** Einzelne Zuwendung */
@@ -105,7 +113,9 @@ export interface Zuwendung {
   // Spender-Info (von API mit include)
   spender?: {
     id: string;
-    vorname: string;
+    istFirma?: boolean;
+    firmenname?: string | null;
+    vorname?: string | null;
     nachname: string;
     strasse?: string;
     plz?: string;

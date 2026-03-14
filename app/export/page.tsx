@@ -6,6 +6,7 @@ import JSZip from 'jszip';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/components/AuthProvider';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
+import { spenderAnzeigename } from '@/lib/types';
 import { apiGet, apiPost } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
 import { generateGeldzuwendung } from '@/lib/docx-templates/geldzuwendung';
@@ -95,7 +96,7 @@ function ExportContent() {
           if (!spender) continue;
           const spenderZuwendungen = jahresZuwendungen.filter((z) => z.spenderId === spenderId && z.art === 'geld');
           const lfdNr = await getNextLaufendeNr();
-          const name = `${spender.nachname}_${spender.vorname}`;
+          const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
 
           const blob = await generateSammelbestaetigung(verein, spender, spenderZuwendungen, `${selectedYear}-01-01`, `${selectedYear}-12-31`, lfdNr, false);
           zip.file(`Bestaetigungen/${name}_Sammelbestaetigung_${selectedYear}.docx`, blob);
@@ -106,7 +107,7 @@ function ExportContent() {
           update();
 
           const summe = spenderZuwendungen.reduce((s, z) => s + z.betrag, 0);
-          csvRows.push(`${lfdNr};${spender.nachname};${spender.vorname};Sammel;${formatBetrag(summe)};${selectedYear};Anlage14`);
+          csvRows.push(`${lfdNr};${spenderAnzeigename(spender)};Sammel;${formatBetrag(summe)};${selectedYear};Anlage14`);
           await markBestaetigt(spenderZuwendungen.map((z) => z.id), 'anlage14', lfdNr);
         }
       }
@@ -116,7 +117,7 @@ function ExportContent() {
           const spender = spenderList.find((s) => s.id === z.spenderId);
           if (!spender) continue;
           const lfdNr = await getNextLaufendeNr();
-          const name = `${spender.nachname}_${spender.vorname}`;
+          const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
 
           const blob = await generateSachzuwendung(verein, spender, z, lfdNr, false);
           zip.file(`Bestaetigungen/${name}_Sachzuwendung.docx`, blob);
@@ -126,7 +127,7 @@ function ExportContent() {
           zip.file(`Doppel/${name}_Sachzuwendung_DOPPEL.docx`, doppelBlob);
           update();
 
-          csvRows.push(`${lfdNr};${spender.nachname};${spender.vorname};Sach;${formatBetrag(z.sachWert ?? 0)};${z.datum};Anlage4`);
+          csvRows.push(`${lfdNr};${spenderAnzeigename(spender)};Sach;${formatBetrag(z.sachWert ?? 0)};${z.datum};Anlage4`);
           await markBestaetigt([z.id], 'anlage4', lfdNr);
         }
       }
@@ -137,9 +138,9 @@ function ExportContent() {
           const spender = spenderList.find((s) => s.id === z.spenderId);
           if (!spender) continue;
           const blob = await generateVereinfachterNachweis(verein, spender, z);
-          zip.file(`Vereinfacht/${spender.nachname}_${spender.vorname}_Nachweis.docx`, blob);
+          zip.file(`Vereinfacht/${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.docx`, blob);
           update();
-          csvRows.push(`;${spender.nachname};${spender.vorname};Vereinfacht;${formatBetrag(z.betrag)};${z.datum};VN`);
+          csvRows.push(`;${spenderAnzeigename(spender)};Vereinfacht;${formatBetrag(z.betrag)};${z.datum};VN`);
         }
       }
 
