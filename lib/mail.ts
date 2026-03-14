@@ -49,16 +49,29 @@ export async function sendInvitationEmail(
   inviterName: string,
   kreisverbandName: string,
 ): Promise<void> {
+  const apiKey = process.env.MAILJET_API_KEY;
+  const secretKey = process.env.MAILJET_SECRET_KEY;
   const from = process.env.MAIL_FROM || 'noreply@drk-spendenquittung.de';
-  const appUrl = process.env.APP_URL || 'https://spendenquittung.drk-aachen.de';
+  const appUrl = process.env.APP_URL || 'https://drk-spendenquittung.de';
   const loginUrl = `${appUrl}/login`;
 
-  await transporter.sendMail({
-    from: `DRK Spendenquittung <${from}>`,
-    to: email,
-    subject: `Einladung zur DRK Spendenquittung – ${kreisverbandName}`,
-    text: `Hallo,\n\n${inviterName} hat Sie zur DRK Spendenquittung für ${kreisverbandName} eingeladen.\n\nSie können sich unter ${loginUrl} mit Ihrer E-Mail-Adresse anmelden.\n\nBei der Anmeldung erhalten Sie einen 6-stelligen Code per E-Mail.\n\nMit freundlichen Grüßen\nDRK Spendenquittung`,
-    html: `
+  if (!apiKey || !secretKey) {
+    throw new Error('MAILJET_API_KEY und MAILJET_SECRET_KEY müssen gesetzt sein');
+  }
+
+  const response = await fetch('https://api.mailjet.com/v3.1/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic ' + Buffer.from(`${apiKey}:${secretKey}`).toString('base64'),
+    },
+    body: JSON.stringify({
+      Messages: [{
+        From: { Email: from, Name: 'DRK Spendenquittung' },
+        To: [{ Email: email }],
+        Subject: `Einladung zur DRK Spendenquittung – ${kreisverbandName}`,
+        TextPart: `Hallo,\n\n${inviterName} hat Sie zur DRK Spendenquittung für ${kreisverbandName} eingeladen.\n\nSie können sich unter ${loginUrl} mit Ihrer E-Mail-Adresse anmelden.\n\nBei der Anmeldung erhalten Sie einen 6-stelligen Code per E-Mail.\n\nMit freundlichen Grüßen\nDRK Spendenquittung`,
+        HTMLPart: `
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
         <div style="background: #e30613; color: #fff; padding: 16px 24px; border-radius: 12px 12px 0 0;">
           <strong>DRK Spendenquittung</strong>
@@ -77,5 +90,12 @@ export async function sendInvitationEmail(
         </div>
       </div>
     `,
+      }],
+    }),
   });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Mailjet API Fehler: ${response.status} ${error}`);
+  }
 }
