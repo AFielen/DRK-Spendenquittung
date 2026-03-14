@@ -104,6 +104,9 @@ export interface Zuwendung {
   // Verwaltung
   verzicht: boolean;
 
+  // Interne Notiz (nicht auf Zuwendungsbestätigung)
+  bemerkung?: string | null;
+
   // Status
   bestaetigungErstellt: boolean;
   bestaetigungDatum?: string | null;

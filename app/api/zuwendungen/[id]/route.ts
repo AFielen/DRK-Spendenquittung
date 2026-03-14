@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const zuwendung = await prisma.zuwendung.findFirst({
     where: { id, kreisverbandId: session.kreisverbandId },
     include: {
-      spender: { select: { id: true, vorname: true, nachname: true, strasse: true, plz: true, ort: true, anrede: true, steuerIdNr: true } },
+      spender: { select: { id: true, istFirma: true, firmenname: true, vorname: true, nachname: true, strasse: true, plz: true, ort: true, anrede: true, steuerIdNr: true } },
     },
   });
 
@@ -56,6 +56,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
       sachUmsatzsteuer: body.sachUmsatzsteuer ?? null,
       sachUnterlagenVorhanden: body.sachUnterlagenVorhanden ?? false,
       verzicht: body.verzicht ?? false,
+      bemerkung: body.bemerkung ?? null,
     },
   });
 

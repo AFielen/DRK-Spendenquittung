@@ -149,6 +149,11 @@ export default function ZuwendungTabelle({
                   </td>
                   <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
                     {z.verwendung === 'spende' ? 'Spende' : 'Mitgliedsbeitrag'}
+                    {z.bemerkung && (
+                      <div className="text-xs italic truncate max-w-[200px]" style={{ color: 'var(--text-muted)' }}>
+                        {z.bemerkung}
+                      </div>
+                    )}
                   </td>
                   <td className="py-2 px-3 text-center">
                     <span
@@ -247,11 +252,16 @@ export default function ZuwendungTabelle({
               <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                 {spender ? spenderAnzeigename(spender) : '–'}
               </div>
-              <div className="text-sm mb-3" style={{ color: 'var(--text-light)' }}>
+              <div className="text-sm mb-1" style={{ color: 'var(--text-light)' }}>
                 {formatDatum(z.datum)} · {z.art === 'geld' ? 'Geld' : 'Sach'} ·{' '}
                 {z.verwendung === 'spende' ? 'Spende' : 'Mitgliedsbeitrag'}
               </div>
-              <div className="flex gap-2">
+              {z.bemerkung && (
+                <div className="text-xs mb-2 italic" style={{ color: 'var(--text-muted)' }}>
+                  {z.bemerkung}
+                </div>
+              )}
+              <div className="flex gap-2 mt-2">
                 <button className="drk-btn-secondary text-sm flex-1" onClick={() => onEdit(z)}>
                   Bearbeiten
                 </button>
