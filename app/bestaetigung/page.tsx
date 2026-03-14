@@ -1,7 +1,20 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { saveAs } from 'file-saver';
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  // Delay cleanup so mobile browsers can start the download
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/components/AuthProvider';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
@@ -119,11 +132,11 @@ function BestaetigungContent() {
     const blob = await generator(verein, spender, selectedZuwendung, lfdNr, false);
     const typ = isGeld ? 'Geldzuwendung' : 'Sachzuwendung';
     const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-    saveAs(blob, `${dateiName}_${typ}.docx`);
+    downloadBlob(blob, `${dateiName}_${typ}.docx`);
 
     if (mitDoppel) {
       const doppelBlob = await generator(verein, spender, selectedZuwendung, lfdNr, true);
-      saveAs(doppelBlob, `${dateiName}_${typ}_DOPPEL.docx`);
+      downloadBlob(doppelBlob, `${dateiName}_${typ}_DOPPEL.docx`);
     }
 
     await markBestaetigt([selectedZuwendung.id], isGeld ? 'anlage3' : 'anlage4', lfdNr);
@@ -142,13 +155,13 @@ function BestaetigungContent() {
     );
     const jahr = sammelVon.substring(0, 4);
     const sammelDateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-    saveAs(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.docx`);
+    downloadBlob(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.docx`);
 
     if (mitDoppel) {
       const doppelBlob = await generateSammelbestaetigung(
         verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, true
       );
-      saveAs(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.docx`);
+      downloadBlob(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.docx`);
     }
 
     await markBestaetigt(sammelZuwendungen.map((z) => z.id), 'anlage14', lfdNr);
@@ -162,7 +175,7 @@ function BestaetigungContent() {
     if (!spender) return;
 
     const blob = await generateVereinfachterNachweis(verein, spender, vereinfachtSelected);
-    saveAs(blob, `${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.docx`);
+    downloadBlob(blob, `${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.docx`);
 
     await markBestaetigt([vereinfachtSelected.id], 'vereinfacht', '');
     setVereinfachtZuwendungId('');
@@ -185,11 +198,11 @@ function BestaetigungContent() {
             Bestätigungen erstellen
           </h2>
 
-          <div className="flex gap-0 mb-6 overflow-x-auto">
+          <div className="flex gap-0 mb-6 overflow-x-auto -mx-1 px-1">
             {tabs.map((t) => (
               <button
                 key={t.key}
-                className="flex-1 py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
+                className="flex-1 py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold transition-colors min-w-0"
                 style={{
                   background: tab === t.key ? 'var(--drk)' : 'var(--bg)',
                   color: tab === t.key ? '#fff' : 'var(--text)',
