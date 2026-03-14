@@ -1,24 +1,25 @@
-import nodemailer from 'nodemailer';
-
-const transporter = nodemailer.createTransport({
-  host: 'in-v3.mailjet.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.MAILJET_API_KEY,
-    pass: process.env.MAILJET_SECRET_KEY,
-  },
-});
-
 export async function sendMagicCode(email: string, code: string): Promise<void> {
+  const apiKey = process.env.MAILJET_API_KEY;
+  const secretKey = process.env.MAILJET_SECRET_KEY;
   const from = process.env.MAIL_FROM || 'noreply@drk-spendenquittung.de';
 
-  await transporter.sendMail({
-    from: `DRK Spendenquittung <${from}>`,
-    to: email,
-    subject: 'Ihr Anmeldecode für DRK Spendenquittung',
-    text: `Ihr Code: ${code}\n\nDieser Code ist 10 Minuten gültig.\n\nWenn Sie diesen Code nicht angefordert haben, können Sie diese E-Mail ignorieren.`,
-    html: `
+  if (!apiKey || !secretKey) {
+    throw new Error('MAILJET_API_KEY und MAILJET_SECRET_KEY müssen gesetzt sein');
+  }
+
+  const response = await fetch('https://api.mailjet.com/v3.1/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic ' + Buffer.from(`${apiKey}:${secretKey}`).toString('base64'),
+    },
+    body: JSON.stringify({
+      Messages: [{
+        From: { Email: from, Name: 'DRK Spendenquittung' },
+        To: [{ Email: email }],
+        Subject: 'Ihr Anmeldecode für DRK Spendenquittung',
+        TextPart: `Ihr Code: ${code}\n\nDieser Code ist 10 Minuten gültig.\n\nWenn Sie diesen Code nicht angefordert haben, können Sie diese E-Mail ignorieren.`,
+        HTMLPart: `
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
         <div style="background: #e30613; color: #fff; padding: 16px 24px; border-radius: 12px 12px 0 0;">
           <strong>DRK Spendenquittung</strong>
@@ -33,5 +34,12 @@ export async function sendMagicCode(email: string, code: string): Promise<void> 
         </div>
       </div>
     `,
+      }],
+    }),
   });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Mailjet API Fehler: ${response.status} ${error}`);
+  }
 }
