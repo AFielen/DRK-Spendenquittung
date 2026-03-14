@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -196,6 +197,13 @@ export default function LoginPage() {
             </button>
           </div>
         )}
+
+        <div className="mt-6 text-sm" style={{ color: 'var(--text-light)' }}>
+          Noch kein Konto?{' '}
+          <Link href="/registrierung" className="underline font-semibold" style={{ color: 'var(--drk)' }}>
+            Verband registrieren
+          </Link>
+        </div>
       </div>
     </div>
   );

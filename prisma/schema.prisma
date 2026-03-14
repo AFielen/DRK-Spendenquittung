@@ -129,3 +129,13 @@ model Zuwendung {
   @@index([spenderId])
   @@index([kreisverbandId, datum])
 }
+
+// ── Temporärer Registrierungscode ──
+model RegistrierungCode {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  name       String
+  code       String
+  expiresAt  DateTime
+  erstelltAm DateTime @default(now())
+}

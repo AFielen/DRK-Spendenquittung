@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { isValidDrkEmail } from '@/lib/domain-check';
+import { sendInvitationEmail } from '@/lib/mail';
 
 export async function GET() {
   const session = await getSession();
@@ -38,6 +40,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'E-Mail und Name erforderlich.' }, { status: 400 });
   }
 
+  if (!isValidDrkEmail(body.email)) {
+    return NextResponse.json(
+      { error: 'Nur E-Mail-Adressen mit @drk-*.de Domain sind erlaubt.' },
+      { status: 400 },
+    );
+  }
+
   // Prüfe ob E-Mail bereits existiert
   const existing = await prisma.nutzer.findUnique({ where: { email: body.email.toLowerCase() } });
   if (existing) {
@@ -52,6 +61,14 @@ export async function POST(req: NextRequest) {
       kreisverbandId: session.kreisverbandId,
     },
   });
+
+  // Einladungs-E-Mail senden
+  try {
+    const kv = await prisma.kreisverband.findUnique({ where: { id: session.kreisverbandId } });
+    await sendInvitationEmail(nutzer.email, session.name, kv?.name ?? 'DRK');
+  } catch {
+    // E-Mail-Fehler blockiert nicht die Nutzeranlage
+  }
 
   return NextResponse.json({
     id: nutzer.id,
