@@ -4,7 +4,6 @@ import {
   Paragraph,
   TextRun,
   AlignmentType,
-  ImageRun,
   Table,
   TableRow,
   TableCell,
@@ -13,7 +12,7 @@ import {
 } from 'docx';
 import type { Verein, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
-import { getLogoBytes } from './default-logo';
+import { createDocxHeader, createDocxFooter } from './briefbogen';
 
 function formatDatum(iso: string): string {
   const dateOnly = iso.substring(0, 10);
@@ -78,31 +77,13 @@ export async function erstelleEmpfangsbestaetigung(
   const spender = zuwendung.spender;
   if (!spender) throw new Error('Spender-Daten fehlen.');
 
-  // Logo
-  const logoBytes = await getLogoBytes(verein.logoBase64);
-  const logoChildren: (TextRun | ImageRun)[] = [];
-  if (logoBytes) {
-    logoChildren.push(
-      new ImageRun({ data: logoBytes, transformation: { width: 57, height: 57 }, type: 'png' })
-    );
-    logoChildren.push(new TextRun({ text: '  ', font: 'Arial', size: 20 }));
-  }
-
-  // Kopfbereich
-  sections.push(
-    new Paragraph({
-      children: [
-        ...logoChildren,
-        new TextRun({ text: verein.name, font: 'Arial', size: 22, bold: true }),
-      ],
-    })
+  // Briefbogen-Header
+  const header = await createDocxHeader(
+    verein,
+    spenderAnschrift(spender),
+    formatDatum(zuwendung.datum)
   );
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, font: 'Arial', size: 18 })],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(...header);
 
   // Titel
   sections.push(
@@ -115,7 +96,7 @@ export async function erstelleEmpfangsbestaetigung(
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { after: 100 },
-      children: [new TextRun({ text: `${verein.name}`, font: 'Arial', size: 20 })],
+      children: [new TextRun({ text: verein.name, font: 'Arial', size: 20 })],
     })
   );
   sections.push(
@@ -166,10 +147,14 @@ export async function erstelleEmpfangsbestaetigung(
 
   const detailRows: TableRow[] = [];
   if (zuwendung.sachBezeichnung) detailRows.push(labelValueRow('Bezeichnung:', zuwendung.sachBezeichnung));
-  if (zuwendung.sachAlter) detailRows.push(labelValueRow('Alter/Zustand:', `${zuwendung.sachAlter}${zuwendung.sachZustand ? `, ${zuwendung.sachZustand}` : ''}`));
-  else if (zuwendung.sachZustand) detailRows.push(labelValueRow('Zustand:', zuwendung.sachZustand));
+  if (zuwendung.sachAlter || zuwendung.sachZustand) {
+    const val = [zuwendung.sachAlter, zuwendung.sachZustand].filter(Boolean).join(', ');
+    detailRows.push(labelValueRow('Alter/Zustand:', val));
+  }
   detailRows.push(labelValueRow('Anzahl:', '1'));
-  if (zuwendung.sachWert != null) detailRows.push(labelValueRow('Geschätzter Wert:', `${formatBetrag(zuwendung.sachWert)} €`));
+  if (zuwendung.sachWert != null) {
+    detailRows.push(labelValueRow('Geschätzter Wert:', `${formatBetrag(zuwendung.sachWert)} €`));
+  }
 
   const herkunftLabel = zuwendung.sachHerkunft === 'privatvermoegen' ? 'Privatvermögen'
     : zuwendung.sachHerkunft === 'betriebsvermoegen' ? 'Betriebsvermögen'
@@ -279,16 +264,14 @@ export async function erstelleEmpfangsbestaetigung(
       children: [new TextRun({ text: 'Dieses Dokument dient der internen Dokumentation des Eigentumsübergangs.', font: 'Arial', size: 16, italics: true, color: '999999' })],
     })
   );
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: `${verein.name} · ${verein.strasse}, ${verein.plz} ${verein.ort}`, font: 'Arial', size: 16, color: '999999' })],
-    })
-  );
 
   const doc = new Document({
     sections: [{
-      properties: { page: { margin: { top: 1134, bottom: 1134, left: 1418, right: 1134 } } },
+      properties: { page: { margin: { top: 850, bottom: 1134, left: 1418, right: 1418 } } },
       children: sections,
+      footers: {
+        default: createDocxFooter(verein),
+      },
     }],
   });
 

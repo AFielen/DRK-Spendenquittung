@@ -52,8 +52,8 @@ export async function generateGeldzuwendungPdf(
   content.push({ text: ' ', fontSize: 6 });
 
   // Verzicht
-  const ja = zuwendung.verzicht ? '☑' : '☐';
-  const nein = zuwendung.verzicht ? '☐' : '☑';
+  const ja = zuwendung.verzicht ? '[X]' : '[ ]';
+  const nein = zuwendung.verzicht ? '[ ]' : '[X]';
   content.push({
     text: `Es handelt sich um den Verzicht auf Erstattung von Aufwendungen  Ja ${ja} / Nein ${nein}`,
     fontSize: 10,
@@ -68,7 +68,7 @@ export async function generateGeldzuwendungPdf(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, datum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, datum, zwecke);
 
-  content.push({ text: `☑ ${freiText}`, fontSize: 9 });
+  content.push({ text: `[X] ${freiText}`, fontSize: 9 });
   content.push({ text: ' ', fontSize: 6 });
 
   // Verwendungsbestätigung
@@ -85,7 +85,7 @@ export async function generateGeldzuwendungPdf(
     fontSize: 8,
     italics: true,
   });
-  content.push({ text: `☐ ${MITGLIEDSBEITRAG_HINWEIS}`, fontSize: 9 });
+  content.push({ text: `[ ] ${MITGLIEDSBEITRAG_HINWEIS}`, fontSize: 9 });
   content.push({ text: ' ', fontSize: 10 });
   content.push({ text: ' ', fontSize: 10 });
 

@@ -4,12 +4,10 @@ import {
   Paragraph,
   TextRun,
   AlignmentType,
-  ImageRun,
-  Footer,
 } from 'docx';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
 import { betragInWorten } from './betrag-in-worten';
-import { getLogoBytes } from './default-logo';
+import { createDocxHeader, createDocxFooter, createDoppelParagraph } from './briefbogen';
 import {
   TITEL_SACHZUWENDUNG,
   freistellungTextA,
@@ -53,44 +51,16 @@ export async function generateSachzuwendung(
   const wert = zuwendung.sachWert ?? zuwendung.betrag;
 
   if (doppel) {
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '— DOPPEL — Kopie für die Vereinsakte (Aufbewahrungspflicht: 10 Jahre gemäß § 50 Abs. 7 EStDV)',
-            font: 'Arial', size: 18, color: '999999', bold: true,
-          }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 200 },
-      })
-    );
+    sections.push(createDoppelParagraph());
   }
 
-  // Aussteller (DRK-Kompaktlogo als Standard)
-  const ausstellerChildren: (TextRun | ImageRun)[] = [];
-  const logoBytes = await getLogoBytes(verein.logoBase64);
-  if (logoBytes) {
-    ausstellerChildren.push(
-      new ImageRun({ data: logoBytes, transformation: { width: 57, height: 57 }, type: 'png' })
-    );
-    ausstellerChildren.push(new TextRun({ text: '  ', font: 'Arial', size: 20 }));
-  }
-
-  sections.push(
-    new Paragraph({
-      children: [
-        ...ausstellerChildren,
-        new TextRun({ text: verein.name, font: 'Arial', size: 20, bold: true }),
-      ],
-    })
+  // Briefbogen-Header
+  const header = await createDocxHeader(
+    verein,
+    spenderAnschrift(spender),
+    formatDatum(zuwendung.datum)
   );
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, font: 'Arial', size: 20 })],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(...header);
 
   // Titel
   for (const zeile of TITEL_SACHZUWENDUNG.split('\n')) {
@@ -232,17 +202,10 @@ export async function generateSachzuwendung(
 
   const doc = new Document({
     sections: [{
-      properties: { page: { margin: { top: 1134, bottom: 1134, left: 1418, right: 1134 } } },
+      properties: { page: { margin: { top: 850, bottom: 1134, left: 1418, right: 1418 } } },
       children: sections,
       footers: {
-        default: new Footer({
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.RIGHT,
-              children: [new TextRun({ text: `Lfd. Nr.: ${laufendeNr}`, font: 'Arial', size: 14 })],
-            }),
-          ],
-        }),
+        default: createDocxFooter(verein, laufendeNr),
       },
     }],
   });
