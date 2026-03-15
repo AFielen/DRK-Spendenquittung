@@ -2,7 +2,7 @@ import type { Content } from 'pdfmake/interfaces';
 import type { Verein, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { createBriefbogenLayout } from './briefbogen';
-import { generatePdfBuffer, formatDatum, formatBetrag } from './pdf-helper';
+import { generatePdfBuffer, formatDatum, formatBetrag, spenderAnschrift } from './pdf-helper';
 
 const BEWERTUNGSGRUNDLAGE_LABELS: Record<string, string> = {
   rechnung: 'Originalrechnung / Kaufbeleg',
@@ -18,11 +18,6 @@ export async function erstelleEmpfangsbestaetigungPdf(
   if (!spender) throw new Error('Spender-Daten fehlen.');
 
   const content: Content[] = [];
-
-  // Kopfbereich
-  content.push({ text: verein.name, fontSize: 11, bold: true });
-  content.push({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, fontSize: 9 });
-  content.push({ text: ' ', fontSize: 6 });
 
   // Titel
   content.push({
@@ -154,7 +149,11 @@ export async function erstelleEmpfangsbestaetigungPdf(
     color: '#999999',
   });
 
-  const docDefinition = createBriefbogenLayout(content, { verein });
+  const docDefinition = createBriefbogenLayout(content, {
+    verein,
+    empfaenger: spenderAnschrift(spender),
+    datum: formatDatum(zuwendung.datum),
+  });
 
   return generatePdfBuffer(docDefinition);
 }

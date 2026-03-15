@@ -23,11 +23,6 @@ export async function generateGeldzuwendungPdf(
 ): Promise<Buffer> {
   const content: Content[] = [];
 
-  // Aussteller
-  content.push({ text: verein.name, fontSize: 10, bold: true });
-  content.push({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 6 });
-
   // Titel
   const titelZeilen = TITEL_GELDZUWENDUNG.split('\n');
   for (const zeile of titelZeilen) {
@@ -116,6 +111,8 @@ export async function generateGeldzuwendungPdf(
     verein,
     laufendeNr,
     doppel,
+    empfaenger: spenderAnschrift(spender),
+    datum: formatDatum(zuwendung.datum),
   });
 
   return generatePdfBuffer(docDefinition);

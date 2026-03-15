@@ -12,6 +12,8 @@ export interface BriefbogenOptions {
   verein: Verein;
   laufendeNr?: string;
   doppel?: boolean;
+  empfaenger?: string;
+  datum?: string;
 }
 
 /**
@@ -20,7 +22,6 @@ export interface BriefbogenOptions {
  */
 export function getLogoBytesServer(logoBase64?: string | null): string | null {
   if (logoBase64) {
-    // Already a data URI or raw base64
     if (logoBase64.startsWith('data:')) return logoBase64;
     return `data:image/png;base64,${logoBase64}`;
   }
@@ -37,10 +38,13 @@ export function getLogoBytesServer(logoBase64?: string | null): string | null {
 /**
  * Wraps content in DRK Briefbogen layout (A4 letterhead).
  *
- * Layout:
- * - Logo top-right (absolute)
- * - Fold marks at 10.5cm and 14.8cm
- * - Right sidebar with org details
+ * Layout matches the official DRK letterhead template:
+ * - Logo + "Deutsches Rotes Kreuz" top-right
+ * - Sender line (small, underlined) above recipient
+ * - Recipient address in envelope window area
+ * - Right sidebar with structured org details
+ * - Fold marks at 10.5cm and 14.85cm
+ * - Date line below recipient
  * - Footer with page numbers and laufende Nr.
  * - Optional DOPPEL header
  */
@@ -48,10 +52,10 @@ export function createBriefbogenLayout(
   content: Content[],
   options: BriefbogenOptions
 ): TDocumentDefinitions {
-  const { verein, laufendeNr, doppel } = options;
+  const { verein, laufendeNr, doppel, empfaenger, datum } = options;
   const logoDataUri = getLogoBytesServer(verein.logoBase64);
 
-  // Build full content array
+  // Build full content array with letterhead elements
   const fullContent: Content[] = [];
 
   // DOPPEL header
@@ -62,56 +66,139 @@ export function createBriefbogenLayout(
       fontSize: 9,
       bold: true,
       color: '#999999',
-      margin: [0, 0, 0, 10],
+      margin: [0, 0, 0, 6],
     });
   }
 
+  // 1. Logo + "Deutsches Rotes Kreuz" — right-aligned
+  const logoColumn: Content[] = [];
+  if (logoDataUri) {
+    logoColumn.push({
+      image: logoDataUri,
+      width: cm(1.8),
+      margin: [0, 0, 8, 0],
+    });
+  }
+  logoColumn.push({
+    stack: [
+      { text: 'Deutsches', fontSize: 16, bold: true, color: '#000000' },
+      { text: 'Rotes', fontSize: 16, bold: true, color: '#000000' },
+      { text: 'Kreuz', fontSize: 16, bold: true, color: '#000000' },
+    ],
+  });
+
+  fullContent.push({
+    columns: [
+      { width: '*', text: '' },
+      {
+        width: 'auto',
+        columns: logoColumn,
+      },
+    ],
+    margin: [0, 0, 0, cm(1.2)],
+  } as Content);
+
+  // 2. Sender line (Absenderzeile) — small, with bottom border
+  const senderLine = `${verein.name} \u00B7 ${verein.strasse} \u00B7 ${verein.plz}  ${verein.ort}`;
+  fullContent.push({
+    stack: [
+      {
+        text: senderLine,
+        fontSize: 7,
+        color: '#555555',
+        bold: true,
+      },
+      {
+        canvas: [
+          { type: 'line', x1: 0, y1: 0, x2: cm(10), y2: 0, lineWidth: 0.5, lineColor: '#999999' },
+        ],
+        margin: [0, 2, 0, 0],
+      },
+    ],
+    margin: [0, 0, 0, cm(0.5)],
+  } as Content);
+
+  // 3. Recipient address (Empfänger)
+  if (empfaenger) {
+    const empfaengerLines = empfaenger.split('\n').filter((l) => l.trim());
+    fullContent.push({
+      stack: empfaengerLines.map((line) => ({
+        text: line,
+        fontSize: 10,
+      })),
+      margin: [0, 0, 0, cm(1.5)],
+    } as Content);
+  } else {
+    fullContent.push({ text: ' ', fontSize: 10, margin: [0, 0, 0, cm(1.5)] } as Content);
+  }
+
+  // 4. Date line
+  if (datum) {
+    fullContent.push({
+      text: `${verein.ort}, den ${datum}`,
+      fontSize: 10,
+      margin: [0, 0, 0, cm(1)],
+    });
+  }
+
+  // Append template content
   fullContent.push(...content);
 
-  // Background: fold marks + logo
+  // Background: fold marks + right sidebar (absolute positioned)
   const background: DynamicBackground = (currentPage: number): Content => {
     const elements: ContentCanvas['canvas'] = [
       // Fold mark at 10.5cm
       { type: 'line', x1: 0, y1: cm(10.5), x2: cm(0.6), y2: cm(10.5), lineWidth: 0.5, lineColor: '#BABABA' },
-      // Fold mark at 14.85cm (letter fold)
-      { type: 'line', x1: 0, y1: cm(14.85), x2: cm(0.6), y2: cm(14.85), lineWidth: 0.5, lineColor: '#BABABA' },
-      // Center mark at 14.85cm
+      // Fold mark at 14.85cm
       { type: 'line', x1: 0, y1: cm(14.85), x2: cm(0.6), y2: cm(14.85), lineWidth: 0.5, lineColor: '#BABABA' },
     ];
 
     const result: Content[] = [{ canvas: elements }];
 
-    // Logo on first page
-    if (currentPage === 1 && logoDataUri) {
-      result.push({
-        image: logoDataUri,
-        width: cm(2),
-        absolutePosition: { x: cm(16.5), y: cm(1.2) },
-      });
-    }
-
-    // Right sidebar on first page
+    // Right sidebar on first page only
     if (currentPage === 1) {
-      const sidebarLines: string[] = [
-        verein.name,
-        '',
-        verein.strasse,
-        `${verein.plz} ${verein.ort}`,
-      ];
+      const sidebarItems: Content[] = [];
 
-      if (verein.vereinsregister) {
-        sidebarLines.push('', `VR: ${verein.vereinsregister}`);
+      // Org name — bold, slightly larger
+      const nameParts = splitOrgName(verein.name);
+      for (const part of nameParts) {
+        sidebarItems.push({ text: part, fontSize: 9, bold: true, color: '#000000' });
       }
-      sidebarLines.push('', `FA: ${verein.finanzamt}`, `StNr: ${verein.steuernummer}`);
+
+      sidebarItems.push({ text: ' ', fontSize: 6 });
+
+      // Address
+      sidebarItems.push({ text: verein.strasse, fontSize: 7.5, color: '#333333' });
+      sidebarItems.push({ text: `${verein.plz} ${verein.ort}`, fontSize: 7.5, color: '#333333' });
+
+      sidebarItems.push({ text: ' ', fontSize: 6 });
+
+      // Vorsitzender / Unterschrift
+      if (verein.unterschriftFunktion) {
+        sidebarItems.push({ text: verein.unterschriftFunktion, fontSize: 7.5, bold: true, color: '#333333' });
+      }
+      if (verein.unterschriftName) {
+        sidebarItems.push({ text: verein.unterschriftName, fontSize: 7.5, color: '#333333' });
+      }
+
+      // Vereinsregister
+      if (verein.vereinsregister) {
+        sidebarItems.push({ text: ' ', fontSize: 6 });
+        // Try to extract Amtsgericht from vereinsregister or use finanzamt location
+        const vrText = verein.vereinsregister;
+        sidebarItems.push({ text: 'Amtsgericht', fontSize: 7.5, bold: true, color: '#333333' });
+        sidebarItems.push({ text: `Vereinsregister-Nr. ${vrText}`, fontSize: 7.5, color: '#333333' });
+      }
+
+      // Steuernummer
+      sidebarItems.push({ text: ' ', fontSize: 6 });
+      sidebarItems.push({ text: 'Steuernummer', fontSize: 7.5, bold: true, color: '#333333' });
+      sidebarItems.push({ text: verein.steuernummer, fontSize: 7.5, color: '#333333' });
 
       result.push({
-        stack: sidebarLines.map((line) =>
-          line === ''
-            ? { text: ' ', fontSize: 4 }
-            : { text: line, fontSize: 7.5, color: '#555555' }
-        ),
-        absolutePosition: { x: cm(15.2), y: cm(4) },
-        width: cm(4.5),
+        stack: sidebarItems,
+        absolutePosition: { x: cm(15), y: cm(4) },
+        width: cm(5),
       } as Content);
     }
 
@@ -120,7 +207,7 @@ export function createBriefbogenLayout(
 
   const docDefinition: TDocumentDefinitions = {
     pageSize: 'A4',
-    pageMargins: [cm(2.5), cm(3), cm(5), cm(2)],
+    pageMargins: [cm(2.5), cm(1.5), cm(5.5), cm(2)],
 
     background,
 
@@ -139,10 +226,11 @@ export function createBriefbogenLayout(
       }
 
       footerContent.push({
-        text: `Seite ${currentPage} / ${pageCount}`,
-        alignment: 'center',
+        text: `Seite ${currentPage}/${pageCount}`,
+        alignment: 'right',
         fontSize: 7,
         color: '#999999',
+        margin: [0, 0, cm(2.5), 0],
       });
 
       return { stack: footerContent };
@@ -162,4 +250,25 @@ export function createBriefbogenLayout(
   };
 
   return docDefinition;
+}
+
+/**
+ * Split organization name into two lines for the sidebar.
+ * Tries to break at common patterns like "e.V.", "e. V." etc.
+ */
+function splitOrgName(name: string): string[] {
+  // Try splitting at "e.V." or "e. V."
+  const evMatch = name.match(/^(.+?)\s+(e\.\s*V\..*)$/);
+  if (evMatch) {
+    return [evMatch[1], evMatch[2]];
+  }
+  // If name is long, try splitting at a space near the middle
+  if (name.length > 25) {
+    const mid = Math.floor(name.length / 2);
+    const spaceIdx = name.indexOf(' ', mid);
+    if (spaceIdx > 0) {
+      return [name.substring(0, spaceIdx), name.substring(spaceIdx + 1)];
+    }
+  }
+  return [name];
 }
