@@ -13,6 +13,7 @@ interface ZuwendungTabelleProps {
   verein?: Verein;
   onEdit: (zuwendung: Zuwendung) => void;
   onDelete: (zuwendung: Zuwendung) => void;
+  onShowDetails?: (zuwendung: Zuwendung) => void;
 }
 
 export default function ZuwendungTabelle({
@@ -21,6 +22,7 @@ export default function ZuwendungTabelle({
   verein,
   onEdit,
   onDelete,
+  onShowDetails,
 }: ZuwendungTabelleProps) {
   const [downloadingEB, setDownloadingEB] = useState<string | null>(null);
   const [filterSpender, setFilterSpender] = useState('');
@@ -187,7 +189,7 @@ export default function ZuwendungTabelle({
                     </span>
                   </td>
                   <td className="py-2 px-3 text-right">
-                    {z.art === 'sach' && verein && (
+                    {z.art === 'sach' && verein && !z.bestaetigungErstellt && (
                       <button
                         className="text-sm underline mr-3"
                         style={{ color: 'var(--info, #17a2b8)' }}
@@ -197,13 +199,23 @@ export default function ZuwendungTabelle({
                         {downloadingEB === z.id ? '...' : 'Empfangsbestätigung'}
                       </button>
                     )}
-                    <button
-                      className="text-sm underline mr-3"
-                      style={{ color: 'var(--drk)' }}
-                      onClick={() => onEdit(z)}
-                    >
-                      Bearbeiten
-                    </button>
+                    {z.bestaetigungErstellt ? (
+                      <button
+                        className="text-sm underline mr-3"
+                        style={{ color: 'var(--text-light)' }}
+                        onClick={() => onShowDetails?.(z)}
+                      >
+                        Details
+                      </button>
+                    ) : (
+                      <button
+                        className="text-sm underline mr-3"
+                        style={{ color: 'var(--drk)' }}
+                        onClick={() => onEdit(z)}
+                      >
+                        Bearbeiten
+                      </button>
+                    )}
                     {!z.bestaetigungErstellt && (
                       deleteConfirm === z.id ? (
                         <span className="text-sm">
@@ -292,7 +304,7 @@ export default function ZuwendungTabelle({
                 </div>
               )}
               <div className="flex gap-2 mt-2 flex-wrap">
-                {z.art === 'sach' && verein && (
+                {z.art === 'sach' && verein && !z.bestaetigungErstellt && (
                   <button
                     className="text-sm px-3 py-2 rounded"
                     style={{ background: 'var(--info-bg)', color: 'var(--info-text)' }}
@@ -302,17 +314,23 @@ export default function ZuwendungTabelle({
                     {downloadingEB === z.id ? '...' : 'Empfangsbestätigung'}
                   </button>
                 )}
-                <button className="drk-btn-secondary text-sm flex-1" onClick={() => onEdit(z)}>
-                  Bearbeiten
-                </button>
-                {!z.bestaetigungErstellt && (
-                  <button
-                    className="text-sm px-3 py-2 rounded"
-                    style={{ background: 'var(--error-bg)', color: 'var(--error)' }}
-                    onClick={() => onDelete(z)}
-                  >
-                    Löschen
+                {z.bestaetigungErstellt ? (
+                  <button className="drk-btn-secondary text-sm flex-1" onClick={() => onShowDetails?.(z)}>
+                    Details
                   </button>
+                ) : (
+                  <>
+                    <button className="drk-btn-secondary text-sm flex-1" onClick={() => onEdit(z)}>
+                      Bearbeiten
+                    </button>
+                    <button
+                      className="text-sm px-3 py-2 rounded"
+                      style={{ background: 'var(--error-bg)', color: 'var(--error)' }}
+                      onClick={() => onDelete(z)}
+                    >
+                      Löschen
+                    </button>
+                  </>
                 )}
               </div>
             </div>

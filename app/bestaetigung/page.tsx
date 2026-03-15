@@ -45,7 +45,10 @@ async function downloadPdfFromApi(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ typ, spenderId, zuwendungIds, laufendeNr, doppel, zeitraum }),
   });
-  if (!res.ok) throw new Error('PDF-Generierung fehlgeschlagen');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+    throw new Error(err.error || 'PDF-Generierung fehlgeschlagen');
+  }
   const blob = await res.blob();
   downloadBlob(blob, filename);
 }
@@ -65,6 +68,8 @@ function BestaetigungContent() {
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [tab, setTab] = useState<Tab>('einzel');
   const [format, setFormat] = useState<ExportFormat>('pdf');
+  const [downloadError, setDownloadError] = useState('');
+  const [downloading, setDownloading] = useState(false);
 
   const [selectedSpenderId, setSelectedSpenderId] = useState('');
   const [selectedZuwendungId, setSelectedZuwendungId] = useState('');
@@ -147,66 +152,82 @@ function BestaetigungContent() {
     const spender = spenderList.find((s) => s.id === selectedZuwendung.spenderId);
     if (!spender) return;
 
-    const lfdNr = await getNextLaufendeNr();
-    const isGeld = selectedZuwendung.art === 'geld';
-    const typ = isGeld ? 'Geldzuwendung' : 'Sachzuwendung';
-    const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-    const ext = format === 'pdf' ? 'pdf' : 'docx';
+    setDownloading(true);
+    setDownloadError('');
+    try {
+      const lfdNr = await getNextLaufendeNr();
+      const isGeld = selectedZuwendung.art === 'geld';
+      const typ = isGeld ? 'Geldzuwendung' : 'Sachzuwendung';
+      const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
+      const ext = format === 'pdf' ? 'pdf' : 'docx';
 
-    if (format === 'pdf') {
-      const pdfTyp = isGeld ? 'geldzuwendung' : 'sachzuwendung';
-      await downloadPdfFromApi(pdfTyp, spender.id, [selectedZuwendung.id], lfdNr, false, `${dateiName}_${typ}.pdf`);
-      if (mitDoppel) {
-        await downloadPdfFromApi(pdfTyp, spender.id, [selectedZuwendung.id], lfdNr, true, `${dateiName}_${typ}_DOPPEL.pdf`);
+      if (format === 'pdf') {
+        const pdfTyp = isGeld ? 'geldzuwendung' : 'sachzuwendung';
+        await downloadPdfFromApi(pdfTyp, spender.id, [selectedZuwendung.id], lfdNr, false, `${dateiName}_${typ}.pdf`);
+        if (mitDoppel) {
+          await downloadPdfFromApi(pdfTyp, spender.id, [selectedZuwendung.id], lfdNr, true, `${dateiName}_${typ}_DOPPEL.pdf`);
+        }
+      } else {
+        const generator = isGeld ? generateGeldzuwendung : generateSachzuwendung;
+        const blob = await generator(verein, spender, selectedZuwendung, lfdNr, false);
+        downloadBlob(blob, `${dateiName}_${typ}.${ext}`);
+        if (mitDoppel) {
+          const doppelBlob = await generator(verein, spender, selectedZuwendung, lfdNr, true);
+          downloadBlob(doppelBlob, `${dateiName}_${typ}_DOPPEL.${ext}`);
+        }
       }
-    } else {
-      const generator = isGeld ? generateGeldzuwendung : generateSachzuwendung;
-      const blob = await generator(verein, spender, selectedZuwendung, lfdNr, false);
-      downloadBlob(blob, `${dateiName}_${typ}.${ext}`);
-      if (mitDoppel) {
-        const doppelBlob = await generator(verein, spender, selectedZuwendung, lfdNr, true);
-        downloadBlob(doppelBlob, `${dateiName}_${typ}_DOPPEL.${ext}`);
-      }
+
+      await markBestaetigt([selectedZuwendung.id], isGeld ? 'anlage3' : 'anlage4', lfdNr);
+      setShowUnterschrift(false);
+      setSelectedZuwendungId('');
+      await reload();
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : 'Download fehlgeschlagen');
+    } finally {
+      setDownloading(false);
     }
-
-    await markBestaetigt([selectedZuwendung.id], isGeld ? 'anlage3' : 'anlage4', lfdNr);
-    setShowUnterschrift(false);
-    setSelectedZuwendungId('');
-    await reload();
   };
 
   const handleSammelDownload = async (mitDoppel: boolean) => {
     const spender = spenderList.find((s) => s.id === sammelSpenderId);
     if (!spender || sammelZuwendungen.length === 0) return;
 
-    const lfdNr = await getNextLaufendeNr();
-    const jahr = sammelVon.substring(0, 4);
-    const sammelDateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-    const ext = format === 'pdf' ? 'pdf' : 'docx';
-    const zeitraum = { von: sammelVon, bis: sammelBis };
+    setDownloading(true);
+    setDownloadError('');
+    try {
+      const lfdNr = await getNextLaufendeNr();
+      const jahr = sammelVon.substring(0, 4);
+      const sammelDateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
+      const ext = format === 'pdf' ? 'pdf' : 'docx';
+      const zeitraum = { von: sammelVon, bis: sammelBis };
 
-    if (format === 'pdf') {
-      const ids = sammelZuwendungen.map((z) => z.id);
-      await downloadPdfFromApi('sammelbestaetigung', spender.id, ids, lfdNr, false, `${sammelDateiName}_Sammelbestaetigung_${jahr}.pdf`, zeitraum);
-      if (mitDoppel) {
-        await downloadPdfFromApi('sammelbestaetigung', spender.id, ids, lfdNr, true, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.pdf`, zeitraum);
-      }
-    } else {
-      const blob = await generateSammelbestaetigung(
-        verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, false
-      );
-      downloadBlob(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.${ext}`);
-      if (mitDoppel) {
-        const doppelBlob = await generateSammelbestaetigung(
-          verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, true
+      if (format === 'pdf') {
+        const ids = sammelZuwendungen.map((z) => z.id);
+        await downloadPdfFromApi('sammelbestaetigung', spender.id, ids, lfdNr, false, `${sammelDateiName}_Sammelbestaetigung_${jahr}.pdf`, zeitraum);
+        if (mitDoppel) {
+          await downloadPdfFromApi('sammelbestaetigung', spender.id, ids, lfdNr, true, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.pdf`, zeitraum);
+        }
+      } else {
+        const blob = await generateSammelbestaetigung(
+          verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, false
         );
-        downloadBlob(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.${ext}`);
+        downloadBlob(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.${ext}`);
+        if (mitDoppel) {
+          const doppelBlob = await generateSammelbestaetigung(
+            verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, true
+          );
+          downloadBlob(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.${ext}`);
+        }
       }
-    }
 
-    await markBestaetigt(sammelZuwendungen.map((z) => z.id), 'anlage14', lfdNr);
-    setShowSammelUnterschrift(false);
-    await reload();
+      await markBestaetigt(sammelZuwendungen.map((z) => z.id), 'anlage14', lfdNr);
+      setShowSammelUnterschrift(false);
+      await reload();
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : 'Download fehlgeschlagen');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleVereinfachtDownload = async () => {
@@ -214,18 +235,26 @@ function BestaetigungContent() {
     const spender = spenderList.find((s) => s.id === vereinfachtSelected.spenderId);
     if (!spender) return;
 
-    const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
+    setDownloading(true);
+    setDownloadError('');
+    try {
+      const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
 
-    if (format === 'pdf') {
-      await downloadPdfFromApi('vereinfacht', spender.id, [vereinfachtSelected.id], '', false, `${dateiName}_Nachweis.pdf`);
-    } else {
-      const blob = await generateVereinfachterNachweis(verein, spender, vereinfachtSelected);
-      downloadBlob(blob, `${dateiName}_Nachweis.docx`);
+      if (format === 'pdf') {
+        await downloadPdfFromApi('vereinfacht', spender.id, [vereinfachtSelected.id], '', false, `${dateiName}_Nachweis.pdf`);
+      } else {
+        const blob = await generateVereinfachterNachweis(verein, spender, vereinfachtSelected);
+        downloadBlob(blob, `${dateiName}_Nachweis.docx`);
+      }
+
+      await markBestaetigt([vereinfachtSelected.id], 'vereinfacht', '');
+      setVereinfachtZuwendungId('');
+      await reload();
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : 'Download fehlgeschlagen');
+    } finally {
+      setDownloading(false);
     }
-
-    await markBestaetigt([vereinfachtSelected.id], 'vereinfacht', '');
-    setVereinfachtZuwendungId('');
-    await reload();
   };
 
   const tabs: Array<{ key: Tab; label: string }> = [
@@ -246,6 +275,12 @@ function BestaetigungContent() {
             </h2>
             <FormatToggle value={format} onChange={setFormat} />
           </div>
+
+          {downloadError && (
+            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
+              {downloadError}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 mb-6 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {tabs.map((t) => (
@@ -312,7 +347,7 @@ function BestaetigungContent() {
               )}
 
               {selectedZuwendung && (
-                <button className="drk-btn-primary" onClick={() => setShowUnterschrift(true)}>{format.toUpperCase()} herunterladen</button>
+                <button className="drk-btn-primary" disabled={downloading} onClick={() => setShowUnterschrift(true)}>{downloading ? 'Generiere...' : `${format.toUpperCase()} herunterladen`}</button>
               )}
             </div>
           )}
