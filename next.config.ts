@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
 
   images: { unoptimized: true },
+
+  // pdfmake uses Node.js fs/path internally — must not be bundled by webpack/turbopack
+  serverExternalPackages: ['pdfmake'],
 };
 
 export default nextConfig;
