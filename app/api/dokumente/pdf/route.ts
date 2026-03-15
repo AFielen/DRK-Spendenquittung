@@ -60,6 +60,7 @@ function mapZuwendung(z: Record<string, unknown>): Zuwendung {
     verwendung: z.verwendung as Zuwendung['verwendung'],
     betrag: Number(z.betrag),
     datum: (z.datum as Date).toISOString(),
+    zugangsweg: z.zugangsweg as Zuwendung['zugangsweg'],
     sachBezeichnung: z.sachBezeichnung as string | null,
     sachAlter: z.sachAlter as string | null,
     sachZustand: z.sachZustand as string | null,

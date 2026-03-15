@@ -26,6 +26,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `components/ZuwendungTabelle.tsx`: Bestätigte Zuwendungen zeigen "Details" statt "Bearbeiten", kein Löschen/Bearbeiten mehr möglich
 
 ### Fixed
+- **PDF-Download:** `pdfmake` zu `serverExternalPackages` in `next.config.ts` hinzugefügt — behebt Runtime-Fehler durch fehlerhaftes Bundling von Node.js-APIs (`fs`, `path`)
+- **PDF-API:** Fehlendes `zugangsweg`-Feld in `mapZuwendung` ergänzt (`app/api/dokumente/pdf/route.ts`)
 - **Security:** Magic Codes werden jetzt als SHA-256-Hash in der DB gespeichert statt im Klartext (`auth/login`, `auth/verify`)
 - **Security:** Rate-Limiting bei Magic-Code-Verifikation – max. 5 Fehlversuche, danach Code invalidiert (`auth/verify`, `magicCodeVersuche` Feld)
 - **Security:** Rollenprüfung (`requireSchreibrecht`) für alle schreibenden Spender- und Zuwendungen-Endpunkte – `leser`-Rolle kann nicht mehr ändern/löschen
