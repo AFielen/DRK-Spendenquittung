@@ -27,11 +27,6 @@ export async function generateSachzuwendungPdf(
   const content: Content[] = [];
   const wert = zuwendung.sachWert ?? zuwendung.betrag;
 
-  // Aussteller
-  content.push({ text: verein.name, fontSize: 10, bold: true });
-  content.push({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 6 });
-
   // Titel
   for (const zeile of TITEL_SACHZUWENDUNG.split('\n')) {
     content.push({ text: zeile, style: 'title' });
@@ -126,6 +121,8 @@ export async function generateSachzuwendungPdf(
     verein,
     laufendeNr,
     doppel,
+    empfaenger: spenderAnschrift(spender),
+    datum: formatDatum(zuwendung.datum),
   });
 
   return generatePdfBuffer(docDefinition);

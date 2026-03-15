@@ -3,7 +3,7 @@ import type { Verein, Spender, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { betragInWorten } from '@/lib/docx-templates/betrag-in-worten';
 import { createBriefbogenLayout } from './briefbogen';
-import { generatePdfBuffer, formatDatum, formatBetrag } from './pdf-helper';
+import { generatePdfBuffer, formatDatum, formatBetrag, spenderAnschrift } from './pdf-helper';
 
 export async function generateVereinfachterNachweisPdf(
   verein: Verein,
@@ -11,11 +11,6 @@ export async function generateVereinfachterNachweisPdf(
   zuwendung: Zuwendung
 ): Promise<Buffer> {
   const content: Content[] = [];
-
-  // Aussteller
-  content.push({ text: verein.name, fontSize: 11, bold: true });
-  content.push({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 6 });
 
   // Titel
   content.push({
@@ -90,7 +85,11 @@ export async function generateVereinfachterNachweisPdf(
     italics: true,
   });
 
-  const docDefinition = createBriefbogenLayout(content, { verein });
+  const docDefinition = createBriefbogenLayout(content, {
+    verein,
+    empfaenger: spenderAnschrift(spender),
+    datum: formatDatum(zuwendung.datum),
+  });
 
   return generatePdfBuffer(docDefinition);
 }

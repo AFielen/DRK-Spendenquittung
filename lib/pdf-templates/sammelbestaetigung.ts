@@ -29,11 +29,6 @@ export async function generateSammelbestaetigungPdf(
   const gesamtbetrag = zuwendungen.reduce((s, z) => s + z.betrag, 0);
   const content: Content[] = [];
 
-  // Aussteller
-  content.push({ text: verein.name, fontSize: 10, bold: true });
-  content.push({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 6 });
-
   // Titel
   for (const zeile of TITEL_SAMMELBESTAETIGUNG.split('\n')) {
     content.push({ text: zeile, style: 'title' });
@@ -174,6 +169,8 @@ export async function generateSammelbestaetigungPdf(
     verein,
     laufendeNr,
     doppel,
+    empfaenger: spenderAnschrift(spender),
+    datum: formatDatum(zeitraumBis),
   });
 
   return generatePdfBuffer(docDefinition);

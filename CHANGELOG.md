@@ -25,6 +25,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `components/ZuwendungDetails.tsx`: Read-only Detailansicht für bestätigte Zuwendungen mit PDF-Download
 
 ### Changed
+- **PDF-Briefbogen:** Layout komplett an offizielle DRK-Briefbogen-Vorlage angepasst – Logo + "Deutsches Rotes Kreuz" oben rechts, Absenderzeile mit Trennlinie, Empfänger-Adresse im Fensterbereich, strukturierte rechte Sidebar (Org-Name bold, Vorsitzender, Amtsgericht/VR, Steuernummer), Datumszeile, Footer rechts
+- **PDF-Templates:** Aussteller-Block aus allen 5 Templates entfernt (wird nun zentral vom Briefbogen-Layout gerendert)
 - **Admin-Navigation:** Admin-Link von der Hauptnavigation ins UserMenu-Dropdown verschoben (Shield-Icon + "Admin-Bereich", nur für Superadmin)
 - `app/bestaetigung/page.tsx`: FormatToggle integriert, PDF-Download über API, dynamische Button-Labels
 - `app/export/page.tsx`: FormatToggle integriert, Batch-Export unterstützt PDF und DOCX
