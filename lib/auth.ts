@@ -30,6 +30,11 @@ export function requireSchreibrecht(session: SessionData): boolean {
   return session.rolle === 'admin' || session.rolle === 'schatzmeister';
 }
 
+export function isSuperadmin(session: SessionData): boolean {
+  const email = process.env.SUPERADMIN_EMAIL;
+  return !!email && session.email.toLowerCase() === email.toLowerCase();
+}
+
 export async function getSession(): Promise<SessionData | null> {
   const cookieStore = await cookies();
   const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());

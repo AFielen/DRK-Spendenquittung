@@ -7,6 +7,7 @@ interface NutzerData {
   email: string;
   name: string;
   rolle: string;
+  isSuperadmin?: boolean;
 }
 
 interface KreisverbandData {
