@@ -198,16 +198,14 @@ function BestaetigungContent() {
             Bestätigungen erstellen
           </h2>
 
-          <div className="flex gap-0 mb-6 overflow-x-auto -mx-1 px-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 mb-6 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {tabs.map((t) => (
               <button
                 key={t.key}
-                className="flex-1 py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold transition-colors min-w-0"
+                className="py-2.5 px-3 text-sm font-semibold transition-colors"
                 style={{
                   background: tab === t.key ? 'var(--drk)' : 'var(--bg)',
                   color: tab === t.key ? '#fff' : 'var(--text)',
-                  border: '1px solid var(--border)',
-                  borderRadius: t.key === 'einzel' ? '0.5rem 0 0 0.5rem' : t.key === 'vereinfacht' ? '0 0.5rem 0.5rem 0' : '0',
                 }}
                 onClick={() => setTab(t.key)}
               >

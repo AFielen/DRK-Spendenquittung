@@ -8,6 +8,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- `app/bestaetigung/page.tsx`: Tab-Buttons (Einzel/Sammel/Vereinfacht) werden auf Mobile vertikal gestapelt statt überlappend (`grid-cols-1 sm:grid-cols-3`)
+- `app/export/page.tsx`: Gesamtsumme im Batch-Export bricht nicht mehr über zwei Zeilen (`text-lg sm:text-2xl`, `whitespace-nowrap`)
+
+### Added
+- `app/login/page.tsx`: Info-Box auf der Anmeldeseite erklärt den Erstanmeldeprozess (KV anlegen, Daten hinterlegen, Mitarbeiter einladen)
+
 ### Changed
 - `ZuwendungFormular.tsx`: Wizard-Pattern statt scrollendem Modal (Geld: 2 Schritte, Sach: 3 Schritte) mit Step-Indikator
 - CSS-Variablen `--error`, `--error-bg`, `--error-border`, `--error-text`, `--info-border`, `--info-text`, `--warning-border`, `--warning-text` in `globals.css` (light + dark mode)

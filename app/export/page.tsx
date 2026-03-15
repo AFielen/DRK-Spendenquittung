@@ -190,10 +190,10 @@ function ExportContent() {
               </select>
             </div>
             <div className="p-4 rounded-lg" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div><div className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{spenderMitGeld.size + new Set(sachZuwendungen.map((z) => z.spenderId)).size}</div><div className="text-xs" style={{ color: 'var(--text-light)' }}>Spender</div></div>
-                <div><div className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{jahresZuwendungen.length}</div><div className="text-xs" style={{ color: 'var(--text-light)' }}>Zuwendungen</div></div>
-                <div><div className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{formatBetrag(gesamtSumme)} €</div><div className="text-xs" style={{ color: 'var(--text-light)' }}>Gesamtsumme</div></div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                <div><div className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--text)' }}>{spenderMitGeld.size + new Set(sachZuwendungen.map((z) => z.spenderId)).size}</div><div className="text-xs" style={{ color: 'var(--text-light)' }}>Spender</div></div>
+                <div><div className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--text)' }}>{jahresZuwendungen.length}</div><div className="text-xs" style={{ color: 'var(--text-light)' }}>Zuwendungen</div></div>
+                <div><div className="text-lg sm:text-2xl font-bold whitespace-nowrap" style={{ color: 'var(--text)' }}>{formatBetrag(gesamtSumme)}&nbsp;€</div><div className="text-xs" style={{ color: 'var(--text-light)' }}>Gesamtsumme</div></div>
               </div>
             </div>
             <div className="space-y-2">

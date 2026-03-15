@@ -202,6 +202,15 @@ export default function LoginPage() {
             Verband registrieren
           </Link>
         </div>
+
+        <div className="mt-6 p-4 rounded-lg text-sm" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+          <div className="font-semibold mb-2" style={{ color: 'var(--text)' }}>So funktioniert die Erstanmeldung</div>
+          <ol className="space-y-1.5 pl-5 list-decimal" style={{ color: 'var(--text-light)' }}>
+            <li>Ein Nutzer registriert den Kreisverband und wird automatisch Administrator.</li>
+            <li>Vereinsdaten, steuerliche Angaben und Unterschriftsberechtigte werden hinterlegt.</li>
+            <li>Anschließend können weitere Mitarbeiter per E-Mail eingeladen werden.</li>
+          </ol>
+        </div>
       </div>
     </div>
   );
