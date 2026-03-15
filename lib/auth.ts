@@ -9,20 +9,30 @@ export interface SessionData {
   rolle: string;
 }
 
-export const SESSION_OPTIONS: SessionOptions = {
-  password: process.env.IRON_SESSION_PASSWORD || 'mindestens-32-zeichen-langes-passwort-fuer-dev-modus',
-  cookieName: 'drk-sq-session',
-  cookieOptions: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
-    maxAge: 60 * 60 * 24 * 7, // 7 Tage
-  },
-};
+function getSessionOptions(): SessionOptions {
+  const pw = process.env.IRON_SESSION_PASSWORD;
+  if (!pw && process.env.NODE_ENV === 'production') {
+    throw new Error('IRON_SESSION_PASSWORD muss in Production gesetzt sein.');
+  }
+  return {
+    password: pw || 'mindestens-32-zeichen-langes-passwort-fuer-dev-modus',
+    cookieName: 'drk-sq-session',
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      maxAge: 60 * 60 * 24 * 7, // 7 Tage
+    },
+  };
+}
+
+export function requireSchreibrecht(session: SessionData): boolean {
+  return session.rolle === 'admin' || session.rolle === 'schatzmeister';
+}
 
 export async function getSession(): Promise<SessionData | null> {
   const cookieStore = await cookies();
-  const session = await getIronSession<SessionData>(cookieStore, SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
 
   if (!session.nutzerId) {
     return null;
@@ -39,7 +49,7 @@ export async function getSession(): Promise<SessionData | null> {
 
 export async function createSession(data: SessionData): Promise<void> {
   const cookieStore = await cookies();
-  const session = await getIronSession<SessionData>(cookieStore, SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
   session.nutzerId = data.nutzerId;
   session.kreisverbandId = data.kreisverbandId;
   session.email = data.email;
@@ -50,6 +60,6 @@ export async function createSession(data: SessionData): Promise<void> {
 
 export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
-  const session = await getIronSession<SessionData>(cookieStore, SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
   session.destroy();
 }
