@@ -56,9 +56,10 @@ model Nutzer {
   kreisverband    Kreisverband @relation(fields: [kreisverbandId], references: [id])
 
   // Auth
-  magicCode       String?
-  magicCodeExpiry DateTime?
-  letztesLogin    DateTime?
+  magicCode          String?
+  magicCodeExpiry    DateTime?
+  magicCodeVersuche  Int       @default(0)
+  letztesLogin       DateTime?
 
   erstelltAm      DateTime @default(now())
   aktualisiertAm  DateTime @updatedAt

@@ -8,6 +8,19 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Security:** Magic Codes werden jetzt als SHA-256-Hash in der DB gespeichert statt im Klartext (`auth/login`, `auth/verify`)
+- **Security:** Rate-Limiting bei Magic-Code-Verifikation – max. 5 Fehlversuche, danach Code invalidiert (`auth/verify`, `magicCodeVersuche` Feld)
+- **Security:** Rollenprüfung (`requireSchreibrecht`) für alle schreibenden Spender- und Zuwendungen-Endpunkte – `leser`-Rolle kann nicht mehr ändern/löschen
+- **Security:** `IRON_SESSION_PASSWORD` Fallback wirft Fehler in Production statt unsicheres Default-Passwort zu verwenden (`lib/auth.ts`)
+- `.env.example` aktualisiert: Fehlende Variablen `IRON_SESSION_PASSWORD`, `MAILJET_API_KEY`, `MAILJET_SECRET_KEY`, `APP_URL` ergänzt; veraltete `SESSION_SECRET`/SMTP-Variablen ersetzt
+
+### Added
+- `lib/auth.ts`: `requireSchreibrecht()` Helper-Funktion für Rollenprüfung (admin/schatzmeister)
+- `prisma/schema.prisma`: `magicCodeVersuche` Feld auf `Nutzer`-Modell für Rate-Limiting
+- `prisma/migrations/20260315_add_magic_code_versuche`: DB-Migration für Fehlversuche-Zähler
+- Opportunistisches Cleanup abgelaufener Magic Codes und Registrierungscodes beim Login (`auth/login`)
+
 ### Changed
 - `ZuwendungFormular.tsx`: Redundantes Feld "Zahlungsart" entfernt und in "Zugangsweg" zusammengeführt; neue Option "Lastschrift" im Zugangsweg
 - `Spendenbuch.tsx`: "Lastschrift" als Zugangsweg-Option in Labels und Filtern ergänzt

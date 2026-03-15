@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { createSession } from '@/lib/auth';
+
+const MAX_VERSUCHE = 5;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -20,7 +23,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ungültiger Code.' }, { status: 401 });
   }
 
-  if (nutzer.magicCode !== code) {
+  // Rate-Limiting: Max Fehlversuche
+  if ((nutzer.magicCodeVersuche ?? 0) >= MAX_VERSUCHE) {
+    // Code invalidieren
+    await prisma.nutzer.update({
+      where: { id: nutzer.id },
+      data: { magicCode: null, magicCodeExpiry: null, magicCodeVersuche: 0 },
+    });
+    return NextResponse.json(
+      { error: 'Zu viele Fehlversuche. Bitte fordern Sie einen neuen Code an.' },
+      { status: 429 },
+    );
+  }
+
+  // Code-Hash vergleichen
+  const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+  if (nutzer.magicCode !== codeHash) {
+    // Fehlversuch zählen
+    await prisma.nutzer.update({
+      where: { id: nutzer.id },
+      data: { magicCodeVersuche: { increment: 1 } },
+    });
     return NextResponse.json({ error: 'Ungültiger Code.' }, { status: 401 });
   }
 
@@ -34,6 +57,7 @@ export async function POST(req: NextRequest) {
     data: {
       magicCode: null,
       magicCodeExpiry: null,
+      magicCodeVersuche: 0,
       letztesLogin: new Date(),
     },
   });
