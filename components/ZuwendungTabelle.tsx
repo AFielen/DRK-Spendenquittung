@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { Spender, Zuwendung } from '@/lib/types';
+import type { Spender, Zuwendung, Verein } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { apiGet } from '@/lib/api-client';
+import { erstelleEmpfangsbestaetigung } from '@/lib/docx-templates/empfangsbestaetigung';
+import { saveAs } from 'file-saver';
 
 interface ZuwendungTabelleProps {
   zuwendungen: Zuwendung[];
   spenderList: Spender[];
+  verein?: Verein;
   onEdit: (zuwendung: Zuwendung) => void;
   onDelete: (zuwendung: Zuwendung) => void;
 }
@@ -14,9 +18,11 @@ interface ZuwendungTabelleProps {
 export default function ZuwendungTabelle({
   zuwendungen,
   spenderList,
+  verein,
   onEdit,
   onDelete,
 }: ZuwendungTabelleProps) {
+  const [downloadingEB, setDownloadingEB] = useState<string | null>(null);
   const [filterSpender, setFilterSpender] = useState('');
   const [filterJahr, setFilterJahr] = useState('');
   const [filterArt, setFilterArt] = useState<'alle' | 'geld' | 'sach'>('alle');
@@ -51,6 +57,20 @@ export default function ZuwendungTabelle({
     () => filtered.reduce((s, z) => s + (z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag), 0),
     [filtered]
   );
+
+  const handleEmpfangsbestaetigung = async (z: Zuwendung) => {
+    if (!verein) return;
+    setDownloadingEB(z.id);
+    try {
+      const vollstaendig = await apiGet<Zuwendung>(`/api/zuwendungen/${z.id}`);
+      const blob = await erstelleEmpfangsbestaetigung(verein, { ...vollstaendig, betrag: Number(vollstaendig.betrag), sachWert: vollstaendig.sachWert != null ? Number(vollstaendig.sachWert) : undefined });
+      const spenderName = vollstaendig.spender ? spenderAnzeigename(vollstaendig.spender).replace(/\s+/g, '_') : 'Spender';
+      const datumStr = vollstaendig.datum.substring(0, 10);
+      saveAs(blob, `Empfangsbestaetigung_${spenderName}_${datumStr}.docx`);
+    } finally {
+      setDownloadingEB(null);
+    }
+  };
 
   const formatDatum = (d: string) => {
     const [y, m, day] = d.split('-');
@@ -159,14 +179,24 @@ export default function ZuwendungTabelle({
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{
-                        background: z.bestaetigungErstellt ? '#dcfce7' : '#fef3c7',
-                        color: z.bestaetigungErstellt ? '#166534' : '#92400e',
+                        background: z.bestaetigungErstellt ? 'var(--success-bg)' : 'var(--warning-bg)',
+                        color: z.bestaetigungErstellt ? 'var(--success)' : 'var(--warning-text)',
                       }}
                     >
                       {z.bestaetigungErstellt ? 'Bestätigt' : 'Offen'}
                     </span>
                   </td>
                   <td className="py-2 px-3 text-right">
+                    {z.art === 'sach' && verein && (
+                      <button
+                        className="text-sm underline mr-3"
+                        style={{ color: 'var(--info, #17a2b8)' }}
+                        disabled={downloadingEB === z.id}
+                        onClick={() => handleEmpfangsbestaetigung(z)}
+                      >
+                        {downloadingEB === z.id ? '...' : 'Empfangsbestätigung'}
+                      </button>
+                    )}
                     <button
                       className="text-sm underline mr-3"
                       style={{ color: 'var(--drk)' }}
@@ -179,7 +209,7 @@ export default function ZuwendungTabelle({
                         <span className="text-sm">
                           <button
                             className="underline font-bold mr-2"
-                            style={{ color: '#dc2626' }}
+                            style={{ color: 'var(--error)' }}
                             onClick={() => {
                               onDelete(z);
                               setDeleteConfirm(null);
@@ -198,7 +228,7 @@ export default function ZuwendungTabelle({
                       ) : (
                         <button
                           className="text-sm underline"
-                          style={{ color: '#dc2626' }}
+                          style={{ color: 'var(--error)' }}
                           onClick={() => setDeleteConfirm(z.id)}
                         >
                           Löschen
@@ -261,14 +291,24 @@ export default function ZuwendungTabelle({
                   {z.bemerkung}
                 </div>
               )}
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {z.art === 'sach' && verein && (
+                  <button
+                    className="text-sm px-3 py-2 rounded"
+                    style={{ background: 'var(--info-bg)', color: 'var(--info-text)' }}
+                    disabled={downloadingEB === z.id}
+                    onClick={() => handleEmpfangsbestaetigung(z)}
+                  >
+                    {downloadingEB === z.id ? '...' : 'Empfangsbestätigung'}
+                  </button>
+                )}
                 <button className="drk-btn-secondary text-sm flex-1" onClick={() => onEdit(z)}>
                   Bearbeiten
                 </button>
                 {!z.bestaetigungErstellt && (
                   <button
                     className="text-sm px-3 py-2 rounded"
-                    style={{ background: '#fef2f2', color: '#dc2626' }}
+                    style={{ background: 'var(--error-bg)', color: 'var(--error)' }}
                     onClick={() => onDelete(z)}
                   >
                     Löschen

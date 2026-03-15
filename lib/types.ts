@@ -88,6 +88,7 @@ export interface Zuwendung {
   betrag: number;
   datum: string; // ISO-Date
   zahlungsart?: string | null;
+  zugangsweg?: 'ueberweisung' | 'bar' | 'online' | 'paypal' | 'scheck' | 'sonstig' | null;
 
   // Sachzuwendung (nur bei art === 'sach')
   sachBezeichnung?: string | null;
@@ -99,6 +100,7 @@ export interface Zuwendung {
   sachWertermittlung?: string | null;
   sachEntnahmewert?: number | null;
   sachUmsatzsteuer?: number | null;
+  sachBewertungsgrundlage?: 'rechnung' | 'eigene_ermittlung' | 'gutachten' | null;
   sachUnterlagenVorhanden: boolean;
 
   // Verwaltung
@@ -106,6 +108,13 @@ export interface Zuwendung {
 
   // Interne Notiz (nicht auf Zuwendungsbestätigung)
   bemerkung?: string | null;
+
+  // Zweckbindung
+  zweckgebunden: boolean;
+  zweckbindung?: string | null;
+  zweckVerwendet: boolean;
+  zweckVerwendetDatum?: string | null;
+  zweckVerwendetNotiz?: string | null;
 
   // Status
   bestaetigungErstellt: boolean;

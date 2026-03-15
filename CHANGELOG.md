@@ -8,7 +8,34 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- `ZuwendungFormular.tsx`: Wizard-Pattern statt scrollendem Modal (Geld: 2 Schritte, Sach: 3 Schritte) mit Step-Indikator
+- CSS-Variablen `--error`, `--error-bg`, `--error-border`, `--error-text`, `--info-border`, `--info-text`, `--warning-border`, `--warning-text` in `globals.css` (light + dark mode)
+- Hardcodierte Hex-Farben durch CSS-Variablen ersetzt in `ZweckbindungsStatus.tsx`, `Fristwarnung.tsx`, `Spendenbuch.tsx`, `ZuwendungTabelle.tsx`, `SpenderTabelle.tsx`
+- `SpenderFormular.tsx`: PLZ-Grid von `grid-cols-3` auf `grid-cols-[5rem_1fr]` (feste PLZ-Breite, flexibler Ort)
+- `CsvImport.tsx`: `max-h-[90vh] overflow-y-auto` auf Modal-Container
+
 ### Added
+- Spendenbuch: Chronologisches Journal aller Zuwendungen mit Filtern nach Jahr, Art, Zugangsweg, Status (SAC II.1–II.6)
+- Zugangsweg-Erfassung bei Geldzuwendungen (Überweisung, Bar, Online, PayPal, Scheck, Sonstig) mit `zugangsweg`-Feld in Schema, Types, API, Formular
+- Sachspenden-Bewertungsdokumentation: Strukturierte Erfassung der Bewertungsgrundlage (`sachBewertungsgrundlage`) mit Plausibilitätsprüfungen (SAC IV.3)
+- Zweckbindungs-Tracking: `zweckgebunden`, `zweckbindung`, `zweckVerwendet`, `zweckVerwendetDatum`, `zweckVerwendetNotiz` Felder (SAC III.2, III.3)
+- `components/ZweckbindungsStatus.tsx`: Dashboard-Karte für offene zweckgebundene Zuwendungen mit Farbcodierung und "Als verwendet markieren"-Funktion
+- Fristüberwachung: `components/Fristwarnung.tsx` – Automatische Ampel für die Zwei-Jahres-Verausgabungsfrist nach § 55 Abs. 1 Nr. 5 AO (SAC III.4)
+- Empfangsbestätigung: `lib/docx-templates/empfangsbestaetigung.ts` – DOCX-Übergabeprotokoll für Sachspenden (internes Dokument)
+- `app/api/zuwendungen/[id]/zweck-verwendet/route.ts`: API-Endpoint zum Markieren von Zweckbindungen als verwendet
+- `app/spendenbuch/page.tsx` + `components/Spendenbuch.tsx`: Spendenbuch-Seite mit Zusammenfassung und Filtern
+- Prisma-Migrationen: `add_zugangsweg`, `add_sach_bewertungsgrundlage`, `add_zweckbindung`
+
+### Changed
+- `ZuwendungFormular.tsx`: Erweiterte Sachspenden-Felder mit Bewertungsblock (Bewertungsgrundlage, Plausibilitätsprüfungen, Betriebsvermögen-Hinweis), Zweckbindungs-Checkbox
+- Dashboard (`app/page.tsx`): Neue Karten für Zweckbindungen (`ZweckbindungsStatus`) und Fristwarnungen (`Fristwarnung`)
+- `Navigation.tsx`: Neuer Menüpunkt "Spendenbuch" (book-open Icon) zwischen Zuwendungen und Bestätigung
+- `ZuwendungTabelle.tsx`: "Empfangsbestätigung"-Download-Button für Sachspenden
+- Batch-Export (`app/export/page.tsx`): Optionaler Export von Empfangsbestätigungen für Sachspenden in Unterordner `Empfangsbestaetigungen/`
+- API `GET /api/zuwendungen`: Neue Filter `zugangsweg` und `status=zweckgebunden_offen`
+- API `POST/PUT /api/zuwendungen`: Neue Felder `zugangsweg`, `sachBewertungsgrundlage`, `zweckgebunden`, `zweckbindung`, `zweckVerwendet`, `zweckVerwendetDatum`, `zweckVerwendetNotiz`
+
 - Firmenspender: `istFirma` und `firmenname` Felder in `Spender`-Modell, Formular, Tabelle, API und DOCX-Templates
 - `components/HilfeHint.tsx`: Wiederverwendbare Hilfe-Hinweis-Komponente mit Toggle
 - Hilfe-Hints bei allen steuerlichen Feldern im `VereinsSetupWizard` (Finanzamt, Steuernummer, Freistellungsart, Bescheiddatum, Veranlagungszeitraum, Begünstigte Zwecke, Unterschrift)

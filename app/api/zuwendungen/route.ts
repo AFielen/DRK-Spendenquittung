@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   const jahr = url.searchParams.get('jahr');
   const art = url.searchParams.get('art');
   const status = url.searchParams.get('status');
+  const zugangsweg = url.searchParams.get('zugangsweg');
 
   const where: Prisma.ZuwendungWhereInput = {
     kreisverbandId: session.kreisverbandId,
@@ -21,6 +22,11 @@ export async function GET(req: NextRequest) {
   if (art && art !== 'alle') where.art = art;
   if (status === 'offen') where.bestaetigungErstellt = false;
   if (status === 'bestaetigt') where.bestaetigungErstellt = true;
+  if (status === 'zweckgebunden_offen') {
+    where.zweckgebunden = true;
+    where.zweckVerwendet = false;
+  }
+  if (zugangsweg && zugangsweg !== 'alle') where.zugangsweg = zugangsweg;
 
   if (jahr) {
     const y = parseInt(jahr);
@@ -76,6 +82,7 @@ export async function POST(req: NextRequest) {
       betrag: body.betrag,
       datum: new Date(body.datum),
       zahlungsart: body.zahlungsart ?? null,
+      zugangsweg: body.zugangsweg ?? null,
       sachBezeichnung: body.sachBezeichnung ?? null,
       sachAlter: body.sachAlter ?? null,
       sachZustand: body.sachZustand ?? null,
@@ -83,11 +90,17 @@ export async function POST(req: NextRequest) {
       sachWert: body.sachWert ?? null,
       sachHerkunft: body.sachHerkunft ?? null,
       sachWertermittlung: body.sachWertermittlung ?? null,
+      sachBewertungsgrundlage: body.sachBewertungsgrundlage ?? null,
       sachEntnahmewert: body.sachEntnahmewert ?? null,
       sachUmsatzsteuer: body.sachUmsatzsteuer ?? null,
       sachUnterlagenVorhanden: body.sachUnterlagenVorhanden ?? false,
       verzicht: body.verzicht ?? false,
       bemerkung: body.bemerkung ?? null,
+      zweckgebunden: body.zweckgebunden ?? false,
+      zweckbindung: body.zweckbindung ?? null,
+      zweckVerwendet: body.zweckVerwendet ?? false,
+      zweckVerwendetDatum: body.zweckVerwendetDatum ? new Date(body.zweckVerwendetDatum) : null,
+      zweckVerwendetNotiz: body.zweckVerwendetNotiz ?? null,
       spenderId: body.spenderId,
       kreisverbandId: session.kreisverbandId,
     },

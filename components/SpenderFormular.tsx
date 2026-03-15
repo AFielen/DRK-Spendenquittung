@@ -180,7 +180,7 @@ export default function SpenderFormular({ spender, onSave, onCancel }: SpenderFo
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-[5rem_1fr] gap-3">
             <div>
               <label className="drk-label">PLZ *</label>
               <input
@@ -190,7 +190,7 @@ export default function SpenderFormular({ spender, onSave, onCancel }: SpenderFo
                 onChange={(e) => setPlz(e.target.value)}
               />
             </div>
-            <div className="col-span-2">
+            <div>
               <label className="drk-label">Ort *</label>
               <input
                 type="text"

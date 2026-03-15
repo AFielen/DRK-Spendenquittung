@@ -146,7 +146,7 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
                     <span className="text-sm">
                       <button
                         className="underline font-bold mr-2"
-                        style={{ color: '#dc2626' }}
+                        style={{ color: 'var(--error)' }}
                         onClick={() => {
                           onDelete(s);
                           setDeleteConfirm(null);
@@ -220,7 +220,7 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
                 <div className="flex gap-2">
                   <button
                     className="text-sm px-3 py-2 rounded font-bold"
-                    style={{ background: '#dc2626', color: '#fff' }}
+                    style={{ background: 'var(--error)', color: '#fff' }}
                     onClick={() => {
                       onDelete(s);
                       setDeleteConfirm(null);
@@ -238,7 +238,7 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
               ) : (
                 <button
                   className="text-sm px-3 py-2 rounded"
-                  style={{ background: '#fef2f2', color: '#dc2626' }}
+                  style={{ background: 'var(--error-bg)', color: 'var(--error)' }}
                   onClick={() => setDeleteConfirm(s.id)}
                 >
                   Löschen
@@ -246,7 +246,7 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
               )}
             </div>
             {deleteConfirm === s.id && (s.zuwendungenCount ?? 0) > 0 && (
-              <div className="text-xs mt-2 p-2 rounded" style={{ background: '#fef2f2', color: '#991b1b' }}>
+              <div className="text-xs mt-2 p-2 rounded" style={{ background: 'var(--error-bg)', color: 'var(--error-text)' }}>
                 Dieser Spender hat {s.zuwendungenCount} Zuwendungen. Beim Löschen werden auch alle
                 zugehörigen Zuwendungen gelöscht.
               </div>
