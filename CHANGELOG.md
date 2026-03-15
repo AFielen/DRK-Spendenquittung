@@ -14,7 +14,6 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - **Admin-API-Routes:** `/api/admin/stats`, `/api/admin/kreisverband`, `/api/admin/nutzer` mit serverseitiger Superadmin-Prüfung
 - **Admin-Seiten:** `app/admin/page.tsx` (Dashboard), `app/admin/kreisverband/[id]/page.tsx` (KV-Detail), `app/admin/nutzer/page.tsx` (Nutzerverwaltung)
 - **Admin-Komponenten:** `AdminGuard.tsx`, `AdminNav.tsx` – Zugangsschutz und Sub-Navigation
-- **Navigation:** Bedingter Admin-Tab mit Shield-Icon in der Hauptnavigation (nur für Superadmin sichtbar)
 - **PDF-Export:** Server-seitige PDF-Generierung mit DRK-Briefbogenlayout via `pdfmake` (`lib/pdf-templates/`)
 - **PDF-Templates:** Geldzuwendung, Sachzuwendung, Sammelbestätigung, Vereinfachter Nachweis, Empfangsbestätigung als PDF
 - **Briefbogen-Layout:** DRK-Logo oben rechts, rechte Seitenleiste mit Vereinsdaten, Falzmarken (DIN 5008), Seitenfuß
@@ -25,6 +24,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `components/FormatToggle.tsx`: Segment-Control für Formatauswahl
 
 ### Changed
+- **Admin-Navigation:** Admin-Link von der Hauptnavigation ins UserMenu-Dropdown verschoben (Shield-Icon + "Admin-Bereich", nur für Superadmin)
 - `app/bestaetigung/page.tsx`: FormatToggle integriert, PDF-Download über API, dynamische Button-Labels
 - `app/export/page.tsx`: FormatToggle integriert, Batch-Export unterstützt PDF und DOCX
 

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthProvider';
+import Link from 'next/link';
 
 export default function UserMenu() {
   const { nutzer, kreisverband, logout } = useAuth();
@@ -61,6 +62,20 @@ export default function UserMenu() {
             )}
           </div>
           <div className="p-2">
+            {nutzer.isSuperadmin && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gray-100"
+                style={{ color: 'var(--text)' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Admin-Bereich
+              </Link>
+            )}
             <button
               onClick={() => {
                 setOpen(false);
