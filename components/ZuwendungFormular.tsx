@@ -28,8 +28,11 @@ export default function ZuwendungFormular({
   const [betrag, setBetrag] = useState(zuwendung?.betrag?.toString() ?? '');
   const [datum, setDatum] = useState(zuwendung?.datum ?? new Date().toISOString().split('T')[0]);
   const [zahlungsart, setZahlungsart] = useState(zuwendung?.zahlungsart ?? '');
+  const [zugangsweg, setZugangsweg] = useState(zuwendung?.zugangsweg ?? '');
   const [verzicht, setVerzicht] = useState(zuwendung?.verzicht ?? false);
   const [bemerkung, setBemerkung] = useState(zuwendung?.bemerkung ?? '');
+  const [zweckgebunden, setZweckgebunden] = useState(zuwendung?.zweckgebunden ?? false);
+  const [zweckbindung, setZweckbindung] = useState(zuwendung?.zweckbindung ?? '');
 
   // Sach
   const [sachBezeichnung, setSachBezeichnung] = useState(zuwendung?.sachBezeichnung ?? '');
@@ -39,6 +42,9 @@ export default function ZuwendungFormular({
   const [sachWert, setSachWert] = useState(zuwendung?.sachWert?.toString() ?? '');
   const [sachHerkunft, setSachHerkunft] = useState<Zuwendung['sachHerkunft']>(
     zuwendung?.sachHerkunft ?? 'privatvermoegen'
+  );
+  const [sachBewertungsgrundlage, setSachBewertungsgrundlage] = useState<Zuwendung['sachBewertungsgrundlage']>(
+    zuwendung?.sachBewertungsgrundlage ?? null
   );
   const [sachWertermittlung, setSachWertermittlung] = useState(zuwendung?.sachWertermittlung ?? '');
   const [sachEntnahmewert, setSachEntnahmewert] = useState(
@@ -84,6 +90,7 @@ export default function ZuwendungFormular({
       betrag: art === 'geld' ? parsedBetrag : parsedSachWert,
       datum,
       zahlungsart: art === 'geld' && zahlungsart ? (zahlungsart as Zuwendung['zahlungsart']) : undefined,
+      zugangsweg: art === 'geld' && zugangsweg ? (zugangsweg as Zuwendung['zugangsweg']) : undefined,
       verzicht,
       bemerkung: bemerkung.trim() || undefined,
       sachBezeichnung: art === 'sach' ? sachBezeichnung.trim() : undefined,
@@ -92,6 +99,7 @@ export default function ZuwendungFormular({
       sachKaufpreis: art === 'sach' && sachKaufpreis ? parseFloat(sachKaufpreis) : undefined,
       sachWert: art === 'sach' ? parsedSachWert : undefined,
       sachHerkunft: art === 'sach' ? sachHerkunft : undefined,
+      sachBewertungsgrundlage: art === 'sach' ? sachBewertungsgrundlage : undefined,
       sachWertermittlung: art === 'sach' ? sachWertermittlung.trim() || undefined : undefined,
       sachEntnahmewert:
         art === 'sach' && sachHerkunft === 'betriebsvermoegen' && sachEntnahmewert
@@ -102,6 +110,11 @@ export default function ZuwendungFormular({
           ? parseFloat(sachUmsatzsteuer)
           : undefined,
       sachUnterlagenVorhanden: art === 'sach' ? sachUnterlagenVorhanden : false,
+      zweckgebunden,
+      zweckbindung: zweckgebunden ? zweckbindung.trim() : undefined,
+      zweckVerwendet: zuwendung?.zweckVerwendet ?? false,
+      zweckVerwendetDatum: zuwendung?.zweckVerwendetDatum,
+      zweckVerwendetNotiz: zuwendung?.zweckVerwendetNotiz,
       bestaetigungErstellt: zuwendung?.bestaetigungErstellt ?? false,
       bestaetigungDatum: zuwendung?.bestaetigungDatum,
       bestaetigungTyp: zuwendung?.bestaetigungTyp,
@@ -209,6 +222,28 @@ export default function ZuwendungFormular({
                   value={datum}
                   onChange={(e) => setDatum(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <label className="drk-label">Zugangsweg (optional)</label>
+                <select
+                  className="drk-input"
+                  value={zugangsweg}
+                  onChange={(e) => setZugangsweg(e.target.value)}
+                >
+                  <option value="">– Keine Angabe –</option>
+                  <option value="ueberweisung">Überweisung</option>
+                  <option value="bar">Bareinzahlung</option>
+                  <option value="online">Online-Spende</option>
+                  <option value="paypal">PayPal</option>
+                  <option value="scheck">Scheck</option>
+                  <option value="sonstig">Sonstig</option>
+                </select>
+                {!zugangsweg && (
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Für das Spendenbuch empfohlen: Bitte den Zugangsweg angeben.
+                  </div>
+                )}
               </div>
 
               <div>
@@ -370,40 +405,113 @@ export default function ZuwendungFormular({
               </div>
 
               {sachHerkunft === 'betriebsvermoegen' && (
-                <div className="grid grid-cols-2 gap-3">
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="drk-label">Entnahmewert (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="drk-input"
+                        value={sachEntnahmewert}
+                        onChange={(e) => setSachEntnahmewert(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="drk-label">Umsatzsteuer (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="drk-input"
+                        value={sachUmsatzsteuer}
+                        onChange={(e) => setSachUmsatzsteuer(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div
+                    className="p-3 rounded-lg text-sm"
+                    style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#991b1b' }}
+                  >
+                    Bei Sachspenden aus dem Betriebsvermögen ist zwingend eine Rechnung des Spenders erforderlich.
+                  </div>
+                </>
+              )}
+
+              {/* Bewertungsblock */}
+              <div>
+                <label className="drk-label">Bewertungsgrundlage</label>
+                <div className="space-y-2 mt-1">
+                  {(
+                    [
+                      ['rechnung', 'Originalrechnung / Kaufbeleg vorhanden'],
+                      ['eigene_ermittlung', 'Eigene Wertermittlung (Vergleichsrecherche)'],
+                      ['gutachten', 'Gutachten / Sachverständiger'],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="bewertungsgrundlage"
+                        checked={sachBewertungsgrundlage === value}
+                        onChange={() => setSachBewertungsgrundlage(value)}
+                      />
+                      <span className="text-sm" style={{ color: 'var(--text)' }}>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {sachBewertungsgrundlage === 'eigene_ermittlung' && (
+                <>
                   <div>
-                    <label className="drk-label">Entnahmewert (€)</label>
-                    <input
-                      type="number"
-                      step="0.01"
+                    <label className="drk-label">Bewertungsnotiz</label>
+                    <textarea
                       className="drk-input"
-                      value={sachEntnahmewert}
-                      onChange={(e) => setSachEntnahmewert(e.target.value)}
+                      rows={3}
+                      value={sachWertermittlung}
+                      onChange={(e) => setSachWertermittlung(e.target.value)}
+                      placeholder="z.B. Vergleich mit eBay-Kleinanzeigen-Inseraten vom 15.03.2026, Mittelwert aus 3 Angeboten: 250-320€"
                     />
                   </div>
-                  <div>
-                    <label className="drk-label">Umsatzsteuer (€)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="drk-input"
-                      value={sachUmsatzsteuer}
-                      onChange={(e) => setSachUmsatzsteuer(e.target.value)}
-                    />
+                  <div
+                    className="p-3 rounded-lg text-sm"
+                    style={{ background: '#eff6ff', border: '1px solid #93c5fd', color: '#1e40af' }}
+                  >
+                    Dokumentieren Sie Ihre Recherche so, dass das Finanzamt die Wertfindung nachvollziehen kann. Screenshots von Vergleichsangeboten sollten der Akte beigelegt werden.
                   </div>
+                </>
+              )}
+
+              {sachBewertungsgrundlage !== 'eigene_ermittlung' && (
+                <div>
+                  <label className="drk-label">Unterlagen zur Wertermittlung</label>
+                  <input
+                    type="text"
+                    className="drk-input"
+                    value={sachWertermittlung}
+                    onChange={(e) => setSachWertermittlung(e.target.value)}
+                    placeholder="z.B. Rechnung vom 15.03.2024"
+                  />
                 </div>
               )}
 
-              <div>
-                <label className="drk-label">Unterlagen zur Wertermittlung</label>
-                <input
-                  type="text"
-                  className="drk-input"
-                  value={sachWertermittlung}
-                  onChange={(e) => setSachWertermittlung(e.target.value)}
-                  placeholder="z.B. Rechnung vom 15.03.2024"
-                />
-              </div>
+              {/* Plausibilitätsprüfungen */}
+              {sachKaufpreis && parsedSachWert > 0 && parsedSachWert > (parseFloat(sachKaufpreis) || 0) && (
+                <div
+                  className="p-3 rounded-lg text-sm"
+                  style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e' }}
+                >
+                  Der angesetzte Wert übersteigt den historischen Kaufpreis. Bitte prüfen.
+                </div>
+              )}
+              {parsedSachWert > 5000 && (
+                <div
+                  className="p-3 rounded-lg text-sm"
+                  style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e' }}
+                >
+                  Bei Werten über 5.000 € empfiehlt sich die Einholung eines Sachverständigengutachtens.
+                </div>
+              )}
 
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -447,6 +555,36 @@ export default function ZuwendungFormular({
             <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
               Nur für Ihre interne Verwaltung — erscheint nicht auf der Spendenquittung.
             </div>
+          </div>
+
+          {/* Zweckbindung */}
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={zweckgebunden}
+                onChange={(e) => setZweckgebunden(e.target.checked)}
+              />
+              <span className="text-sm" style={{ color: 'var(--text)' }}>
+                Diese Zuwendung ist zweckgebunden
+              </span>
+            </label>
+            {zweckgebunden && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  className="drk-input"
+                  value={zweckbindung}
+                  onChange={(e) => setZweckbindung(e.target.value)}
+                  placeholder="z.B. für die Jugendarbeit, Katastrophenhilfe, Kleiderkammer..."
+                />
+                {zweckgebunden && !zweckbindung.trim() && (
+                  <div className="text-xs mt-1" style={{ color: '#dc2626' }}>
+                    Bitte geben Sie den Zweck an.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {effectiveBetrag > 0 && effectiveBetrag <= 300 && (

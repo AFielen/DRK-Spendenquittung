@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import AuthGuard from '@/components/AuthGuard';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
 import StatistikKarten from '@/components/StatistikKarten';
+import ZweckbindungsStatus from '@/components/ZweckbindungsStatus';
+import Fristwarnung from '@/components/Fristwarnung';
 import type { Verein, Zuwendung } from '@/lib/types';
 import { apiGet } from '@/lib/api-client';
 
@@ -15,23 +17,28 @@ function DashboardContent() {
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [spenderData, zuwendungenData] = await Promise.all([
-          apiGet<{ id: string }[]>('/api/spender'),
-          apiGet<Zuwendung[]>('/api/zuwendungen'),
-        ]);
-        setSpenderCount(spenderData.length);
-        setZuwendungen(zuwendungenData.map((z) => ({ ...z, betrag: Number(z.betrag) })));
-      } catch {
-        // Fehler werden im api-client behandelt
-      } finally {
-        setLoaded(true);
-      }
+  const reload = useCallback(async () => {
+    try {
+      const [spenderData, zuwendungenData] = await Promise.all([
+        apiGet<{ id: string }[]>('/api/spender'),
+        apiGet<Zuwendung[]>('/api/zuwendungen'),
+      ]);
+      setSpenderCount(spenderData.length);
+      setZuwendungen(zuwendungenData.map((z) => ({
+        ...z,
+        betrag: Number(z.betrag),
+        sachWert: z.sachWert != null ? Number(z.sachWert) : undefined,
+      })));
+    } catch {
+      // Fehler werden im api-client behandelt
+    } finally {
+      setLoaded(true);
     }
-    load();
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   if (!loaded || !kreisverband) return null;
 
@@ -96,6 +103,12 @@ function DashboardContent() {
 
         {/* Statistik-Karten */}
         <StatistikKarten spenderCount={spenderCount} zuwendungen={zuwendungen} />
+
+        {/* Zweckbindungs-Status */}
+        <ZweckbindungsStatus zuwendungen={zuwendungen} onUpdate={reload} />
+
+        {/* Fristüberwachung */}
+        <Fristwarnung zuwendungen={zuwendungen} />
 
         {/* Schnellzugriff */}
         <div className="drk-card">

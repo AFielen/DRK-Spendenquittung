@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import AuthGuard from '@/components/AuthGuard';
+import { useAuth } from '@/components/AuthProvider';
 import ZuwendungTabelle from '@/components/ZuwendungTabelle';
 import ZuwendungFormular from '@/components/ZuwendungFormular';
-import type { Zuwendung, Spender } from '@/lib/types';
+import type { Zuwendung, Spender, Verein } from '@/lib/types';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 
 function ZuwendungenContent() {
+  const { kreisverband } = useAuth();
   const [spenderList, setSpenderList] = useState<Spender[]>([]);
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [showFormular, setShowFormular] = useState(false);
@@ -69,6 +71,7 @@ function ZuwendungenContent() {
           <ZuwendungTabelle
             zuwendungen={zuwendungen}
             spenderList={spenderList}
+            verein={kreisverband ? { ...kreisverband, freistellungsart: kreisverband.freistellungsart as Verein['freistellungsart'] } : undefined}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

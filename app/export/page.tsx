@@ -13,6 +13,7 @@ import { generateGeldzuwendung } from '@/lib/docx-templates/geldzuwendung';
 import { generateSachzuwendung } from '@/lib/docx-templates/sachzuwendung';
 import { generateSammelbestaetigung } from '@/lib/docx-templates/sammelbestaetigung';
 import { generateVereinfachterNachweis } from '@/lib/docx-templates/vereinfachter-nachweis';
+import { erstelleEmpfangsbestaetigung } from '@/lib/docx-templates/empfangsbestaetigung';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
 
 function formatBetrag(n: number): string {
@@ -28,6 +29,7 @@ function ExportContent() {
   const [optSammel, setOptSammel] = useState(true);
   const [optEinzelSach, setOptEinzelSach] = useState(true);
   const [optVereinfacht, setOptVereinfacht] = useState(true);
+  const [optEmpfangsbestaetigung, setOptEmpfangsbestaetigung] = useState(false);
 
   const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState('');
@@ -85,6 +87,7 @@ function ExportContent() {
     if (optSammel) total += spenderMitGeld.size * 2;
     if (optEinzelSach) total += sachZuwendungen.length * 2;
     if (optVereinfacht) total += kleinZuwendungen.length;
+    if (optEmpfangsbestaetigung) total += sachZuwendungen.length;
     if (total === 0) total = 1;
 
     const update = () => { done++; setProgress(`Generiere Bestätigung ${done} von ${total}...`); };
@@ -144,6 +147,18 @@ function ExportContent() {
         }
       }
 
+      if (optEmpfangsbestaetigung) {
+        for (const z of sachZuwendungen) {
+          const spender = spenderList.find((s) => s.id === z.spenderId);
+          if (!spender) continue;
+          const vollstaendig: Zuwendung = { ...z, spender: { ...spender }, betrag: Number(z.betrag), sachWert: z.sachWert != null ? Number(z.sachWert) : undefined };
+          const blob = await erstelleEmpfangsbestaetigung(verein, vollstaendig);
+          const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
+          zip.file(`Empfangsbestaetigungen/${name}_Empfangsbestaetigung.docx`, blob);
+          update();
+        }
+      }
+
       zip.file(`Uebersicht_${selectedYear}.csv`, '\uFEFF' + csvRows.join('\n'));
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       saveAs(zipBlob, `DRK_Spendenquittung_Export_${selectedYear}.zip`);
@@ -185,6 +200,9 @@ function ExportContent() {
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={optSammel} onChange={(e) => setOptSammel(e.target.checked)} /><span className="text-sm" style={{ color: 'var(--text)' }}>Sammelbestätigungen für alle Spender mit Geldzuwendungen</span></label>
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={optEinzelSach} onChange={(e) => setOptEinzelSach(e.target.checked)} /><span className="text-sm" style={{ color: 'var(--text)' }}>Einzelbestätigungen für Sachzuwendungen</span></label>
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={optVereinfacht} onChange={(e) => setOptVereinfacht(e.target.checked)} /><span className="text-sm" style={{ color: 'var(--text)' }}>Vereinfachte Nachweise für Zuwendungen ≤ 300 €</span></label>
+              {sachZuwendungen.length > 0 && (
+                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={optEmpfangsbestaetigung} onChange={(e) => setOptEmpfangsbestaetigung(e.target.checked)} /><span className="text-sm" style={{ color: 'var(--text)' }}>Empfangsbestätigungen für Sachspenden mit exportieren</span></label>
+              )}
               <label className="flex items-center gap-2"><input type="checkbox" checked disabled className="opacity-50" /><span className="text-sm" style={{ color: 'var(--text-muted)' }}>Doppel für Vereinsakte<span className="text-xs block">(Pflicht gemäß § 50 Abs. 7 EStDV — 10 Jahre Aufbewahrung)</span></span></label>
             </div>
             {exporting && <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--drk-bg)', color: 'var(--text)' }}>{progress}</div>}
