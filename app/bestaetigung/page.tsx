@@ -27,8 +27,28 @@ import { generateSammelbestaetigung } from '@/lib/docx-templates/sammelbestaetig
 import { generateVereinfachterNachweis } from '@/lib/docx-templates/vereinfachter-nachweis';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
 import UnterschriftHinweis from '@/components/UnterschriftHinweis';
+import FormatToggle, { type ExportFormat } from '@/components/FormatToggle';
 
 type Tab = 'einzel' | 'sammel' | 'vereinfacht';
+
+async function downloadPdfFromApi(
+  typ: string,
+  spenderId: string,
+  zuwendungIds: string[],
+  laufendeNr: string,
+  doppel: boolean,
+  filename: string,
+  zeitraum?: { von: string; bis: string }
+) {
+  const res = await fetch('/api/dokumente/pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ typ, spenderId, zuwendungIds, laufendeNr, doppel, zeitraum }),
+  });
+  if (!res.ok) throw new Error('PDF-Generierung fehlgeschlagen');
+  const blob = await res.blob();
+  downloadBlob(blob, filename);
+}
 
 function formatDatum(iso: string): string {
   const d = new Date(iso);
@@ -44,6 +64,7 @@ function BestaetigungContent() {
   const [spenderList, setSpenderList] = useState<Spender[]>([]);
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [tab, setTab] = useState<Tab>('einzel');
+  const [format, setFormat] = useState<ExportFormat>('pdf');
 
   const [selectedSpenderId, setSelectedSpenderId] = useState('');
   const [selectedZuwendungId, setSelectedZuwendungId] = useState('');
@@ -128,15 +149,24 @@ function BestaetigungContent() {
 
     const lfdNr = await getNextLaufendeNr();
     const isGeld = selectedZuwendung.art === 'geld';
-    const generator = isGeld ? generateGeldzuwendung : generateSachzuwendung;
-    const blob = await generator(verein, spender, selectedZuwendung, lfdNr, false);
     const typ = isGeld ? 'Geldzuwendung' : 'Sachzuwendung';
     const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-    downloadBlob(blob, `${dateiName}_${typ}.docx`);
+    const ext = format === 'pdf' ? 'pdf' : 'docx';
 
-    if (mitDoppel) {
-      const doppelBlob = await generator(verein, spender, selectedZuwendung, lfdNr, true);
-      downloadBlob(doppelBlob, `${dateiName}_${typ}_DOPPEL.docx`);
+    if (format === 'pdf') {
+      const pdfTyp = isGeld ? 'geldzuwendung' : 'sachzuwendung';
+      await downloadPdfFromApi(pdfTyp, spender.id, [selectedZuwendung.id], lfdNr, false, `${dateiName}_${typ}.pdf`);
+      if (mitDoppel) {
+        await downloadPdfFromApi(pdfTyp, spender.id, [selectedZuwendung.id], lfdNr, true, `${dateiName}_${typ}_DOPPEL.pdf`);
+      }
+    } else {
+      const generator = isGeld ? generateGeldzuwendung : generateSachzuwendung;
+      const blob = await generator(verein, spender, selectedZuwendung, lfdNr, false);
+      downloadBlob(blob, `${dateiName}_${typ}.${ext}`);
+      if (mitDoppel) {
+        const doppelBlob = await generator(verein, spender, selectedZuwendung, lfdNr, true);
+        downloadBlob(doppelBlob, `${dateiName}_${typ}_DOPPEL.${ext}`);
+      }
     }
 
     await markBestaetigt([selectedZuwendung.id], isGeld ? 'anlage3' : 'anlage4', lfdNr);
@@ -150,18 +180,28 @@ function BestaetigungContent() {
     if (!spender || sammelZuwendungen.length === 0) return;
 
     const lfdNr = await getNextLaufendeNr();
-    const blob = await generateSammelbestaetigung(
-      verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, false
-    );
     const jahr = sammelVon.substring(0, 4);
     const sammelDateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-    downloadBlob(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.docx`);
+    const ext = format === 'pdf' ? 'pdf' : 'docx';
+    const zeitraum = { von: sammelVon, bis: sammelBis };
 
-    if (mitDoppel) {
-      const doppelBlob = await generateSammelbestaetigung(
-        verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, true
+    if (format === 'pdf') {
+      const ids = sammelZuwendungen.map((z) => z.id);
+      await downloadPdfFromApi('sammelbestaetigung', spender.id, ids, lfdNr, false, `${sammelDateiName}_Sammelbestaetigung_${jahr}.pdf`, zeitraum);
+      if (mitDoppel) {
+        await downloadPdfFromApi('sammelbestaetigung', spender.id, ids, lfdNr, true, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.pdf`, zeitraum);
+      }
+    } else {
+      const blob = await generateSammelbestaetigung(
+        verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, false
       );
-      downloadBlob(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.docx`);
+      downloadBlob(blob, `${sammelDateiName}_Sammelbestaetigung_${jahr}.${ext}`);
+      if (mitDoppel) {
+        const doppelBlob = await generateSammelbestaetigung(
+          verein, spender, sammelZuwendungen, sammelVon, sammelBis, lfdNr, true
+        );
+        downloadBlob(doppelBlob, `${sammelDateiName}_Sammelbestaetigung_${jahr}_DOPPEL.${ext}`);
+      }
     }
 
     await markBestaetigt(sammelZuwendungen.map((z) => z.id), 'anlage14', lfdNr);
@@ -174,8 +214,14 @@ function BestaetigungContent() {
     const spender = spenderList.find((s) => s.id === vereinfachtSelected.spenderId);
     if (!spender) return;
 
-    const blob = await generateVereinfachterNachweis(verein, spender, vereinfachtSelected);
-    downloadBlob(blob, `${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.docx`);
+    const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
+
+    if (format === 'pdf') {
+      await downloadPdfFromApi('vereinfacht', spender.id, [vereinfachtSelected.id], '', false, `${dateiName}_Nachweis.pdf`);
+    } else {
+      const blob = await generateVereinfachterNachweis(verein, spender, vereinfachtSelected);
+      downloadBlob(blob, `${dateiName}_Nachweis.docx`);
+    }
 
     await markBestaetigt([vereinfachtSelected.id], 'vereinfacht', '');
     setVereinfachtZuwendungId('');
@@ -194,9 +240,12 @@ function BestaetigungContent() {
         {freistellungStatus.status === 'warnung' && <FreistellungsBlocker verein={verein} />}
 
         <div className="drk-card">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text)' }}>
-            Bestätigungen erstellen
-          </h2>
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
+              Bestätigungen erstellen
+            </h2>
+            <FormatToggle value={format} onChange={setFormat} />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 mb-6 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {tabs.map((t) => (
@@ -263,7 +312,7 @@ function BestaetigungContent() {
               )}
 
               {selectedZuwendung && (
-                <button className="drk-btn-primary" onClick={() => setShowUnterschrift(true)}>DOCX herunterladen</button>
+                <button className="drk-btn-primary" onClick={() => setShowUnterschrift(true)}>{format.toUpperCase()} herunterladen</button>
               )}
             </div>
           )}
@@ -296,7 +345,7 @@ function BestaetigungContent() {
                       {sammelZuwendungen.length} Geldzuwendungen · Gesamt: {formatBetrag(sammelSumme)} €
                     </div>
                   </div>
-                  <button className="drk-btn-primary" onClick={() => setShowSammelUnterschrift(true)}>Sammelbestätigung herunterladen</button>
+                  <button className="drk-btn-primary" onClick={() => setShowSammelUnterschrift(true)}>Sammelbestätigung ({format.toUpperCase()}) herunterladen</button>
                 </div>
               )}
               {sammelSpenderId && sammelZuwendungen.length === 0 && (
@@ -333,7 +382,7 @@ function BestaetigungContent() {
                 </div>
               )}
               {vereinfachtSelected && (
-                <button className="drk-btn-primary" onClick={handleVereinfachtDownload}>Vereinfachten Nachweis herunterladen</button>
+                <button className="drk-btn-primary" onClick={handleVereinfachtDownload}>Vereinfachten Nachweis ({format.toUpperCase()}) herunterladen</button>
               )}
             </div>
           )}

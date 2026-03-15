@@ -8,6 +8,20 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **PDF-Export:** Server-seitige PDF-Generierung mit DRK-Briefbogenlayout via `pdfmake` (`lib/pdf-templates/`)
+- **PDF-Templates:** Geldzuwendung, Sachzuwendung, Sammelbestätigung, Vereinfachter Nachweis, Empfangsbestätigung als PDF
+- **Briefbogen-Layout:** DRK-Logo oben rechts, rechte Seitenleiste mit Vereinsdaten, Falzmarken (DIN 5008), Seitenfuß
+- **API-Route:** `POST /api/dokumente/pdf` für server-seitige PDF-Generierung
+- **FormatToggle-Komponente:** Umschalter PDF/DOCX auf Bestätigungs- und Export-Seite (PDF als Standard)
+- `lib/pdf-templates/briefbogen.ts`: Briefbogen-Layout-Engine (Logo, Sidebar, Falzmarken, Footer)
+- `lib/pdf-templates/pdf-helper.ts`: Shared Hilfsfunktionen (Buffer-Generierung, Formatierung)
+- `components/FormatToggle.tsx`: Segment-Control für Formatauswahl
+
+### Changed
+- `app/bestaetigung/page.tsx`: FormatToggle integriert, PDF-Download über API, dynamische Button-Labels
+- `app/export/page.tsx`: FormatToggle integriert, Batch-Export unterstützt PDF und DOCX
+
 ### Fixed
 - **Security:** Magic Codes werden jetzt als SHA-256-Hash in der DB gespeichert statt im Klartext (`auth/login`, `auth/verify`)
 - **Security:** Rate-Limiting bei Magic-Code-Verifikation – max. 5 Fehlversuche, danach Code invalidiert (`auth/verify`, `magicCodeVersuche` Feld)
