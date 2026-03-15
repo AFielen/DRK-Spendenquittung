@@ -2,8 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from './AuthProvider';
-
 interface NavItem {
   href: string;
   label: string;
@@ -108,7 +106,6 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { nutzer } = useAuth();
 
   return (
     <nav
@@ -140,28 +137,6 @@ export default function Navigation() {
             </Link>
           );
         })}
-        {nutzer?.isSuperadmin && (
-          <>
-            <div className="w-px h-5 mx-1" style={{ background: 'var(--border)' }} />
-            <Link
-              href="/admin"
-              className={`flex items-center gap-1.5 py-2.5 px-3 text-sm rounded-t transition-colors ${
-                pathname.startsWith('/admin') ? 'font-semibold' : 'hover:bg-gray-100'
-              }`}
-              style={{
-                color: pathname.startsWith('/admin') ? 'var(--drk)' : 'var(--text-light)',
-                borderBottom: pathname.startsWith('/admin') ? '2px solid var(--drk)' : '2px solid transparent',
-                marginBottom: '-1px',
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <span className="hidden sm:inline">Admin</span>
-            </Link>
-          </>
-        )}
       </div>
     </nav>
   );
