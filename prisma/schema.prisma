@@ -97,8 +97,7 @@ model Zuwendung {
 
   betrag                 Decimal   @db.Decimal(10, 2)
   datum                  DateTime
-  zahlungsart            String?
-  zugangsweg             String?   // 'ueberweisung' | 'bar' | 'online' | 'paypal' | 'scheck' | 'sonstig'
+  zugangsweg             String?   // 'ueberweisung' | 'bar' | 'online' | 'lastschrift' | 'paypal' | 'scheck' | 'sonstig'
 
   // Sachzuwendung
   sachBezeichnung        String?

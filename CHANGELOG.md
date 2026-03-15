@@ -8,6 +8,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- `ZuwendungFormular.tsx`: Redundantes Feld "Zahlungsart" entfernt und in "Zugangsweg" zusammengeführt; neue Option "Lastschrift" im Zugangsweg
+- `Spendenbuch.tsx`: "Lastschrift" als Zugangsweg-Option in Labels und Filtern ergänzt
+
+### Removed
+- `zahlungsart`-Feld aus Zuwendung (Schema, Types, API, Formular) – ersetzt durch `zugangsweg`
+- Prisma-Migration `remove_zahlungsart`: Bestehende Zahlungsart-Werte werden automatisch in Zugangsweg übertragen
+
 ### Fixed
 - `app/bestaetigung/page.tsx`: Tab-Buttons (Einzel/Sammel/Vereinfacht) werden auf Mobile vertikal gestapelt statt überlappend (`grid-cols-1 sm:grid-cols-3`)
 - `app/export/page.tsx`: Gesamtsumme im Batch-Export bricht nicht mehr über zwei Zeilen (`text-lg sm:text-2xl`, `whitespace-nowrap`)
