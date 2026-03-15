@@ -78,7 +78,7 @@ export async function generateSachzuwendungPdf(
   ];
 
   for (const item of herkunftItems) {
-    content.push({ text: `${item.checked ? '☑' : '☐'} ${item.text}`, fontSize: 9 });
+    content.push({ text: `${item.checked ? '[X]' : '[ ]'} ${item.text}`, fontSize: 9 });
   }
   content.push({ text: ' ', fontSize: 6 });
 
@@ -90,7 +90,7 @@ export async function generateSachzuwendungPdf(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, bescheidDatum, zwecke);
 
-  content.push({ text: `☑ ${freiText}`, fontSize: 9 });
+  content.push({ text: `[X] ${freiText}`, fontSize: 9 });
   content.push({ text: ' ', fontSize: 6 });
 
   // Verwendungsbestätigung

@@ -9,6 +9,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `lib/docx-templates/briefbogen.ts`: Shared DOCX-Briefbogen-Helper (Header, Footer, Doppel-Paragraph) für einheitliches Layout
 - **Admin-Dashboard:** KV-übergreifendes Superadmin-Dashboard unter `/admin` mit Übersicht, Statistiken, Nutzer- und Daten-Verwaltung
 - **Superadmin-Auth:** `isSuperadmin()` in `lib/auth.ts` – Erkennung via `SUPERADMIN_EMAIL` Env-Variable (kein DB-Feld)
 - **Admin-API-Routes:** `/api/admin/stats`, `/api/admin/kreisverband`, `/api/admin/nutzer` mit serverseitiger Superadmin-Prüfung
@@ -27,6 +28,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ### Changed
 - **PDF-Briefbogen:** Komplett-Redesign als professioneller Report-Stil – DRK-Logo links + Org-Name rechts, rote Akzentlinie (#e30613), symmetrische Seitenränder (keine Sidebar mehr), Absenderzeile im Briefkopf-Fenster, Datum rechts, Footer mit roter Linie + Org-Details + VR + StNr + Seitenzahl
 - **PDF-Templates:** Aussteller-Block aus allen 5 Templates entfernt (wird nun zentral vom Briefbogen-Layout gerendert)
+- **DOCX-Templates:** Alle 5 DOCX-Templates auf PDF-Briefbogen-Layout adaptiert – Logo + Org-Name, rote Akzentlinie, Absenderzeile, Empfänger, Datum, Footer mit Org-Details
+
+### Fixed
+- **PDF-Checkboxen:** Unicode ☑/☐ durch [X]/[ ] ersetzt – Helvetica unterstützt keine Unicode-Checkboxen (wurden als && dargestellt)
 - **Admin-Navigation:** Admin-Link von der Hauptnavigation ins UserMenu-Dropdown verschoben (Shield-Icon + "Admin-Bereich", nur für Superadmin)
 - `app/bestaetigung/page.tsx`: FormatToggle integriert, PDF-Download über API, dynamische Button-Labels
 - `app/export/page.tsx`: FormatToggle integriert, Batch-Export unterstützt PDF und DOCX

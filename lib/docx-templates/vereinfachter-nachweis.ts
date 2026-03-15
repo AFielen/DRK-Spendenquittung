@@ -8,6 +8,7 @@ import {
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { betragInWorten } from './betrag-in-worten';
+import { createDocxHeader, createDocxFooter } from './briefbogen';
 
 function formatDatum(iso: string): string {
   const dateOnly = iso.substring(0, 10);
@@ -19,6 +20,14 @@ function formatBetrag(n: number): string {
   return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function spenderAnschrift(spender: Spender): string {
+  if (spender.istFirma && spender.firmenname) {
+    return `${spender.firmenname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
+  }
+  const anrede = spender.anrede ? `${spender.anrede} ` : '';
+  return `${anrede}${spender.vorname ?? ''} ${spender.nachname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
+}
+
 export async function generateVereinfachterNachweis(
   verein: Verein,
   spender: Spender,
@@ -26,18 +35,13 @@ export async function generateVereinfachterNachweis(
 ): Promise<Blob> {
   const sections: Paragraph[] = [];
 
-  // Aussteller
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: verein.name, font: 'Arial', size: 22, bold: true })],
-    })
+  // Briefbogen-Header
+  const header = await createDocxHeader(
+    verein,
+    spenderAnschrift(spender),
+    formatDatum(zuwendung.datum)
   );
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: `${verein.strasse}, ${verein.plz} ${verein.ort}`, font: 'Arial', size: 20 })],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(...header);
 
   // Titel
   sections.push(
@@ -172,8 +176,11 @@ export async function generateVereinfachterNachweis(
 
   const doc = new Document({
     sections: [{
-      properties: { page: { margin: { top: 1134, bottom: 1134, left: 1418, right: 1134 } } },
+      properties: { page: { margin: { top: 850, bottom: 1134, left: 1418, right: 1418 } } },
       children: sections,
+      footers: {
+        default: createDocxFooter(verein),
+      },
     }],
   });
 

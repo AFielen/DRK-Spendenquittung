@@ -67,7 +67,7 @@ export async function generateSammelbestaetigungPdf(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, bescheidDatum, zwecke);
 
-  content.push({ text: `☑ ${freiText}`, fontSize: 9 });
+  content.push({ text: `[X] ${freiText}`, fontSize: 9 });
   content.push({ text: ' ', fontSize: 6 });
 
   // Verwendungsbestätigung
@@ -84,7 +84,7 @@ export async function generateSammelbestaetigungPdf(
     fontSize: 8,
     italics: true,
   });
-  content.push({ text: `☐ ${MITGLIEDSBEITRAG_HINWEIS}`, fontSize: 9 });
+  content.push({ text: `[ ] ${MITGLIEDSBEITRAG_HINWEIS}`, fontSize: 9 });
   content.push({ text: ' ', fontSize: 6 });
 
   // Sammelbestätigungs-Pflicht-Texte

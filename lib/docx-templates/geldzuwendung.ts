@@ -4,14 +4,12 @@ import {
   Paragraph,
   TextRun,
   AlignmentType,
-  ImageRun,
-  Footer,
   TabStopPosition,
   TabStopType,
 } from 'docx';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
 import { betragInWorten } from './betrag-in-worten';
-import { getLogoBytes } from './default-logo';
+import { createDocxHeader, createDocxFooter, createDoppelParagraph } from './briefbogen';
 import {
   TITEL_GELDZUWENDUNG,
   freistellungTextA,
@@ -41,29 +39,6 @@ function spenderAnschrift(spender: Spender): string {
   return `${anrede}${spender.vorname ?? ''} ${spender.nachname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
 }
 
-function freistellungAbsatz(verein: Verein): Paragraph {
-  const zwecke = verein.beguenstigteZwecke.join(', ');
-  const datum = formatDatum(verein.freistellungDatum);
-
-  const text =
-    verein.freistellungsart === 'freistellungsbescheid'
-      ? freistellungTextA(
-          verein.finanzamt,
-          verein.steuernummer,
-          datum,
-          verein.letzterVZ || '',
-          zwecke
-        )
-      : freistellungTextB(verein.finanzamt, verein.steuernummer, datum, zwecke);
-
-  return new Paragraph({
-    children: [
-      new TextRun({ text: '☑ ', font: 'Arial', size: 18 }),
-      new TextRun({ text, font: 'Arial', size: 18 }),
-    ],
-  });
-}
-
 export async function generateGeldzuwendung(
   verein: Verein,
   spender: Spender,
@@ -75,59 +50,16 @@ export async function generateGeldzuwendung(
 
   // Doppel-Kennzeichnung
   if (doppel) {
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '— DOPPEL — Kopie für die Vereinsakte (Aufbewahrungspflicht: 10 Jahre gemäß § 50 Abs. 7 EStDV)',
-            font: 'Arial',
-            size: 18,
-            color: '999999',
-            bold: true,
-          }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 200 },
-      })
-    );
+    sections.push(createDoppelParagraph());
   }
 
-  // Aussteller-Block (DRK-Kompaktlogo als Standard, falls kein eigenes hochgeladen)
-  const ausstellerChildren: (TextRun | ImageRun)[] = [];
-  const logoBytes = await getLogoBytes(verein.logoBase64);
-  if (logoBytes) {
-    ausstellerChildren.push(
-      new ImageRun({
-        data: logoBytes,
-        transformation: { width: 57, height: 57 },
-        type: 'png',
-      })
-    );
-    ausstellerChildren.push(new TextRun({ text: '  ', font: 'Arial', size: 20 }));
-  }
-
-  sections.push(
-    new Paragraph({
-      children: [
-        ...ausstellerChildren,
-        new TextRun({ text: verein.name, font: 'Arial', size: 20, bold: true }),
-      ],
-    })
+  // Briefbogen-Header
+  const header = await createDocxHeader(
+    verein,
+    spenderAnschrift(spender),
+    formatDatum(zuwendung.datum)
   );
-  sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: `${verein.strasse}, ${verein.plz} ${verein.ort}`,
-          font: 'Arial',
-          size: 20,
-        }),
-      ],
-    })
-  );
-
-  // Leerzeile
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(...header);
 
   // Titel
   const titelZeilen = TITEL_GELDZUWENDUNG.split('\n');
@@ -139,8 +71,6 @@ export async function generateGeldzuwendung(
       })
     );
   }
-
-  // Leerzeile
   sections.push(new Paragraph({ children: [] }));
 
   // Name und Anschrift
@@ -163,8 +93,6 @@ export async function generateGeldzuwendung(
       })
     );
   }
-
-  // Leerzeile
   sections.push(new Paragraph({ children: [] }));
 
   // Betrag
@@ -201,8 +129,6 @@ export async function generateGeldzuwendung(
       ],
     })
   );
-
-  // Leerzeile
   sections.push(new Paragraph({ children: [] }));
 
   // Verzicht
@@ -219,14 +145,24 @@ export async function generateGeldzuwendung(
       ],
     })
   );
-
-  // Leerzeile
   sections.push(new Paragraph({ children: [] }));
 
   // Freistellungsstatus
-  sections.push(freistellungAbsatz(verein));
+  const zwecke = verein.beguenstigteZwecke.join(', ');
+  const datum = formatDatum(verein.freistellungDatum);
+  const freiText =
+    verein.freistellungsart === 'freistellungsbescheid'
+      ? freistellungTextA(verein.finanzamt, verein.steuernummer, datum, verein.letzterVZ || '', zwecke)
+      : freistellungTextB(verein.finanzamt, verein.steuernummer, datum, zwecke);
 
-  // Leerzeile
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '☑ ', font: 'Arial', size: 18 }),
+        new TextRun({ text: freiText, font: 'Arial', size: 18 }),
+      ],
+    })
+  );
   sections.push(new Paragraph({ children: [] }));
 
   // Verwendungsbestätigung
@@ -245,8 +181,6 @@ export async function generateGeldzuwendung(
       ],
     })
   );
-
-  // Leerzeile
   sections.push(new Paragraph({ children: [] }));
 
   // Mitgliedsbeitrag-Hinweis
@@ -270,8 +204,6 @@ export async function generateGeldzuwendung(
       ],
     })
   );
-
-  // Leerzeilen
   sections.push(new Paragraph({ children: [] }));
   sections.push(new Paragraph({ children: [] }));
 
@@ -306,8 +238,6 @@ export async function generateGeldzuwendung(
       ],
     })
   );
-
-  // Leerzeile
   sections.push(new Paragraph({ children: [] }));
 
   // Haftungshinweis
@@ -333,25 +263,12 @@ export async function generateGeldzuwendung(
       {
         properties: {
           page: {
-            margin: { top: 1134, bottom: 1134, left: 1418, right: 1134 },
+            margin: { top: 850, bottom: 1134, left: 1418, right: 1418 },
           },
         },
         children: sections,
         footers: {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.RIGHT,
-                children: [
-                  new TextRun({
-                    text: `Lfd. Nr.: ${laufendeNr}`,
-                    font: 'Arial',
-                    size: 14,
-                  }),
-                ],
-              }),
-            ],
-          }),
+          default: createDocxFooter(verein, laufendeNr),
         },
       },
     ],
