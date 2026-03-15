@@ -106,7 +106,18 @@ export default function Datenschutz() {
             </section>
 
             <section>
-              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>10. Open Source</h3>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>10. API-Schlüssel</h3>
+              <p>
+                Die Anwendung bietet eine REST-API für den externen Zugriff auf Spender- und Zuwendungsdaten.
+                API-Schlüssel werden als SHA-256-Hash gespeichert – der Klartext-Schlüssel ist nur bei der
+                Erstellung einmalig sichtbar. Es wird der Zeitpunkt der letzten Nutzung gespeichert.
+                API-Schlüssel können jederzeit von berechtigten Nutzern gelöscht werden.
+                Die Belegfunktion (Erstellung von Zuwendungsbestätigungen) ist nicht über die API verfügbar.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>11. Open Source</h3>
               <p>
                 Der gesamte Quellcode dieser Anwendung ist öffentlich einsehbar und überprüfbar.
               </p>

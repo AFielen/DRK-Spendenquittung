@@ -9,6 +9,21 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **API-Schlüssel-System:** Nutzer (Admin/Schatzmeister) können API-Schlüssel erstellen, um externen Anwendungen REST-API-Zugriff zu gewähren
+- **Öffentliche REST-API** unter `/api/v1/` mit Bearer-Token-Authentifizierung für Spender, Zuwendungen und Kreisverband-Daten
+- **API-Schlüssel-Verwaltung:** Neue Seite `/api-schluessel` zum Erstellen, Anzeigen und Löschen von API-Schlüsseln
+- **API-Dokumentation:** Öffentliche Seite `/api-dokumentation` mit vollständiger Endpunkt-Referenz und curl-Beispielen
+- **Berechtigungssystem:** Granulare Scopes (`spender:read`, `spender:write`, `zuwendungen:read`, `zuwendungen:write`, `kreisverband:read`)
+- **Rate Limiting:** 100 Anfragen/Minute pro API-Schlüssel mit `X-RateLimit-*` Response-Headers
+- `ApiKey` Prisma-Modell mit SHA-256-Hash, Prefix, Berechtigungen, optionalem Ablaufdatum
+- `lib/api-key.ts`: API-Schlüssel-Generierung (`sq_live_*`) und Validierung
+- `lib/api-key-types.ts`: Scope-Definitionen und ApiKeyContext-Interface
+- `lib/rate-limit.ts`: In-Memory Rate Limiter
+- `lib/api-v1-helpers.ts`: Wrapper für API-Key-Auth, Rate Limiting und Scope-Prüfung
+- API-Routes: `/api/api-schluessel` (Verwaltung), `/api/v1/spender`, `/api/v1/zuwendungen`, `/api/v1/kreisverband`
+- Navigation: "API"-Link mit Schlüssel-Icon
+- Datenschutz: Abschnitt über API-Schlüssel-Datenverarbeitung
+- **Belegfunktion nur in Web-App:** PDF/DOCX-Erstellung, Bestätigung und Export bewusst nicht in der API
 - `lib/docx-templates/briefbogen.ts`: Shared DOCX-Briefbogen-Helper (Header, Footer, Doppel-Paragraph) für einheitliches Layout
 - **Admin-Dashboard:** KV-übergreifendes Superadmin-Dashboard unter `/admin` mit Übersicht, Statistiken, Nutzer- und Daten-Verwaltung
 - **Superadmin-Auth:** `isSuperadmin()` in `lib/auth.ts` – Erkennung via `SUPERADMIN_EMAIL` Env-Variable (kein DB-Feld)
