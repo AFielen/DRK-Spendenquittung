@@ -13,6 +13,7 @@ const ZUGANGSWEG_LABELS: Record<string, { icon: string; label: string }> = {
   bar: { icon: '💵', label: 'Bar' },
   online: { icon: '🌐', label: 'Online' },
   paypal: { icon: '💳', label: 'PayPal' },
+  lastschrift: { icon: '🔄', label: 'Lastschrift' },
   scheck: { icon: '📝', label: 'Scheck' },
   sonstig: { icon: '📦', label: 'Sonstig' },
 };
@@ -101,6 +102,7 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
           <option value="ueberweisung">Überweisung</option>
           <option value="bar">Bareinzahlung</option>
           <option value="online">Online-Spende</option>
+          <option value="lastschrift">Lastschrift</option>
           <option value="paypal">PayPal</option>
           <option value="scheck">Scheck</option>
           <option value="sonstig">Sonstig</option>

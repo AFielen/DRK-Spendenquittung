@@ -87,8 +87,7 @@ export interface Zuwendung {
   // Geldzuwendung
   betrag: number;
   datum: string; // ISO-Date
-  zahlungsart?: string | null;
-  zugangsweg?: 'ueberweisung' | 'bar' | 'online' | 'paypal' | 'scheck' | 'sonstig' | null;
+  zugangsweg?: 'ueberweisung' | 'bar' | 'online' | 'lastschrift' | 'paypal' | 'scheck' | 'sonstig' | null;
 
   // Sachzuwendung (nur bei art === 'sach')
   sachBezeichnung?: string | null;

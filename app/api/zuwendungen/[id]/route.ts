@@ -44,7 +44,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
       verwendung: body.verwendung,
       betrag: body.betrag,
       datum: new Date(body.datum),
-      zahlungsart: body.zahlungsart ?? null,
       zugangsweg: body.zugangsweg ?? null,
       sachBezeichnung: body.sachBezeichnung ?? null,
       sachAlter: body.sachAlter ?? null,

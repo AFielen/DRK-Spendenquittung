@@ -29,7 +29,6 @@ export default function ZuwendungFormular({
   // Geld
   const [betrag, setBetrag] = useState(zuwendung?.betrag?.toString() ?? '');
   const [datum, setDatum] = useState(zuwendung?.datum ?? new Date().toISOString().split('T')[0]);
-  const [zahlungsart, setZahlungsart] = useState(zuwendung?.zahlungsart ?? '');
   const [zugangsweg, setZugangsweg] = useState(zuwendung?.zugangsweg ?? '');
   const [verzicht, setVerzicht] = useState(zuwendung?.verzicht ?? false);
   const [bemerkung, setBemerkung] = useState(zuwendung?.bemerkung ?? '');
@@ -99,7 +98,6 @@ export default function ZuwendungFormular({
       verwendung,
       betrag: art === 'geld' ? parsedBetrag : parsedSachWert,
       datum,
-      zahlungsart: art === 'geld' && zahlungsart ? (zahlungsart as Zuwendung['zahlungsart']) : undefined,
       zugangsweg: art === 'geld' && zugangsweg ? (zugangsweg as Zuwendung['zugangsweg']) : undefined,
       verzicht,
       bemerkung: bemerkung.trim() || undefined,
@@ -260,6 +258,7 @@ export default function ZuwendungFormular({
                     <option value="ueberweisung">Überweisung</option>
                     <option value="bar">Bareinzahlung</option>
                     <option value="online">Online-Spende</option>
+                    <option value="lastschrift">Lastschrift</option>
                     <option value="paypal">PayPal</option>
                     <option value="scheck">Scheck</option>
                     <option value="sonstig">Sonstig</option>
@@ -271,30 +270,17 @@ export default function ZuwendungFormular({
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="drk-label">Verwendung</label>
-                    <div className="flex gap-4 mt-1">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="verwendung" checked={verwendung === 'spende'} onChange={() => setVerwendung('spende')} />
-                        <span className="text-sm" style={{ color: 'var(--text)' }}>Spende</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="verwendung" checked={verwendung === 'mitgliedsbeitrag'} onChange={() => setVerwendung('mitgliedsbeitrag')} />
-                        <span className="text-sm" style={{ color: 'var(--text)' }}>Beitrag</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="drk-label">Zahlungsart</label>
-                    <select className="drk-input" value={zahlungsart} onChange={(e) => setZahlungsart(e.target.value)}>
-                      <option value="">– Keine –</option>
-                      <option value="ueberweisung">Überweisung</option>
-                      <option value="bar">Bar</option>
-                      <option value="lastschrift">Lastschrift</option>
-                      <option value="paypal">PayPal</option>
-                      <option value="sonstige">Sonstige</option>
-                    </select>
+                <div>
+                  <label className="drk-label">Verwendung</label>
+                  <div className="flex gap-4 mt-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="verwendung" checked={verwendung === 'spende'} onChange={() => setVerwendung('spende')} />
+                      <span className="text-sm" style={{ color: 'var(--text)' }}>Spende</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="verwendung" checked={verwendung === 'mitgliedsbeitrag'} onChange={() => setVerwendung('mitgliedsbeitrag')} />
+                      <span className="text-sm" style={{ color: 'var(--text)' }}>Beitrag</span>
+                    </label>
                   </div>
                 </div>
               </>
