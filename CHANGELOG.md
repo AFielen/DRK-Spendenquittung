@@ -9,6 +9,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Admin-Dashboard:** KV-übergreifendes Superadmin-Dashboard unter `/admin` mit Übersicht, Statistiken, Nutzer- und Daten-Verwaltung
+- **Superadmin-Auth:** `isSuperadmin()` in `lib/auth.ts` – Erkennung via `SUPERADMIN_EMAIL` Env-Variable (kein DB-Feld)
+- **Admin-API-Routes:** `/api/admin/stats`, `/api/admin/kreisverband`, `/api/admin/nutzer` mit serverseitiger Superadmin-Prüfung
+- **Admin-Seiten:** `app/admin/page.tsx` (Dashboard), `app/admin/kreisverband/[id]/page.tsx` (KV-Detail), `app/admin/nutzer/page.tsx` (Nutzerverwaltung)
+- **Admin-Komponenten:** `AdminGuard.tsx`, `AdminNav.tsx` – Zugangsschutz und Sub-Navigation
+- **Navigation:** Bedingter Admin-Tab mit Shield-Icon in der Hauptnavigation (nur für Superadmin sichtbar)
 - **PDF-Export:** Server-seitige PDF-Generierung mit DRK-Briefbogenlayout via `pdfmake` (`lib/pdf-templates/`)
 - **PDF-Templates:** Geldzuwendung, Sachzuwendung, Sammelbestätigung, Vereinfachter Nachweis, Empfangsbestätigung als PDF
 - **Briefbogen-Layout:** DRK-Logo oben rechts, rechte Seitenleiste mit Vereinsdaten, Falzmarken (DIN 5008), Seitenfuß

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, isSuperadmin } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
@@ -24,6 +24,7 @@ export async function GET() {
       email: nutzer.email,
       name: nutzer.name,
       rolle: nutzer.rolle,
+      isSuperadmin: isSuperadmin(session),
     },
     kreisverband: {
       id: nutzer.kreisverband.id,
