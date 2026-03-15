@@ -44,9 +44,9 @@ function berechneAmpel(fristEnde: Date): AmpelStatus | null {
 }
 
 const AMPEL_CONFIG: Record<AmpelStatus, { bg: string; color: string; border: string; label: string }> = {
-  rot: { bg: '#fef2f2', color: '#991b1b', border: '#fca5a5', label: 'Frist überschritten – bitte sofort prüfen' },
-  orange: { bg: '#fff7ed', color: '#9a3412', border: '#fdba74', label: 'Verausgabung dringend' },
-  gelb: { bg: '#fffbeb', color: '#92400e', border: '#fcd34d', label: 'Verausgabung empfohlen' },
+  rot: { bg: 'var(--error-bg)', color: 'var(--error-text)', border: 'var(--error-border)', label: 'Frist überschritten – bitte sofort prüfen' },
+  orange: { bg: 'var(--warning-bg)', color: 'var(--warning-text)', border: 'var(--warning-border)', label: 'Verausgabung dringend' },
+  gelb: { bg: 'var(--warning-bg)', color: 'var(--warning-text)', border: 'var(--warning-border)', label: 'Verausgabung empfohlen' },
 };
 
 export default function Fristwarnung({ zuwendungen }: FristwarnungProps) {
@@ -81,7 +81,7 @@ export default function Fristwarnung({ zuwendungen }: FristwarnungProps) {
         </h3>
         <span
           className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold"
-          style={{ background: hatRot ? '#dc2626' : 'var(--drk)', color: '#fff' }}
+          style={{ background: hatRot ? 'var(--error)' : 'var(--drk)', color: '#fff' }}
         >
           {eintraege.length}
         </span>

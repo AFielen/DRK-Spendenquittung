@@ -8,6 +8,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- `ZuwendungFormular.tsx`: Wizard-Pattern statt scrollendem Modal (Geld: 2 Schritte, Sach: 3 Schritte) mit Step-Indikator
+- CSS-Variablen `--error`, `--error-bg`, `--error-border`, `--error-text`, `--info-border`, `--info-text`, `--warning-border`, `--warning-text` in `globals.css` (light + dark mode)
+- Hardcodierte Hex-Farben durch CSS-Variablen ersetzt in `ZweckbindungsStatus.tsx`, `Fristwarnung.tsx`, `Spendenbuch.tsx`, `ZuwendungTabelle.tsx`, `SpenderTabelle.tsx`
+- `SpenderFormular.tsx`: PLZ-Grid von `grid-cols-3` auf `grid-cols-[5rem_1fr]` (feste PLZ-Breite, flexibler Ort)
+- `CsvImport.tsx`: `max-h-[90vh] overflow-y-auto` auf Modal-Container
+
 ### Added
 - Spendenbuch: Chronologisches Journal aller Zuwendungen mit Filtern nach Jahr, Art, Zugangsweg, Status (SAC II.1–II.6)
 - Zugangsweg-Erfassung bei Geldzuwendungen (Überweisung, Bar, Online, PayPal, Scheck, Sonstig) mit `zugangsweg`-Feld in Schema, Types, API, Formular

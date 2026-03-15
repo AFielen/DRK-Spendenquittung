@@ -149,8 +149,8 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{
-                        background: z.art === 'geld' ? '#dbeafe' : '#fef3c7',
-                        color: z.art === 'geld' ? '#1e40af' : '#92400e',
+                        background: z.art === 'geld' ? 'var(--info-bg)' : 'var(--warning-bg)',
+                        color: z.art === 'geld' ? 'var(--info-text)' : 'var(--warning-text)',
                       }}
                     >
                       {z.art === 'geld' ? 'Geld' : 'Sach'}
@@ -169,8 +169,8 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{
-                        background: z.bestaetigungErstellt ? '#dcfce7' : '#fef3c7',
-                        color: z.bestaetigungErstellt ? '#166534' : '#92400e',
+                        background: z.bestaetigungErstellt ? 'var(--success-bg)' : 'var(--warning-bg)',
+                        color: z.bestaetigungErstellt ? 'var(--success)' : 'var(--warning-text)',
                       }}
                     >
                       {z.bestaetigungErstellt ? '✅ Quittiert' : '⏳ Offen'}

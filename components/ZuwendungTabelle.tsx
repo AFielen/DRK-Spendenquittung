@@ -179,8 +179,8 @@ export default function ZuwendungTabelle({
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{
-                        background: z.bestaetigungErstellt ? '#dcfce7' : '#fef3c7',
-                        color: z.bestaetigungErstellt ? '#166534' : '#92400e',
+                        background: z.bestaetigungErstellt ? 'var(--success-bg)' : 'var(--warning-bg)',
+                        color: z.bestaetigungErstellt ? 'var(--success)' : 'var(--warning-text)',
                       }}
                     >
                       {z.bestaetigungErstellt ? 'Bestätigt' : 'Offen'}
@@ -209,7 +209,7 @@ export default function ZuwendungTabelle({
                         <span className="text-sm">
                           <button
                             className="underline font-bold mr-2"
-                            style={{ color: '#dc2626' }}
+                            style={{ color: 'var(--error)' }}
                             onClick={() => {
                               onDelete(z);
                               setDeleteConfirm(null);
@@ -228,7 +228,7 @@ export default function ZuwendungTabelle({
                       ) : (
                         <button
                           className="text-sm underline"
-                          style={{ color: '#dc2626' }}
+                          style={{ color: 'var(--error)' }}
                           onClick={() => setDeleteConfirm(z.id)}
                         >
                           Löschen
@@ -295,7 +295,7 @@ export default function ZuwendungTabelle({
                 {z.art === 'sach' && verein && (
                   <button
                     className="text-sm px-3 py-2 rounded"
-                    style={{ background: '#eff6ff', color: '#1e40af' }}
+                    style={{ background: 'var(--info-bg)', color: 'var(--info-text)' }}
                     disabled={downloadingEB === z.id}
                     onClick={() => handleEmpfangsbestaetigung(z)}
                   >
@@ -308,7 +308,7 @@ export default function ZuwendungTabelle({
                 {!z.bestaetigungErstellt && (
                   <button
                     className="text-sm px-3 py-2 rounded"
-                    style={{ background: '#fef2f2', color: '#dc2626' }}
+                    style={{ background: 'var(--error-bg)', color: 'var(--error)' }}
                     onClick={() => onDelete(z)}
                   >
                     Löschen

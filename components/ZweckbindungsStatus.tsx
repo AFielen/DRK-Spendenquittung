@@ -34,9 +34,9 @@ function alterLabel(tage: number): string {
 
 function alterFarbe(tage: number): { bg: string; color: string } {
   const monate = tage / 30;
-  if (monate > 18) return { bg: '#fef2f2', color: '#991b1b' };
-  if (monate > 12) return { bg: '#fffbeb', color: '#92400e' };
-  return { bg: '#f0fdf4', color: '#166534' };
+  if (monate > 18) return { bg: 'var(--error-bg)', color: 'var(--error-text)' };
+  if (monate > 12) return { bg: 'var(--warning-bg)', color: 'var(--warning-text)' };
+  return { bg: 'var(--success-bg)', color: 'var(--success)' };
 }
 
 export default function ZweckbindungsStatus({ zuwendungen, onUpdate }: ZweckbindungsStatusProps) {

@@ -55,7 +55,7 @@ export default function CsvImport({ onImportDone, onCancel }: CsvImportProps) {
       style={{ background: 'rgba(0,0,0,0.5)' }}
     >
       <div
-        className="w-full max-w-lg rounded-xl shadow-lg drk-sheet-enter"
+        className="w-full max-w-lg rounded-xl shadow-lg drk-sheet-enter max-h-[90vh] overflow-y-auto"
         style={{ background: 'var(--bg-card)' }}
       >
         <div className="p-6">
