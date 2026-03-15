@@ -17,10 +17,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `lib/pdf-templates/briefbogen.ts`: Briefbogen-Layout-Engine (Logo, Sidebar, Falzmarken, Footer)
 - `lib/pdf-templates/pdf-helper.ts`: Shared Hilfsfunktionen (Buffer-Generierung, Formatierung)
 - `components/FormatToggle.tsx`: Segment-Control für Formatauswahl
+- `components/ZuwendungDetails.tsx`: Read-only Detailansicht für bestätigte Zuwendungen mit PDF-Download
 
 ### Changed
 - `app/bestaetigung/page.tsx`: FormatToggle integriert, PDF-Download über API, dynamische Button-Labels
 - `app/export/page.tsx`: FormatToggle integriert, Batch-Export unterstützt PDF und DOCX
+- `app/zuwendungen/page.tsx`: Details-Ansicht + PDF-Download für bestätigte Zuwendungen
+- `components/ZuwendungTabelle.tsx`: Bestätigte Zuwendungen zeigen "Details" statt "Bearbeiten", kein Löschen/Bearbeiten mehr möglich
 
 ### Fixed
 - **Security:** Magic Codes werden jetzt als SHA-256-Hash in der DB gespeichert statt im Klartext (`auth/login`, `auth/verify`)
