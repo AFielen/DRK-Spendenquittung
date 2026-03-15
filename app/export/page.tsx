@@ -15,6 +15,24 @@ import { generateSammelbestaetigung } from '@/lib/docx-templates/sammelbestaetig
 import { generateVereinfachterNachweis } from '@/lib/docx-templates/vereinfachter-nachweis';
 import { erstelleEmpfangsbestaetigung } from '@/lib/docx-templates/empfangsbestaetigung';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
+import FormatToggle, { type ExportFormat } from '@/components/FormatToggle';
+
+async function fetchPdfBlob(
+  typ: string,
+  spenderId: string,
+  zuwendungIds: string[],
+  laufendeNr: string,
+  doppel: boolean,
+  zeitraum?: { von: string; bis: string }
+): Promise<Blob> {
+  const res = await fetch('/api/dokumente/pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ typ, spenderId, zuwendungIds, laufendeNr, doppel, zeitraum }),
+  });
+  if (!res.ok) throw new Error('PDF-Generierung fehlgeschlagen');
+  return res.blob();
+}
 
 function formatBetrag(n: number): string {
   return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -30,6 +48,7 @@ function ExportContent() {
   const [optEinzelSach, setOptEinzelSach] = useState(true);
   const [optVereinfacht, setOptVereinfacht] = useState(true);
   const [optEmpfangsbestaetigung, setOptEmpfangsbestaetigung] = useState(false);
+  const [format, setFormat] = useState<ExportFormat>('pdf');
 
   const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState('');
@@ -83,6 +102,8 @@ function ExportContent() {
     const csvRows: string[] = ['Lfd.Nr;Nachname;Vorname;Art;Betrag;Datum;Typ'];
     let total = 0;
     let done = 0;
+    const ext = format === 'pdf' ? 'pdf' : 'docx';
+    const isPdf = format === 'pdf';
 
     if (optSammel) total += spenderMitGeld.size * 2;
     if (optEinzelSach) total += sachZuwendungen.length * 2;
@@ -90,7 +111,7 @@ function ExportContent() {
     if (optEmpfangsbestaetigung) total += sachZuwendungen.length;
     if (total === 0) total = 1;
 
-    const update = () => { done++; setProgress(`Generiere Bestätigung ${done} von ${total}...`); };
+    const update = () => { done++; setProgress(`Generiere Bestätigung ${done} von ${total} (${format.toUpperCase()})...`); };
 
     try {
       if (optSammel) {
@@ -100,14 +121,24 @@ function ExportContent() {
           const spenderZuwendungen = jahresZuwendungen.filter((z) => z.spenderId === spenderId && z.art === 'geld');
           const lfdNr = await getNextLaufendeNr();
           const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
+          const zeitraum = { von: `${selectedYear}-01-01`, bis: `${selectedYear}-12-31` };
 
-          const blob = await generateSammelbestaetigung(verein, spender, spenderZuwendungen, `${selectedYear}-01-01`, `${selectedYear}-12-31`, lfdNr, false);
-          zip.file(`Bestaetigungen/${name}_Sammelbestaetigung_${selectedYear}.docx`, blob);
-          update();
-
-          const doppelBlob = await generateSammelbestaetigung(verein, spender, spenderZuwendungen, `${selectedYear}-01-01`, `${selectedYear}-12-31`, lfdNr, true);
-          zip.file(`Doppel/${name}_Sammelbestaetigung_${selectedYear}_DOPPEL.docx`, doppelBlob);
-          update();
+          if (isPdf) {
+            const ids = spenderZuwendungen.map((z) => z.id);
+            const blob = await fetchPdfBlob('sammelbestaetigung', spenderId, ids, lfdNr, false, zeitraum);
+            zip.file(`Bestaetigungen/${name}_Sammelbestaetigung_${selectedYear}.pdf`, blob);
+            update();
+            const doppelBlob = await fetchPdfBlob('sammelbestaetigung', spenderId, ids, lfdNr, true, zeitraum);
+            zip.file(`Doppel/${name}_Sammelbestaetigung_${selectedYear}_DOPPEL.pdf`, doppelBlob);
+            update();
+          } else {
+            const blob = await generateSammelbestaetigung(verein, spender, spenderZuwendungen, zeitraum.von, zeitraum.bis, lfdNr, false);
+            zip.file(`Bestaetigungen/${name}_Sammelbestaetigung_${selectedYear}.${ext}`, blob);
+            update();
+            const doppelBlob = await generateSammelbestaetigung(verein, spender, spenderZuwendungen, zeitraum.von, zeitraum.bis, lfdNr, true);
+            zip.file(`Doppel/${name}_Sammelbestaetigung_${selectedYear}_DOPPEL.${ext}`, doppelBlob);
+            update();
+          }
 
           const summe = spenderZuwendungen.reduce((s, z) => s + z.betrag, 0);
           csvRows.push(`${lfdNr};${spenderAnzeigename(spender)};Sammel;${formatBetrag(summe)};${selectedYear};Anlage14`);
@@ -122,13 +153,21 @@ function ExportContent() {
           const lfdNr = await getNextLaufendeNr();
           const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
 
-          const blob = await generateSachzuwendung(verein, spender, z, lfdNr, false);
-          zip.file(`Bestaetigungen/${name}_Sachzuwendung.docx`, blob);
-          update();
-
-          const doppelBlob = await generateSachzuwendung(verein, spender, z, lfdNr, true);
-          zip.file(`Doppel/${name}_Sachzuwendung_DOPPEL.docx`, doppelBlob);
-          update();
+          if (isPdf) {
+            const blob = await fetchPdfBlob('sachzuwendung', spender.id, [z.id], lfdNr, false);
+            zip.file(`Bestaetigungen/${name}_Sachzuwendung.pdf`, blob);
+            update();
+            const doppelBlob = await fetchPdfBlob('sachzuwendung', spender.id, [z.id], lfdNr, true);
+            zip.file(`Doppel/${name}_Sachzuwendung_DOPPEL.pdf`, doppelBlob);
+            update();
+          } else {
+            const blob = await generateSachzuwendung(verein, spender, z, lfdNr, false);
+            zip.file(`Bestaetigungen/${name}_Sachzuwendung.${ext}`, blob);
+            update();
+            const doppelBlob = await generateSachzuwendung(verein, spender, z, lfdNr, true);
+            zip.file(`Doppel/${name}_Sachzuwendung_DOPPEL.${ext}`, doppelBlob);
+            update();
+          }
 
           csvRows.push(`${lfdNr};${spenderAnzeigename(spender)};Sach;${formatBetrag(z.sachWert ?? 0)};${z.datum};Anlage4`);
           await markBestaetigt([z.id], 'anlage4', lfdNr);
@@ -140,8 +179,14 @@ function ExportContent() {
           if (z.bestaetigungErstellt) { update(); continue; }
           const spender = spenderList.find((s) => s.id === z.spenderId);
           if (!spender) continue;
-          const blob = await generateVereinfachterNachweis(verein, spender, z);
-          zip.file(`Vereinfacht/${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.docx`, blob);
+
+          if (isPdf) {
+            const blob = await fetchPdfBlob('vereinfacht', spender.id, [z.id], '', false);
+            zip.file(`Vereinfacht/${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.pdf`, blob);
+          } else {
+            const blob = await generateVereinfachterNachweis(verein, spender, z);
+            zip.file(`Vereinfacht/${spenderAnzeigename(spender).replace(/\s+/g, '_')}_Nachweis.${ext}`, blob);
+          }
           update();
           csvRows.push(`;${spenderAnzeigename(spender)};Vereinfacht;${formatBetrag(z.betrag)};${z.datum};VN`);
         }
@@ -151,10 +196,16 @@ function ExportContent() {
         for (const z of sachZuwendungen) {
           const spender = spenderList.find((s) => s.id === z.spenderId);
           if (!spender) continue;
-          const vollstaendig: Zuwendung = { ...z, spender: { ...spender }, betrag: Number(z.betrag), sachWert: z.sachWert != null ? Number(z.sachWert) : undefined };
-          const blob = await erstelleEmpfangsbestaetigung(verein, vollstaendig);
           const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
-          zip.file(`Empfangsbestaetigungen/${name}_Empfangsbestaetigung.docx`, blob);
+
+          if (isPdf) {
+            const blob = await fetchPdfBlob('empfangsbestaetigung', spender.id, [z.id], '', false);
+            zip.file(`Empfangsbestaetigungen/${name}_Empfangsbestaetigung.pdf`, blob);
+          } else {
+            const vollstaendig: Zuwendung = { ...z, spender: { ...spender }, betrag: Number(z.betrag), sachWert: z.sachWert != null ? Number(z.sachWert) : undefined };
+            const blob = await erstelleEmpfangsbestaetigung(verein, vollstaendig);
+            zip.file(`Empfangsbestaetigungen/${name}_Empfangsbestaetigung.${ext}`, blob);
+          }
           update();
         }
       }
@@ -180,7 +231,10 @@ function ExportContent() {
       <div className="max-w-4xl mx-auto">
         {freistellungStatus.status === 'warnung' && <FreistellungsBlocker verein={verein} />}
         <div className="drk-card">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text)' }}>Batch-Export</h2>
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Batch-Export</h2>
+            <FormatToggle value={format} onChange={setFormat} />
+          </div>
           <div className="space-y-4">
             <div>
               <label className="drk-label">Jahr</label>
@@ -207,7 +261,7 @@ function ExportContent() {
             </div>
             {exporting && <div className="p-3 rounded-lg text-sm" style={{ background: 'var(--drk-bg)', color: 'var(--text)' }}>{progress}</div>}
             <button className="drk-btn-primary w-full" disabled={exporting || jahresZuwendungen.length === 0} onClick={handleExport}>
-              {exporting ? 'Exportiere...' : 'ZIP exportieren'}
+              {exporting ? 'Exportiere...' : `ZIP exportieren (${format.toUpperCase()})`}
             </button>
           </div>
         </div>

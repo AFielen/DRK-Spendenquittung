@@ -15,7 +15,8 @@ Jeder DRK-Kreisverband und Ortsverein muss Spendern steuerlich anerkannte Zuwend
 ## ✨ Features
 
 ### Web-App
-- **BMF-konforme DOCX-Generierung** — Anlagen 3, 4 und 14 des BMF-Schreibens vom 07.11.2013
+- **PDF- und DOCX-Export** — BMF-konforme Zuwendungsbestätigungen als PDF (Standard) oder DOCX, Anlagen 3, 4 und 14
+- **DRK-Briefbogen-Layout** — PDF mit Logo, Seitenleiste, Falzmarken (DIN 5008) und Seitenfuß
 - **Vereins-Setup-Wizard** — Stammdaten, steuerliche Angaben, Unterschrift in 3 Schritten
 - **Spenderverwaltung** — CRUD mit Suche, Sortierung und CSV-Import
 - **Zuwendungen erfassen** — Geldspenden, Sachspenden, Mitgliedsbeiträge, Aufwandsverzicht
@@ -66,6 +67,7 @@ npm run dev
 | [React](https://react.dev/) | 19 | UI-Library |
 | [TypeScript](https://www.typescriptlang.org/) | strict | Typisierung |
 | [Tailwind CSS](https://tailwindcss.com/) | 4 | Styling |
+| [pdfmake](https://www.npmjs.com/package/pdfmake) | latest | PDF-Generierung serverseitig |
 | [docx](https://www.npmjs.com/package/docx) | latest | DOCX-Generierung clientseitig |
 | [file-saver](https://www.npmjs.com/package/file-saver) | latest | Download-Trigger |
 | [JSZip](https://www.npmjs.com/package/jszip) | latest | ZIP-Erstellung |
@@ -113,6 +115,14 @@ DRK-Spendenquittung/
 │       ├── sachzuwendung.ts     # Anlage 4
 │       ├── sammelbestaetigung.ts # Anlage 14
 │       └── vereinfachter-nachweis.ts
+│   └── pdf-templates/
+│       ├── briefbogen.ts        # DRK-Briefbogen-Layout (Logo, Sidebar, Falzmarken)
+│       ├── pdf-helper.ts        # Shared PDF-Hilfsfunktionen
+│       ├── geldzuwendung.ts     # Anlage 3 (PDF)
+│       ├── sachzuwendung.ts     # Anlage 4 (PDF)
+│       ├── sammelbestaetigung.ts # Anlage 14 (PDF)
+│       ├── vereinfachter-nachweis.ts  # Vereinfacht (PDF)
+│       └── empfangsbestaetigung.ts    # Sachspenden-Protokoll (PDF)
 ├── Dockerfile
 ├── docker-compose.yml
 └── package.json
