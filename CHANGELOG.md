@@ -9,6 +9,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Einstellungen-Hub:** Neue Seite `/einstellungen` gruppiert Einrichtung, Export und API-Schlüssel unter einem Menüpunkt
+- Navigation: Export, API und Einrichtung zu einem "Einstellungen"-Tab zusammengefasst (7 statt 9 Tabs)
+- **Rollenbasierte Sichtbarkeit:** Export und API nur für Admin/Schatzmeister sichtbar, Leser sehen nur Einrichtung
+- Export-Seite: Rollenprüfung für Leser hinzugefügt (nur Admin/Schatzmeister dürfen exportieren)
 - **API-Schlüssel-System:** Nutzer (Admin/Schatzmeister) können API-Schlüssel erstellen, um externen Anwendungen REST-API-Zugriff zu gewähren
 - **Öffentliche REST-API** unter `/api/v1/` mit Bearer-Token-Authentifizierung für Spender, Zuwendungen und Kreisverband-Daten
 - **API-Schlüssel-Verwaltung:** Neue Seite `/api-schluessel` zum Erstellen, Anzeigen und Löschen von API-Schlüsseln

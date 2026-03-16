@@ -39,7 +39,22 @@ function formatBetrag(n: number): string {
 }
 
 function ExportContent() {
-  const { kreisverband } = useAuth();
+  const { kreisverband, nutzer } = useAuth();
+  const isSchreibberechtigt = nutzer?.rolle === 'admin' || nutzer?.rolle === 'schatzmeister';
+
+  if (!isSchreibberechtigt) {
+    return (
+      <div className="py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="drk-card text-center py-12">
+            <p style={{ color: 'var(--text-light)' }}>
+              Nur Administratoren und Schatzmeister können den Export verwenden.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [spenderList, setSpenderList] = useState<Spender[]>([]);
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
 
