@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
+  activePaths?: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -70,18 +72,6 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    href: '/export',
-    label: 'Export',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
-    ),
-  },
-  {
     href: '/daten',
     label: 'Daten',
     icon: (
@@ -92,18 +82,9 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    href: '/api-schluessel',
-    label: 'API',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
-      </svg>
-    ),
-  },
-  {
-    href: '/einrichtung',
-    label: 'Einrichtung',
+    href: '/einstellungen',
+    label: 'Einstellungen',
+    activePaths: ['/einstellungen', '/einrichtung', '/export', '/api-schluessel'],
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -124,8 +105,9 @@ export default function Navigation() {
     >
       <div className="flex items-center gap-1 px-6 whitespace-nowrap">
         {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.href === '/'
+          const isActive = item.activePaths
+            ? item.activePaths.some((p) => pathname.startsWith(p))
+            : item.href === '/'
               ? pathname === '/'
               : pathname.startsWith(item.href);
 
