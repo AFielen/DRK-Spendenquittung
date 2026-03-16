@@ -29,6 +29,12 @@ Jeder DRK-Kreisverband und Ortsverein muss Spendern steuerlich anerkannte Zuwend
 - **Backup-Ampel** — Visueller Status im Dashboard, JSON-Export/Import
 - **Mobile-First** — Cards statt Tabellen auf Mobilgeräten, 44px Touch-Targets
 
+### REST-API
+- **API-Schlüssel** — Bearer-Token-Authentifizierung für externe Anwendungen und Agenten
+- **Granulare Berechtigungen** — 5 Scopes für feingranularen Zugriff (spender:read/write, zuwendungen:read/write, kreisverband:read)
+- **Rate Limiting** — 100 Anfragen/Minute pro Schlüssel
+- **Belegfunktion geschützt** — PDF/DOCX-Erstellung nur in der Web-App, nicht via API
+
 ### Steuerrechtliche Sicherheitsmechanismen
 - Exakte BMF-Pflicht-Textbausteine (keine Umformulierungen)
 - Freistellungs-Prüfung mit automatischer Blockierung
@@ -86,6 +92,9 @@ DRK-Spendenquittung/
 │   ├── bestaetigung/page.tsx    # Bestätigungen erstellen (3 Tabs)
 │   ├── export/page.tsx          # Batch-Export (ZIP)
 │   ├── daten/page.tsx           # Backup, Statistik, Daten löschen
+│   ├── api-schluessel/page.tsx  # API-Schlüssel-Verwaltung
+│   ├── api-dokumentation/page.tsx # Öffentliche API-Dokumentation
+│   ├── api/v1/                  # Öffentliche REST-API (Bearer-Token)
 │   ├── impressum/page.tsx       # Pflicht
 │   ├── datenschutz/page.tsx     # Pflicht
 │   ├── hilfe/page.tsx           # Pflicht (10 FAQ)
@@ -106,6 +115,10 @@ DRK-Spendenquittung/
 │   ├── types.ts                 # Verein, Spender, Zuwendung, AppSettings
 │   ├── storage.ts               # localStorage-Abstraktion
 │   ├── freistellung-check.ts    # Freistellungs-Prüfung
+│   ├── api-key.ts               # API-Schlüssel-Generierung & Validierung
+│   ├── api-key-types.ts         # Scope-Definitionen
+│   ├── api-v1-helpers.ts        # API v1 Auth-Wrapper
+│   ├── rate-limit.ts            # In-Memory Rate Limiter
 │   ├── i18n.ts                  # DE/EN Übersetzungen
 │   ├── version.ts               # App-Version
 │   └── docx-templates/
