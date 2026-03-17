@@ -8,7 +8,14 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Gefahrenzone in Einstellungen:** Neue Sektion auf `/einstellungen` zum unwiderruflichen Löschen aller Spender und Zuwendungen (#6)
+- `app/api/einstellungen/gefahrenzone/route.ts`: DELETE-Route für komplette Datenbereinigung (Zuwendungen → Spender, laufende Nr. zurückgesetzt)
+- Zweistufige Sicherheitsabfrage: Checkbox + Bestätigungstext „ALLES LÖSCHEN" vor Löschung
+- Gefahrenzone nur für Admin/Schatzmeister sichtbar
+
 ### Fixed
+- `StatistikKarten.tsx`: Summierungsfehler behoben – Prisma-Decimal-Werte werden mit `Number()` konvertiert, verhindert String-Konkatenation in Jahressumme und Balkendiagramm (#5)
 - `ZuwendungTabelle.tsx`: Datumsformatierung korrigiert – ISO-Zeitstempel (`2026-03-16T00:00:00.000Z`) wird nun korrekt als `16.03.2026` angezeigt statt `16T00:00:00.000Z.03.2026`
 - `ZuwendungTabelle.tsx`: Summenberechnung korrigiert – Prisma-Decimal-Werte werden mit `Number()` in numerische Werte konvertiert (verhindert String-Konkatenation statt Addition)
 - `ZuwendungTabelle.tsx`: Einzelbeträge in Tabelle und Mobile-Cards ebenfalls mit `Number()` konvertiert
