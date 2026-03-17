@@ -140,7 +140,8 @@ function BestaetigungContent() {
     (z) =>
       z.spenderId === vereinfachtSpenderId &&
       z.betrag <= 300 &&
-      z.art === 'geld'
+      z.art === 'geld' &&
+      !z.bestaetigungErstellt
   );
   const vereinfachtSelected = zuwendungen.find((z) => z.id === vereinfachtZuwendungId);
 

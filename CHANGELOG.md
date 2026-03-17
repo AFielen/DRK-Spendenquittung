@@ -21,6 +21,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `bestaetigung/page.tsx`: Sammelbestätigung schließt bereits bestätigte Zuwendungen aus – verhindert Überschreibung von Einzelbestätigungen (#7)
 - `bestaetigung/page.tsx`: Warnhinweis wenn Zuwendungen im Zeitraum bereits einzeln bestätigt wurden (#7)
 - `export/page.tsx`: Batch-Export überspringt bereits bestätigte Zuwendungen bei Sammel- und Sachbestätigungen (#7)
+- `bestaetigung/page.tsx`: Vereinfacht-Tab filtert ebenfalls bereits bestätigte Zuwendungen heraus (#7)
 - `bestaetigen/route.ts`: API lehnt Typwechsel ab (z.B. Einzelbestätigung → Sammelbestätigung) mit HTTP 409 (#7)
 - `StatistikKarten.tsx`: Summierungsfehler behoben – Prisma-Decimal-Werte werden mit `Number()` konvertiert, verhindert String-Konkatenation in Jahressumme und Balkendiagramm (#5)
 - `ZuwendungTabelle.tsx`: Datumsformatierung korrigiert – ISO-Zeitstempel (`2026-03-16T00:00:00.000Z`) wird nun korrekt als `16.03.2026` angezeigt statt `16T00:00:00.000Z.03.2026`
