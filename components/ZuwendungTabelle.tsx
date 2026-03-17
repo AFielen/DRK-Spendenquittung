@@ -56,7 +56,7 @@ export default function ZuwendungTabelle({
   }, [zuwendungen, filterSpender, filterJahr, filterArt, filterStatus]);
 
   const summe = useMemo(
-    () => filtered.reduce((s, z) => s + (z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag), 0),
+    () => filtered.reduce((s, z) => s + Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag), 0),
     [filtered]
   );
 
@@ -75,7 +75,7 @@ export default function ZuwendungTabelle({
   };
 
   const formatDatum = (d: string) => {
-    const [y, m, day] = d.split('-');
+    const [y, m, day] = d.substring(0, 10).split('-');
     return `${day}.${m}.${y}`;
   };
 
@@ -154,7 +154,7 @@ export default function ZuwendungTabelle({
           <tbody>
             {filtered.map((z) => {
               const spender = spenderMap[z.spenderId];
-              const wert = z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
+              const wert = Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag);
               return (
                 <tr key={z.id} style={{ borderBottom: '1px solid var(--border)' }}>
                   <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
@@ -270,7 +270,7 @@ export default function ZuwendungTabelle({
       <div className="md:hidden space-y-3">
         {filtered.map((z) => {
           const spender = spenderMap[z.spenderId];
-          const wert = z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
+          const wert = Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag);
           return (
             <div
               key={z.id}
