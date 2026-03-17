@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import type { Spender, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 
@@ -20,7 +20,18 @@ export default function ZuwendungFormular({
   const [step, setStep] = useState(1);
 
   const [spenderId, setSpenderId] = useState(zuwendung?.spenderId ?? '');
-  const [spenderSuche, setSpenderSuche] = useState('');
+  const [spenderSuche, setSpenderSuche] = useState(() => {
+    if (zuwendung?.spenderId) {
+      const s = spenderList.find((sp) => sp.id === zuwendung.spenderId);
+      return s ? spenderAnzeigename(s) : '';
+    }
+    return '';
+  });
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const [art, setArt] = useState<'geld' | 'sach'>(zuwendung?.art ?? 'geld');
   const [verwendung, setVerwendung] = useState<'spende' | 'mitgliedsbeitrag'>(
     zuwendung?.verwendung ?? 'spende'
@@ -65,6 +76,64 @@ export default function ZuwendungFormular({
       (s) => spenderAnzeigename(s).toLowerCase().includes(q) || (s.firmenname && s.firmenname.toLowerCase().includes(q)) || s.ort.toLowerCase().includes(q)
     );
   }, [spenderList, spenderSuche]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && listRef.current) {
+      const item = listRef.current.children[highlightedIndex] as HTMLElement;
+      item?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightedIndex]);
+
+  const selectSpender = useCallback((s: Spender) => {
+    setSpenderId(s.id);
+    setSpenderSuche(spenderAnzeigename(s));
+    setDropdownOpen(false);
+    setHighlightedIndex(-1);
+  }, []);
+
+  const handleSpenderKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!dropdownOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        setDropdownOpen(true);
+        setHighlightedIndex(0);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.min(prev + 1, filteredSpender.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < filteredSpender.length) {
+          selectSpender(filteredSpender[highlightedIndex]);
+        }
+        break;
+      case 'Escape':
+        setDropdownOpen(false);
+        setHighlightedIndex(-1);
+        break;
+    }
+  }, [dropdownOpen, highlightedIndex, filteredSpender, selectSpender]);
 
   const selectedSpender = spenderList.find((s) => s.id === spenderId);
   const parsedBetrag = parseFloat(betrag) || 0;
@@ -176,31 +245,83 @@ export default function ZuwendungFormular({
         {step === 1 && (
           <div className="space-y-4">
             {/* Spender */}
-            <div>
+            <div ref={dropdownRef} className="relative">
               <label className="drk-label">Spender *</label>
               <input
+                ref={inputRef}
                 type="text"
-                className="drk-input mb-1"
+                className="drk-input"
                 placeholder="Spender suchen..."
+                role="combobox"
+                aria-expanded={dropdownOpen}
+                aria-controls="spender-listbox"
+                aria-autocomplete="list"
+                aria-activedescendant={highlightedIndex >= 0 ? `spender-option-${highlightedIndex}` : undefined}
                 value={spenderSuche}
                 onChange={(e) => {
                   setSpenderSuche(e.target.value);
-                  if (e.target.value) setSpenderId('');
+                  setSpenderId('');
+                  setDropdownOpen(true);
+                  setHighlightedIndex(-1);
                 }}
+                onFocus={() => setDropdownOpen(true)}
+                onKeyDown={handleSpenderKeyDown}
               />
-              <select
-                className="drk-input"
-                value={spenderId}
-                onChange={(e) => setSpenderId(e.target.value)}
-              >
-                <option value="">– Bitte wählen –</option>
-                {filteredSpender.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {spenderAnzeigename(s)} ({s.plz} {s.ort})
-                  </option>
-                ))}
-              </select>
-              {selectedSpender && (
+              {spenderSuche && (
+                <button
+                  type="button"
+                  className="absolute right-3 top-[2.35rem] text-sm"
+                  style={{ color: 'var(--text-muted)' }}
+                  onClick={() => {
+                    setSpenderSuche('');
+                    setSpenderId('');
+                    setDropdownOpen(true);
+                    inputRef.current?.focus();
+                  }}
+                  aria-label="Suche löschen"
+                >
+                  ✕
+                </button>
+              )}
+              {dropdownOpen && (
+                <ul
+                  ref={listRef}
+                  id="spender-listbox"
+                  role="listbox"
+                  className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg shadow-lg border"
+                  style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
+                >
+                  {filteredSpender.length === 0 ? (
+                    <li className="px-3 py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Keine Spender gefunden
+                    </li>
+                  ) : (
+                    filteredSpender.map((s, i) => (
+                      <li
+                        key={s.id}
+                        id={`spender-option-${i}`}
+                        role="option"
+                        aria-selected={s.id === spenderId}
+                        className="px-3 py-2 text-sm cursor-pointer transition-colors"
+                        style={{
+                          background: i === highlightedIndex ? 'var(--drk-bg)' : undefined,
+                          color: s.id === spenderId ? 'var(--drk)' : 'var(--text)',
+                          fontWeight: s.id === spenderId ? 600 : undefined,
+                        }}
+                        onMouseEnter={() => setHighlightedIndex(i)}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          selectSpender(s);
+                        }}
+                      >
+                        {spenderAnzeigename(s)}{' '}
+                        <span style={{ color: 'var(--text-muted)' }}>({s.plz} {s.ort})</span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              )}
+              {selectedSpender && !dropdownOpen && (
                 <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   {selectedSpender.strasse}, {selectedSpender.plz} {selectedSpender.ort}
                 </div>

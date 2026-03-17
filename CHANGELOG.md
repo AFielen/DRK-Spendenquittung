@@ -8,6 +8,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- `ZuwendungFormular.tsx`: Spender-Dropdown durch durchsuchbares Combobox-Widget ersetzt – Eingabe filtert Live-Ergebnisse, Keyboard-Navigation (Pfeiltasten, Enter, Escape), Click-Outside schließt Dropdown (#8)
+
 ### Added
 - **Gefahrenzone in Einstellungen:** Neue Sektion auf `/einstellungen` zum unwiderruflichen Löschen aller Spender und Zuwendungen (#6)
 - `app/api/einstellungen/gefahrenzone/route.ts`: DELETE-Route für komplette Datenbereinigung (Zuwendungen → Spender, laufende Nr. zurückgesetzt)
