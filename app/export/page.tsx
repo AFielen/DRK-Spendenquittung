@@ -133,7 +133,8 @@ function ExportContent() {
         for (const spenderId of spenderMitGeld) {
           const spender = spenderList.find((s) => s.id === spenderId);
           if (!spender) continue;
-          const spenderZuwendungen = jahresZuwendungen.filter((z) => z.spenderId === spenderId && z.art === 'geld');
+          const spenderZuwendungen = jahresZuwendungen.filter((z) => z.spenderId === spenderId && z.art === 'geld' && !z.bestaetigungErstellt);
+          if (spenderZuwendungen.length === 0) continue;
           const lfdNr = await getNextLaufendeNr();
           const name = spenderAnzeigename(spender).replace(/\s+/g, '_');
           const zeitraum = { von: `${selectedYear}-01-01`, bis: `${selectedYear}-12-31` };
@@ -163,6 +164,7 @@ function ExportContent() {
 
       if (optEinzelSach) {
         for (const z of sachZuwendungen) {
+          if (z.bestaetigungErstellt) { update(); update(); continue; }
           const spender = spenderList.find((s) => s.id === z.spenderId);
           if (!spender) continue;
           const lfdNr = await getNextLaufendeNr();

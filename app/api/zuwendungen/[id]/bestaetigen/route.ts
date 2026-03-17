@@ -22,9 +22,16 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (!existing) return NextResponse.json({ error: 'Zuwendung nicht gefunden.' }, { status: 404 });
 
-  // Idempotenz: bereits bestätigt → bestehende Daten zurückgeben
+  // Idempotenz: bereits bestätigt → bestehende Daten zurückgeben (gleicher Typ)
+  // Typwechsel verhindern (z.B. Einzelbestätigung → Sammelbestätigung)
   if (existing.bestaetigungErstellt) {
-    return NextResponse.json(existing);
+    if (existing.bestaetigungTyp === body.bestaetigungTyp) {
+      return NextResponse.json(existing);
+    }
+    return NextResponse.json(
+      { error: `Zuwendung wurde bereits als ${existing.bestaetigungTyp} bestätigt und kann nicht überschrieben werden.` },
+      { status: 409 },
+    );
   }
 
   // Duplikat-Prüfung: laufendeNr darf nur innerhalb derselben Sammelbestätigung mehrfach vorkommen

@@ -121,16 +121,27 @@ function BestaetigungContent() {
     (z) =>
       z.spenderId === sammelSpenderId &&
       z.art === 'geld' &&
+      !z.bestaetigungErstellt &&
       z.datum >= sammelVon &&
       z.datum <= sammelBis
   );
   const sammelSumme = sammelZuwendungen.reduce((s, z) => s + z.betrag, 0);
 
+  const sammelBereitsBestaetigt = zuwendungen.filter(
+    (z) =>
+      z.spenderId === sammelSpenderId &&
+      z.art === 'geld' &&
+      z.bestaetigungErstellt &&
+      z.datum >= sammelVon &&
+      z.datum <= sammelBis
+  );
+
   const vereinfachtOffene = zuwendungen.filter(
     (z) =>
       z.spenderId === vereinfachtSpenderId &&
       z.betrag <= 300 &&
-      z.art === 'geld'
+      z.art === 'geld' &&
+      !z.bestaetigungErstellt
   );
   const vereinfachtSelected = zuwendungen.find((z) => z.id === vereinfachtZuwendungId);
 
@@ -380,11 +391,27 @@ function BestaetigungContent() {
                       {sammelZuwendungen.length} Geldzuwendungen · Gesamt: {formatBetrag(sammelSumme)} €
                     </div>
                   </div>
+                  {sammelBereitsBestaetigt.length > 0 && (
+                    <div className="p-3 rounded-lg mb-3 text-sm" style={{ background: '#fefce8', border: '1px solid #fde68a', color: '#92400e' }}>
+                      <div className="font-semibold mb-1">{sammelBereitsBestaetigt.length} Zuwendung(en) bereits bestätigt – nicht enthalten:</div>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {sammelBereitsBestaetigt.map((z) => (
+                          <li key={z.id}>
+                            {formatBetrag(z.betrag)} € vom {formatDatum(z.datum)} — {bestaetigungTypLabel(z.bestaetigungTyp)}
+                            {z.laufendeNr && ` (Nr. ${z.laufendeNr})`}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <button className="drk-btn-primary" onClick={() => setShowSammelUnterschrift(true)}>Sammelbestätigung ({format.toUpperCase()}) herunterladen</button>
                 </div>
               )}
-              {sammelSpenderId && sammelZuwendungen.length === 0 && (
+              {sammelSpenderId && sammelZuwendungen.length === 0 && sammelBereitsBestaetigt.length === 0 && (
                 <p className="text-sm" style={{ color: 'var(--text-light)' }}>Keine Geldzuwendungen im gewählten Zeitraum.</p>
+              )}
+              {sammelSpenderId && sammelZuwendungen.length === 0 && sammelBereitsBestaetigt.length > 0 && (
+                <p className="text-sm" style={{ color: 'var(--text-light)' }}>Keine offenen Geldzuwendungen im gewählten Zeitraum – alle wurden bereits einzeln bestätigt.</p>
               )}
             </div>
           )}
