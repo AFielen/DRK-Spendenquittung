@@ -54,11 +54,11 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
 
   const stats = useMemo(() => {
     const gesamt = filtered.length;
-    const gesamtSumme = filtered.reduce((s, z) => s + (z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag), 0);
+    const gesamtSumme = filtered.reduce((s, z) => s + Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag), 0);
     const geldZuwendungen = filtered.filter((z) => z.art === 'geld');
     const sachZuwendungen = filtered.filter((z) => z.art === 'sach');
-    const geldSumme = geldZuwendungen.reduce((s, z) => s + z.betrag, 0);
-    const sachSumme = sachZuwendungen.reduce((s, z) => s + (z.sachWert ?? 0), 0);
+    const geldSumme = geldZuwendungen.reduce((s, z) => s + Number(z.betrag), 0);
+    const sachSumme = sachZuwendungen.reduce((s, z) => s + Number(z.sachWert ?? 0), 0);
     return { gesamt, gesamtSumme, geldCount: geldZuwendungen.length, geldSumme, sachCount: sachZuwendungen.length, sachSumme };
   }, [filtered]);
 
@@ -76,12 +76,12 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
             <div className="text-xs" style={{ color: 'var(--text-light)' }}>Gesamtsumme</div>
           </div>
           <div>
-            <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{stats.geldCount} × {formatBetrag(stats.geldSumme)} €</div>
-            <div className="text-xs" style={{ color: 'var(--text-light)' }}>davon Geld</div>
+            <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatBetrag(stats.geldSumme)} €</div>
+            <div className="text-xs" style={{ color: 'var(--text-light)' }}>{stats.geldCount} Geldspende{stats.geldCount !== 1 ? 'n' : ''}</div>
           </div>
           <div>
-            <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{stats.sachCount} × {formatBetrag(stats.sachSumme)} €</div>
-            <div className="text-xs" style={{ color: 'var(--text-light)' }}>davon Sach</div>
+            <div className="text-lg font-bold" style={{ color: 'var(--text)' }}>{formatBetrag(stats.sachSumme)} €</div>
+            <div className="text-xs" style={{ color: 'var(--text-light)' }}>{stats.sachCount} Sachspende{stats.sachCount !== 1 ? 'n' : ''}</div>
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
           </thead>
           <tbody>
             {filtered.map((z, index) => {
-              const wert = z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
+              const wert = Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag);
               const zugangInfo = z.zugangsweg ? ZUGANGSWEG_LABELS[z.zugangsweg] : null;
               const bemerkungKurz = z.bemerkung && z.bemerkung.length > 50
                 ? z.bemerkung.substring(0, 50) + '…'
@@ -199,7 +199,7 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
       {/* Mobile-Cards */}
       <div className="md:hidden space-y-3">
         {filtered.map((z) => {
-          const wert = z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
+          const wert = Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag);
           const zugangInfo = z.zugangsweg ? ZUGANGSWEG_LABELS[z.zugangsweg] : null;
           return (
             <div
