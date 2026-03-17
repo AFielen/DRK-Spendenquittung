@@ -22,6 +22,29 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (!existing) return NextResponse.json({ error: 'Zuwendung nicht gefunden.' }, { status: 404 });
 
+  // Idempotenz: bereits bestätigt → bestehende Daten zurückgeben
+  if (existing.bestaetigungErstellt) {
+    return NextResponse.json(existing);
+  }
+
+  // Duplikat-Prüfung: laufendeNr darf nur innerhalb derselben Sammelbestätigung mehrfach vorkommen
+  const duplicate = await prisma.zuwendung.findFirst({
+    where: {
+      kreisverbandId: session.kreisverbandId,
+      laufendeNr: body.laufendeNr,
+      bestaetigungErstellt: true,
+      // Bei Sammelbestätigung (anlage14) ist gleiche laufendeNr erlaubt
+      ...(body.bestaetigungTyp !== 'anlage14' ? {} : {}),
+    },
+  });
+
+  if (duplicate && body.bestaetigungTyp !== 'anlage14' && duplicate.bestaetigungTyp !== 'anlage14') {
+    return NextResponse.json(
+      { error: `Laufende Nummer ${body.laufendeNr} ist bereits vergeben.` },
+      { status: 409 },
+    );
+  }
+
   const zuwendung = await prisma.zuwendung.update({
     where: { id },
     data: {
