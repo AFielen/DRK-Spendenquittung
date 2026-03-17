@@ -9,11 +9,11 @@ interface StatistikKartenProps {
 
 export default function StatistikKarten({ spenderCount, zuwendungen }: StatistikKartenProps) {
   const currentYear = new Date().getFullYear();
+  const zuwendungBetrag = (z: Zuwendung): number =>
+    z.art === 'sach' ? Number(z.sachWert ?? 0) : Number(z.betrag);
+
   const jahresZuwendungen = zuwendungen.filter((z) => z.datum.startsWith(currentYear.toString()));
-  const jahresSumme = jahresZuwendungen.reduce(
-    (s, z) => s + (z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag),
-    0
-  );
+  const jahresSumme = jahresZuwendungen.reduce((s, z) => s + zuwendungBetrag(z), 0);
   const offene = zuwendungen.filter((z) => !z.bestaetigungErstellt).length;
 
   // Balkendiagramm: letzte 5 Jahre
@@ -24,7 +24,7 @@ export default function StatistikKarten({ spenderCount, zuwendungen }: Statistik
   for (const z of zuwendungen) {
     const jahr = z.datum.substring(0, 4);
     if (jahreMap[jahr] !== undefined) {
-      jahreMap[jahr] += z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
+      jahreMap[jahr] += zuwendungBetrag(z);
     }
   }
   const maxSumme = Math.max(...Object.values(jahreMap), 1);
