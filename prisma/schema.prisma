@@ -84,6 +84,9 @@ model Spender {
   ort            String
   steuerIdNr     String?
 
+  archiviert     Boolean  @default(false)
+  archiviertAm   DateTime?
+
   kreisverbandId String
   kreisverband   Kreisverband @relation(fields: [kreisverbandId], references: [id])
   zuwendungen    Zuwendung[]

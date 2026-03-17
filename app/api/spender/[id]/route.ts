@@ -60,7 +60,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   if (!requireSchreibrecht(session)) return NextResponse.json({ error: 'Keine Berechtigung.' }, { status: 403 });
 
   const { id } = await params;
-  const body = await req.json().catch(() => ({}));
 
   // Mandantenisolation prüfen
   const existing = await prisma.spender.findFirst({
@@ -69,11 +68,14 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   });
   if (!existing) return NextResponse.json({ error: 'Spender nicht gefunden.' }, { status: 404 });
 
-  if (existing._count.zuwendungen > 0 && !body.confirm) {
-    return NextResponse.json(
-      { error: `Spender hat ${existing._count.zuwendungen} Zuwendung(en). Bestätigung erforderlich.`, requireConfirm: true },
-      { status: 409 },
-    );
+  // Spender mit Zuwendungen archivieren statt löschen
+  if (existing._count.zuwendungen > 0) {
+    await prisma.spender.update({
+      where: { id },
+      data: { archiviert: true, archiviertAm: new Date() },
+    });
+
+    return NextResponse.json({ success: true, archiviert: true });
   }
 
   await prisma.spender.delete({ where: { id } });

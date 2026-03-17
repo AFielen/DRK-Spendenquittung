@@ -62,6 +62,10 @@ export interface Spender {
 
   steuerIdNr?: string | null;
 
+  // Archivierung
+  archiviert?: boolean;
+  archiviertAm?: string | null;
+
   // Aggregierte Daten (von API)
   zuwendungenCount?: number;
   jahresSumme?: number;
