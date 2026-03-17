@@ -14,6 +14,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Zweistufige Sicherheitsabfrage: Checkbox + Bestätigungstext „ALLES LÖSCHEN" vor Löschung
 - Gefahrenzone nur für Admin/Schatzmeister sichtbar
 
+### Removed
+- `app/daten/page.tsx`: Datenspeicherungs-Hinweistext und alte Gefahrenzone entfernt (jetzt in `/einstellungen`) (#6)
+
 ### Fixed
 - `StatistikKarten.tsx`: Summierungsfehler behoben – Prisma-Decimal-Werte werden mit `Number()` konvertiert, verhindert String-Konkatenation in Jahressumme und Balkendiagramm (#5)
 - `ZuwendungTabelle.tsx`: Datumsformatierung korrigiert – ISO-Zeitstempel (`2026-03-16T00:00:00.000Z`) wird nun korrekt als `16.03.2026` angezeigt statt `16T00:00:00.000Z.03.2026`
