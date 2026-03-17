@@ -4,8 +4,14 @@ import { prisma } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   return withApiKey(req, 'spender:read', async (ctx) => {
+    const { searchParams } = new URL(req.url);
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+
     const spender = await prisma.spender.findMany({
-      where: { kreisverbandId: ctx.kreisverbandId },
+      where: {
+        kreisverbandId: ctx.kreisverbandId,
+        ...(includeArchived ? {} : { archiviert: false }),
+      },
       include: {
         _count: { select: { zuwendungen: true } },
         zuwendungen: { select: { betrag: true, datum: true } },
@@ -30,6 +36,8 @@ export async function GET(req: NextRequest) {
         plz: s.plz,
         ort: s.ort,
         steuerIdNr: s.steuerIdNr,
+        archiviert: s.archiviert,
+        archiviertAm: s.archiviertAm,
         zuwendungenCount: s._count.zuwendungen,
         jahresSumme,
         erstelltAm: s.erstelltAm,

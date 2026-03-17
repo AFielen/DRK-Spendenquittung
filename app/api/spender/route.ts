@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession, requireSchreibrecht } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Nicht angemeldet.' }, { status: 401 });
 
+  const { searchParams } = new URL(req.url);
+  const includeArchived = searchParams.get('includeArchived') === 'true';
+
   const spender = await prisma.spender.findMany({
-    where: { kreisverbandId: session.kreisverbandId },
+    where: {
+      kreisverbandId: session.kreisverbandId,
+      ...(includeArchived ? {} : { archiviert: false }),
+    },
     include: {
       _count: { select: { zuwendungen: true } },
       zuwendungen: {
@@ -35,6 +41,8 @@ export async function GET() {
       plz: s.plz,
       ort: s.ort,
       steuerIdNr: s.steuerIdNr,
+      archiviert: s.archiviert,
+      archiviertAm: s.archiviertAm,
       zuwendungenCount: s._count.zuwendungen,
       jahresSumme,
       erstelltAm: s.erstelltAm,

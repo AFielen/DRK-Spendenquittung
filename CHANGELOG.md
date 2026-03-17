@@ -8,6 +8,19 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Spender-Archivierung:** Spender mit Zuwendungen werden archiviert statt gelöscht – Daten bleiben erhalten (#9)
+- `prisma/schema.prisma`: `archiviert` (Boolean, default false) und `archiviertAm` (DateTime?) Felder auf `Spender`-Modell
+- `SpenderTabelle.tsx`: Archivierte Spender ausgegraut/durchgestrichen dargestellt, Toggle „Archivierte anzeigen"
+- `SpenderTabelle.tsx`: Button-Text „Archivieren" statt „Löschen" bei Spendern mit Zuwendungen
+- `prisma/migrations/20260317_add_spender_archivierung`: DB-Migration für Archivierungsfelder
+
+### Changed
+- `app/api/spender/[id]/route.ts`: DELETE archiviert Spender mit Zuwendungen statt Cascade-Löschung
+- `app/api/spender/route.ts`: GET filtert archivierte Spender standardmäßig aus, Query-Parameter `includeArchived=true`
+- `app/api/v1/spender/route.ts`: REST-API filtert archivierte Spender analog mit `includeArchived`-Parameter
+- `app/spender/page.tsx`: Toggle-State für Archivierte, angepasster API-Aufruf
+
 ### Fixed
 - `ZuwendungFormular.tsx`: Spender-Dropdown durch durchsuchbares Combobox-Widget ersetzt – Eingabe filtert Live-Ergebnisse, Keyboard-Navigation (Pfeiltasten, Enter, Escape), Click-Outside schließt Dropdown (#8)
 

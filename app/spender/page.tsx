@@ -13,11 +13,13 @@ function SpenderContent() {
   const [showForm, setShowForm] = useState(false);
   const [showCsv, setShowCsv] = useState(false);
   const [editSpender, setEditSpender] = useState<Spender | undefined>();
+  const [showArchived, setShowArchived] = useState(false);
 
   const loadSpender = useCallback(async () => {
-    const data = await apiGet<Spender[]>('/api/spender');
+    const url = showArchived ? '/api/spender?includeArchived=true' : '/api/spender';
+    const data = await apiGet<Spender[]>(url);
     setSpender(data);
-  }, []);
+  }, [showArchived]);
 
   useEffect(() => {
     loadSpender();
@@ -35,7 +37,7 @@ function SpenderContent() {
   }
 
   async function handleDelete(s: Spender) {
-    await apiDelete(`/api/spender/${s.id}`, { confirm: true });
+    await apiDelete(`/api/spender/${s.id}`);
     await loadSpender();
   }
 
@@ -72,6 +74,8 @@ function SpenderContent() {
             spender={spender}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            showArchived={showArchived}
+            onToggleArchived={() => setShowArchived((v) => !v)}
           />
         </div>
       </div>

@@ -8,12 +8,14 @@ interface SpenderTabelleProps {
   spender: Spender[];
   onEdit: (spender: Spender) => void;
   onDelete: (spender: Spender) => void;
+  showArchived?: boolean;
+  onToggleArchived?: () => void;
 }
 
 type SortKey = 'name' | 'ort';
 type SortDir = 'asc' | 'desc';
 
-export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTabelleProps) {
+export default function SpenderTabelle({ spender, onEdit, onDelete, showArchived, onToggleArchived }: SpenderTabelleProps) {
   const [suche, setSuche] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -67,13 +69,25 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
 
   return (
     <div>
-      <input
-        type="text"
-        className="drk-input mb-4"
-        placeholder="Suche nach Name oder Ort..."
-        value={suche}
-        onChange={(e) => setSuche(e.target.value)}
-      />
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          className="drk-input flex-1 min-w-0"
+          placeholder="Suche nach Name oder Ort..."
+          value={suche}
+          onChange={(e) => setSuche(e.target.value)}
+        />
+        {onToggleArchived && (
+          <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap" style={{ color: 'var(--text-light)' }}>
+            <input
+              type="checkbox"
+              checked={showArchived ?? false}
+              onChange={onToggleArchived}
+            />
+            Archivierte anzeigen
+          </label>
+        )}
+      </div>
 
       {/* Desktop-Tabelle */}
       <div className="hidden md:block overflow-x-auto">
@@ -107,8 +121,8 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
           </thead>
           <tbody>
             {filtered.map((s) => (
-              <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
+              <tr key={s.id} style={{ borderBottom: '1px solid var(--border)', opacity: s.archiviert ? 0.5 : 1 }}>
+                <td className="py-2 px-3" style={{ color: 'var(--text)', textDecoration: s.archiviert ? 'line-through' : 'none' }}>
                   {s.istFirma ? (
                     <span>
                       {s.firmenname}
@@ -142,7 +156,9 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
                   >
                     Bearbeiten
                   </button>
-                  {deleteConfirm === s.id ? (
+                  {s.archiviert ? (
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Archiviert</span>
+                  ) : deleteConfirm === s.id ? (
                     <span className="text-sm">
                       <button
                         className="underline font-bold mr-2"
@@ -168,7 +184,7 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
                       style={{ color: '#dc2626' }}
                       onClick={() => setDeleteConfirm(s.id)}
                     >
-                      Löschen
+                      {(s.zuwendungenCount ?? 0) > 0 ? 'Archivieren' : 'Löschen'}
                     </button>
                   )}
                 </td>
@@ -184,9 +200,9 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
           <div
             key={s.id}
             className="p-4 rounded-xl"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', opacity: s.archiviert ? 0.5 : 1 }}
           >
-            <div className="font-bold mb-1" style={{ color: 'var(--text)' }}>
+            <div className="font-bold mb-1" style={{ color: 'var(--text)', textDecoration: s.archiviert ? 'line-through' : 'none' }}>
               {s.istFirma ? (
                 <>
                   {s.firmenname}
@@ -216,7 +232,9 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
               >
                 Bearbeiten
               </button>
-              {deleteConfirm === s.id ? (
+              {s.archiviert ? (
+                <span className="text-sm px-3 py-2" style={{ color: 'var(--text-muted)' }}>Archiviert</span>
+              ) : deleteConfirm === s.id ? (
                 <div className="flex gap-2">
                   <button
                     className="text-sm px-3 py-2 rounded font-bold"
@@ -226,7 +244,7 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
                       setDeleteConfirm(null);
                     }}
                   >
-                    Ja, löschen
+                    {(s.zuwendungenCount ?? 0) > 0 ? 'Ja, archivieren' : 'Ja, löschen'}
                   </button>
                   <button
                     className="drk-btn-secondary text-sm"
@@ -241,14 +259,13 @@ export default function SpenderTabelle({ spender, onEdit, onDelete }: SpenderTab
                   style={{ background: 'var(--error-bg)', color: 'var(--error)' }}
                   onClick={() => setDeleteConfirm(s.id)}
                 >
-                  Löschen
+                  {(s.zuwendungenCount ?? 0) > 0 ? 'Archivieren' : 'Löschen'}
                 </button>
               )}
             </div>
             {deleteConfirm === s.id && (s.zuwendungenCount ?? 0) > 0 && (
-              <div className="text-xs mt-2 p-2 rounded" style={{ background: 'var(--error-bg)', color: 'var(--error-text)' }}>
-                Dieser Spender hat {s.zuwendungenCount} Zuwendungen. Beim Löschen werden auch alle
-                zugehörigen Zuwendungen gelöscht.
+              <div className="text-xs mt-2 p-2 rounded" style={{ background: 'var(--warning-bg, #fffbeb)', color: 'var(--warning-text, #92400e)' }}>
+                Dieser Spender hat {s.zuwendungenCount} Zuwendungen und wird archiviert statt gelöscht. Die Zuwendungen bleiben erhalten.
               </div>
             )}
           </div>
