@@ -46,12 +46,77 @@ function spenderAnschrift(spender: Spender): string {
   return `${anrede}${spender.vorname ?? ''} ${spender.nachname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
 }
 
+const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: '999999' } as const;
+const cellBordersStyled = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+
 const cellBorder = {
   top: { style: BorderStyle.SINGLE, size: 1 },
   bottom: { style: BorderStyle.SINGLE, size: 1 },
   left: { style: BorderStyle.SINGLE, size: 1 },
   right: { style: BorderStyle.SINGLE, size: 1 },
 } as const;
+
+function borderedBox(label: string, contentLines: string[]): Table {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            borders: cellBordersStyled,
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: label, font: 'Arial', size: 16, color: '666666' })],
+                spacing: { after: 40 },
+              }),
+              ...contentLines.map(
+                (line) =>
+                  new Paragraph({
+                    children: [new TextRun({ text: line, font: 'Arial', size: 20 })],
+                  })
+              ),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+function dataRow(cells: Array<{ label: string; value: string }>): Table {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: cells.map(
+          (c) =>
+            new TableCell({
+              borders: cellBordersStyled,
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: c.label, font: 'Arial', size: 16, color: '666666' })],
+                  spacing: { after: 40 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: c.value, font: 'Arial', size: 20, bold: true })],
+                }),
+              ],
+            })
+        ),
+      }),
+    ],
+  });
+}
+
+function checkbox(checked: boolean, text: string, fontSize = 18): Paragraph {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: checked ? '☑ ' : '☐ ', font: 'Arial', size: fontSize }),
+      new TextRun({ text, font: 'Arial', size: fontSize }),
+    ],
+    spacing: { after: 20 },
+  });
+}
 
 function makeCell(text: string, bold = false, alignment: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT): TableCell {
   return new TableCell({
@@ -75,7 +140,7 @@ export async function generateSammelbestaetigung(
   doppel = false
 ): Promise<Blob> {
   const gesamtbetrag = zuwendungen.reduce((s, z) => s + z.betrag, 0);
-  const sections: Paragraph[] = [];
+  const sections: (Paragraph | Table)[] = [];
 
   if (doppel) {
     sections.push(createDoppelParagraph());
@@ -98,30 +163,41 @@ export async function generateSammelbestaetigung(
       })
     );
   }
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
-  // Name und Anschrift
+  // Aussteller
   sections.push(
     new Paragraph({
-      children: [new TextRun({ text: 'Name und Anschrift des Zuwendenden:', font: 'Arial', size: 20, bold: true })],
+      children: [new TextRun({ text: 'Aussteller:', font: 'Arial', size: 20, bold: true })],
+      spacing: { after: 20 },
     })
   );
-  for (const line of spenderAnschrift(spender).split('\n')) {
-    sections.push(new Paragraph({ children: [new TextRun({ text: line, font: 'Arial', size: 20 })] }));
-  }
-  sections.push(new Paragraph({ children: [] }));
-
-  // Gesamtbetrag
   sections.push(
     new Paragraph({
       children: [
-        new TextRun({ text: 'Gesamtbetrag der Zuwendung  - in Ziffern -  ', font: 'Arial', size: 20 }),
-        new TextRun({ text: `${formatBetrag(gesamtbetrag)} €`, font: 'Arial', size: 20, bold: true }),
-        new TextRun({ text: '  - in Buchstaben -  ', font: 'Arial', size: 20 }),
-        new TextRun({ text: betragInWorten(gesamtbetrag), font: 'Arial', size: 20, bold: true }),
+        new TextRun({
+          text: `${verein.name}, ${verein.strasse}, ${verein.plz} ${verein.ort}`,
+          font: 'Arial',
+          size: 20,
+        }),
       ],
+      spacing: { after: 120 },
     })
   );
+
+  // Name und Anschrift (bordered box)
+  const adressLines = spenderAnschrift(spender).split('\n').filter((l) => l.trim());
+  sections.push(borderedBox('Name und Anschrift des Zuwendenden:', adressLines));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
+
+  // Gesamtbetrag + Buchstaben (bordered data row)
+  sections.push(
+    dataRow([
+      { label: 'Gesamtbetrag der Zuwendung – in Ziffern', value: `${formatBetrag(gesamtbetrag)} €` },
+      { label: 'in Buchstaben', value: betragInWorten(gesamtbetrag) },
+    ])
+  );
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
   // Zeitraum
   sections.push(
@@ -132,9 +208,9 @@ export async function generateSammelbestaetigung(
           font: 'Arial', size: 20,
         }),
       ],
+      spacing: { after: 120 },
     })
   );
-  sections.push(new Paragraph({ children: [] }));
 
   // Freistellungsstatus
   const zwecke = verein.beguenstigteZwecke.join(', ');
@@ -144,28 +220,36 @@ export async function generateSammelbestaetigung(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, bescheidDatum, zwecke);
 
-  sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: '☑ ', font: 'Arial', size: 18 }),
-        new TextRun({ text: freiText, font: 'Arial', size: 18 }),
-      ],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(checkbox(true, freiText, 18));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
-  // Verwendungsbestätigung
+  // Verwendungsbestätigung (bordered + shaded)
   sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: VERWENDUNGSBESTAETIGUNG_PREFIX + zwecke + VERWENDUNGSBESTAETIGUNG_SUFFIX,
-          font: 'Arial', size: 20, bold: true,
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              borders: cellBordersStyled,
+              shading: { fill: 'f5f5f5' },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: VERWENDUNGSBESTAETIGUNG_PREFIX + zwecke + VERWENDUNGSBESTAETIGUNG_SUFFIX,
+                      font: 'Arial', size: 18, bold: true,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
         }),
       ],
     })
   );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
   // Mitgliedsbeitrag-Hinweis
   sections.push(
@@ -176,51 +260,64 @@ export async function generateSammelbestaetigung(
           font: 'Arial', size: 16, italics: true,
         }),
       ],
+      spacing: { after: 20 },
+    })
+  );
+  sections.push(checkbox(false, MITGLIEDSBEITRAG_HINWEIS, 16));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
+
+  // Sammelbestätigungs-Pflicht-Texte
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: SAMMEL_DOPPELBESTAETIGUNG, font: 'Arial', size: 18 })],
+      spacing: { after: 60 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: SAMMEL_VERZICHTHINWEIS, font: 'Arial', size: 18 })],
+      spacing: { after: 120 },
+    })
+  );
+
+  // Unterschriftenbereich
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: verein.name, font: 'Arial', size: 20 })],
+      spacing: { after: 200 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '________________________________', font: 'Arial', size: 18 })],
     })
   );
   sections.push(
     new Paragraph({
       children: [
-        new TextRun({ text: '☐ ', font: 'Arial', size: 18 }),
-        new TextRun({ text: MITGLIEDSBEITRAG_HINWEIS, font: 'Arial', size: 18 }),
+        new TextRun({ text: `${verein.unterschriftName ?? ''}`, font: 'Arial', size: 18, bold: true }),
+        new TextRun({ text: `    ${verein.unterschriftFunktion ?? ''}`, font: 'Arial', size: 18 }),
       ],
     })
   );
-  sections.push(new Paragraph({ children: [] }));
-
-  // Sammelbestätigungs-Pflicht-Texte
   sections.push(
     new Paragraph({
-      children: [new TextRun({ text: SAMMEL_DOPPELBESTAETIGUNG, font: 'Arial', size: 20 })],
+      children: [
+        new TextRun({
+          text: '(Ort, Datum und Unterschrift des Zuwendungsempfängers)',
+          font: 'Arial',
+          size: 16,
+          color: '666666',
+        }),
+      ],
+      spacing: { after: 120 },
     })
   );
-  sections.push(new Paragraph({ children: [] }));
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: SAMMEL_VERZICHTHINWEIS, font: 'Arial', size: 20 })],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
-  sections.push(new Paragraph({ children: [] }));
-
-  // Unterschrift
-  sections.push(new Paragraph({ children: [new TextRun({ text: '________________________________', font: 'Arial', size: 18 })] }));
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: '(Ort, Datum und Unterschrift des Zuwendungsempfängers)', font: 'Arial', size: 18 })],
-    })
-  );
-  sections.push(
-    new Paragraph({
-      children: [new TextRun({ text: `${verein.unterschriftName ?? ''}, ${verein.unterschriftFunktion ?? ''}`, font: 'Arial', size: 18 })],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
 
   // Hinweis
   sections.push(new Paragraph({ children: [new TextRun({ text: 'Hinweis:', font: 'Arial', size: 16, bold: true })] }));
   sections.push(new Paragraph({ children: [new TextRun({ text: HAFTUNGSHINWEIS, font: 'Arial', size: 16 })] }));
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 40 } }));
   sections.push(new Paragraph({ children: [new TextRun({ text: GUELTIGKEITSHINWEIS, font: 'Arial', size: 16 })] }));
 
   // Seite 2 — Anlage

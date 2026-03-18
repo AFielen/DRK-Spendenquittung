@@ -175,7 +175,7 @@ export function createBriefbogenLayout(
 
     content: fullContent,
 
-    // ── Footer: red line + org details + page number ──
+    // ── Footer: red line + org details + contact + bank + page number ──
     footer: (currentPage: number, pageCount: number): Content => {
       const orgParts: string[] = [verein.name];
       if (verein.vereinsregister) {
@@ -189,40 +189,60 @@ export function createBriefbogenLayout(
       }
       rightParts.push({ text: `Seite ${currentPage}/${pageCount}`, fontSize: 7, color: '#999999' });
 
-      return {
-        stack: [
-          {
-            canvas: [
-              {
-                type: 'line',
-                x1: 0,
-                y1: 0,
-                x2: cm(16),
-                y2: 0,
-                lineWidth: 0.5,
-                lineColor: '#e30613',
-              },
-            ],
-            margin: [cm(2.5), 0, cm(2.5), 4],
-          },
-          {
-            columns: [
-              {
-                text: orgParts.join(' \u00B7 '),
-                fontSize: 7,
-                color: '#666666',
-                width: '*',
-              },
-              {
-                text: rightParts,
-                width: 'auto',
-                alignment: 'right' as const,
-              },
-            ],
-            margin: [cm(2.5), 0, cm(2.5), 0],
-          },
-        ],
-      };
+      // Second line: contact + bank details (if available)
+      const contactParts: string[] = [];
+      if (verein.telefon) contactParts.push(`Tel. ${verein.telefon}`);
+      if (verein.email) contactParts.push(verein.email);
+      if (verein.bankName) {
+        let bankPart = verein.bankName;
+        if (verein.bankIban) bankPart += ` \u00B7 IBAN ${verein.bankIban}`;
+        if (verein.bankBic) bankPart += ` \u00B7 BIC ${verein.bankBic}`;
+        contactParts.push(bankPart);
+      }
+
+      const footerStack: Content[] = [
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: cm(16),
+              y2: 0,
+              lineWidth: 0.5,
+              lineColor: '#e30613',
+            },
+          ],
+          margin: [cm(2.5), 0, cm(2.5), 4],
+        },
+        {
+          columns: [
+            {
+              text: orgParts.join(' \u00B7 '),
+              fontSize: 7,
+              color: '#666666',
+              width: '*',
+            },
+            {
+              text: rightParts,
+              width: 'auto',
+              alignment: 'right' as const,
+            },
+          ],
+          margin: [cm(2.5), 0, cm(2.5), 0],
+        },
+      ];
+
+      if (contactParts.length > 0) {
+        footerStack.push({
+          text: contactParts.join(' \u00B7 '),
+          fontSize: 6,
+          color: '#999999',
+          margin: [cm(2.5), 2, cm(2.5), 0],
+        });
+      }
+
+      return { stack: footerStack };
     },
 
     defaultStyle: {

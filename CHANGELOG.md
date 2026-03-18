@@ -9,6 +9,19 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Vereins-Kontaktdaten:** Neue Felder `telefon`, `email`, `bankName`, `bankIban`, `bankBic` auf `Kreisverband`-Modell (#14)
+- `VereinsSetupWizard.tsx`: Eingabefelder für Telefon, E-Mail und Bankverbindung in Schritt 1
+- `prisma/migrations/20260318_add_kontaktdaten_bankverbindung`: DB-Migration für Kontakt- und Bankfelder
+- `lib/pdf-templates/pdf-helper.ts`: Neue Helper-Funktionen `createBorderedBox()`, `createDataRow()`, `createCheckbox()`, `createAusstellerBlock()`, `createSignatureBlock()` für konsistentes PDF-Layout
+
+### Changed
+- **PDF-Templates:** Professionelleres Layout mit borderten Tabellen für Name/Anschrift, Betrag/Buchstaben/Tag, Aussteller-Zeile, verbessertem Unterschriftenbereich mit Stempel-Platzhalter, grau hinterlegter Verwendungsbestätigung (#14)
+- **DOCX-Templates:** Konsistentes Design analog zu PDF – borderte Tabellen, Aussteller-Zeile, verbesserte Checkboxen und Unterschriftenbereich (#14)
+- **Briefbogen-Footer (PDF + DOCX):** Kontaktdaten (Telefon, E-Mail) und Bankverbindung (Bank, IBAN, BIC) integriert (#14)
+- `app/api/kreisverband/route.ts`: PUT-Handler um neue Kontakt-/Bankfelder erweitert
+- `app/api/dokumente/pdf/route.ts`: `mapKreisverband()` um neue Felder erweitert
+
+### Added
 - **Spender-Archivierung:** Spender mit Zuwendungen werden archiviert statt gelöscht – Daten bleiben erhalten (#9)
 - `prisma/schema.prisma`: `archiviert` (Boolean, default false) und `archiviertAm` (DateTime?) Felder auf `Spender`-Modell
 - `SpenderTabelle.tsx`: Archivierte Spender ausgegraut/durchgestrichen dargestellt, Toggle „Archivierte anzeigen"

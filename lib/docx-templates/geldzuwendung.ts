@@ -4,8 +4,11 @@ import {
   Paragraph,
   TextRun,
   AlignmentType,
-  TabStopPosition,
-  TabStopType,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
 } from 'docx';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
 import { betragInWorten } from './betrag-in-worten';
@@ -39,6 +42,74 @@ function spenderAnschrift(spender: Spender): string {
   return `${anrede}${spender.vorname ?? ''} ${spender.nachname}\n${spender.strasse}\n${spender.plz} ${spender.ort}`;
 }
 
+const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: '999999' } as const;
+const cellBorders = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+
+/** Creates a bordered box with label and content */
+function borderedBox(label: string, contentLines: string[]): Table {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            borders: cellBorders,
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: label, font: 'Arial', size: 16, color: '666666' })],
+                spacing: { after: 40 },
+              }),
+              ...contentLines.map(
+                (line) =>
+                  new Paragraph({
+                    children: [new TextRun({ text: line, font: 'Arial', size: 20 })],
+                  })
+              ),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+/** Creates a bordered data row with multiple cells */
+function dataRow(cells: Array<{ label: string; value: string }>): Table {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: cells.map(
+          (c) =>
+            new TableCell({
+              borders: cellBorders,
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: c.label, font: 'Arial', size: 16, color: '666666' })],
+                  spacing: { after: 40 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: c.value, font: 'Arial', size: 20, bold: true })],
+                }),
+              ],
+            })
+        ),
+      }),
+    ],
+  });
+}
+
+/** Creates a checkbox paragraph */
+function checkbox(checked: boolean, text: string, fontSize = 18): Paragraph {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: checked ? '☑ ' : '☐ ', font: 'Arial', size: fontSize }),
+      new TextRun({ text, font: 'Arial', size: fontSize }),
+    ],
+    spacing: { after: 20 },
+  });
+}
+
 export async function generateGeldzuwendung(
   verein: Verein,
   spender: Spender,
@@ -46,7 +117,7 @@ export async function generateGeldzuwendung(
   laufendeNr: string,
   doppel = false
 ): Promise<Blob> {
-  const sections: Paragraph[] = [];
+  const sections: (Paragraph | Table)[] = [];
 
   // Doppel-Kennzeichnung
   if (doppel) {
@@ -71,65 +142,44 @@ export async function generateGeldzuwendung(
       })
     );
   }
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
-  // Name und Anschrift
+  // Aussteller
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'Aussteller:', font: 'Arial', size: 20, bold: true }),
+      ],
+      spacing: { after: 20 },
+    })
+  );
   sections.push(
     new Paragraph({
       children: [
         new TextRun({
-          text: 'Name und Anschrift des Zuwendenden:',
+          text: `${verein.name}, ${verein.strasse}, ${verein.plz} ${verein.ort}`,
           font: 'Arial',
           size: 20,
-          bold: true,
         }),
       ],
-    })
-  );
-  for (const line of spenderAnschrift(spender).split('\n')) {
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: line, font: 'Arial', size: 20 })],
-      })
-    );
-  }
-  sections.push(new Paragraph({ children: [] }));
-
-  // Betrag
-  sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: 'Betrag der Zuwendung  - in Ziffern -  ', font: 'Arial', size: 20 }),
-        new TextRun({
-          text: `${formatBetrag(zuwendung.betrag)} €`,
-          font: 'Arial',
-          size: 20,
-          bold: true,
-        }),
-        new TextRun({ text: '  - in Buchstaben -  ', font: 'Arial', size: 20 }),
-        new TextRun({
-          text: betragInWorten(zuwendung.betrag),
-          font: 'Arial',
-          size: 20,
-          bold: true,
-        }),
-      ],
+      spacing: { after: 120 },
     })
   );
 
-  // Tag der Zuwendung
+  // Name und Anschrift (bordered box)
+  const adressLines = spenderAnschrift(spender).split('\n').filter((l) => l.trim());
+  sections.push(borderedBox('Name und Anschrift des Zuwendenden:', adressLines));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
+
+  // Betrag + Buchstaben + Tag (bordered data row)
   sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: `Tag der Zuwendung: ${formatDatum(zuwendung.datum)}`,
-          font: 'Arial',
-          size: 20,
-        }),
-      ],
-    })
+    dataRow([
+      { label: 'Betrag der Zuwendung – in Ziffern', value: `${formatBetrag(zuwendung.betrag)} €` },
+      { label: 'in Buchstaben', value: betragInWorten(zuwendung.betrag) },
+      { label: 'Tag der Zuwendung', value: formatDatum(zuwendung.datum) },
+    ])
   );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
   // Verzicht
   const ja = zuwendung.verzicht ? '☑' : '☐';
@@ -138,14 +188,14 @@ export async function generateGeldzuwendung(
     new Paragraph({
       children: [
         new TextRun({
-          text: `Es handelt sich um den Verzicht auf Erstattung von Aufwendungen  Ja ${ja} / Nein ${nein}`,
+          text: `Es handelt sich um den Verzicht auf Erstattung von Aufwendungen  Ja ${ja}  Nein ${nein}`,
           font: 'Arial',
-          size: 20,
+          size: 18,
         }),
       ],
+      spacing: { after: 120 },
     })
   );
-  sections.push(new Paragraph({ children: [] }));
 
   // Freistellungsstatus
   const zwecke = verein.beguenstigteZwecke.join(', ');
@@ -155,33 +205,45 @@ export async function generateGeldzuwendung(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, datum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, datum, zwecke);
 
-  sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: '☑ ', font: 'Arial', size: 18 }),
-        new TextRun({ text: freiText, font: 'Arial', size: 18 }),
-      ],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(checkbox(true, freiText, 18));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
-  // Verwendungsbestätigung
+  // Satzungsmäßige Voraussetzungen (unchecked)
+  sections.push(checkbox(false, 'Die Einhaltung der satzungsmäßigen Voraussetzungen nach den §§ 51, 59, 60 und 61 AO wurde vom Finanzamt…… St.Nr.…… mit Bescheid von…… nach § 60a AO gesondert festgestellt. Wir fördern nach unserer Satzung (Angabe des begünstigten Zwecks / der begünstigten Zwecke).', 16));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
+
+  // Verwendungsbestätigung (bordered box with shading)
   sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text:
-            VERWENDUNGSBESTAETIGUNG_PREFIX +
-            verein.beguenstigteZwecke.join(', ') +
-            VERWENDUNGSBESTAETIGUNG_SUFFIX,
-          font: 'Arial',
-          size: 20,
-          bold: true,
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              borders: cellBorders,
+              shading: { fill: 'f5f5f5' },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text:
+                        VERWENDUNGSBESTAETIGUNG_PREFIX +
+                        zwecke +
+                        VERWENDUNGSBESTAETIGUNG_SUFFIX,
+                      font: 'Arial',
+                      size: 18,
+                      bold: true,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
         }),
       ],
     })
   );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 60 } }));
 
   // Mitgliedsbeitrag-Hinweis
   sections.push(
@@ -194,25 +256,29 @@ export async function generateGeldzuwendung(
           italics: true,
         }),
       ],
+      spacing: { after: 20 },
     })
   );
-  sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: '☐ ', font: 'Arial', size: 18 }),
-        new TextRun({ text: MITGLIEDSBEITRAG_HINWEIS, font: 'Arial', size: 18 }),
-      ],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(checkbox(false, MITGLIEDSBEITRAG_HINWEIS, 16));
+  sections.push(new Paragraph({ children: [], spacing: { after: 120 } }));
 
-  // Unterschriftenzeile
+  // Unterschriftenbereich
   sections.push(
     new Paragraph({
-      tabStops: [{ type: TabStopType.LEFT, position: TabStopPosition.MAX }],
+      children: [new TextRun({ text: verein.name, font: 'Arial', size: 20 })],
+      spacing: { after: 200 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '________________________________', font: 'Arial', size: 18 })],
+    })
+  );
+  sections.push(
+    new Paragraph({
       children: [
-        new TextRun({ text: '________________________________', font: 'Arial', size: 18 }),
+        new TextRun({ text: `${verein.unterschriftName ?? ''}`, font: 'Arial', size: 18, bold: true }),
+        new TextRun({ text: `    ${verein.unterschriftFunktion ?? ''}`, font: 'Arial', size: 18 }),
       ],
     })
   );
@@ -222,23 +288,13 @@ export async function generateGeldzuwendung(
         new TextRun({
           text: '(Ort, Datum und Unterschrift des Zuwendungsempfängers)',
           font: 'Arial',
-          size: 18,
+          size: 16,
+          color: '666666',
         }),
       ],
+      spacing: { after: 120 },
     })
   );
-  sections.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: `${verein.unterschriftName ?? ''}, ${verein.unterschriftFunktion ?? ''}`,
-          font: 'Arial',
-          size: 18,
-        }),
-      ],
-    })
-  );
-  sections.push(new Paragraph({ children: [] }));
 
   // Haftungshinweis
   sections.push(
@@ -251,7 +307,7 @@ export async function generateGeldzuwendung(
       children: [new TextRun({ text: HAFTUNGSHINWEIS, font: 'Arial', size: 16 })],
     })
   );
-  sections.push(new Paragraph({ children: [] }));
+  sections.push(new Paragraph({ children: [], spacing: { after: 40 } }));
   sections.push(
     new Paragraph({
       children: [new TextRun({ text: GUELTIGKEITSHINWEIS, font: 'Arial', size: 16 })],
