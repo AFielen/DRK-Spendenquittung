@@ -51,10 +51,43 @@ Jeder DRK-Kreisverband und Ortsverein muss Spendern steuerlich anerkannte Zuwend
 ```bash
 git clone https://github.com/AFielen/DRK-Spendenquittung.git
 cd DRK-Spendenquittung
+```
+
+`.env`-Datei anlegen (neben `docker-compose.yml`):
+
+```env
+SESSION_SECRET=ein-zufälliger-geheimer-string
+MAILJET_API_KEY=dein-mailjet-api-key
+MAILJET_SECRET_KEY=dein-mailjet-secret-key
+MAIL_FROM=noreply@deine-domain.de
+SUPERADMIN_EMAIL=admin@deine-domain.de
+```
+
+Starten:
+
+```bash
 docker compose up -d --build
 ```
 
-Die App ist unter `http://localhost:3000` erreichbar.
+Die App ist unter `http://localhost:3000` erreichbar. Datenbank-Migrationen werden automatisch beim Container-Start ausgeführt.
+
+#### Updates einspielen
+
+```bash
+cd ~/spendenquittung
+git pull
+docker compose down && docker compose up -d --build
+```
+
+#### Bestehende Datenbank (Baseline)
+
+Wenn die Datenbank bereits Tabellen enthält, aber noch nie mit Prisma-Migrationen verwaltet wurde (Fehler `P3005`), muss einmalig eine Baseline erstellt werden:
+
+```bash
+docker exec -it spendenquittung npx prisma migrate resolve --applied <migration-name>
+```
+
+Alternativ: Die `_prisma_migrations`-Tabelle manuell anlegen und alle bestehenden Migrationen als „applied" markieren. Details: [Prisma Baseline-Dokumentation](https://www.prisma.io/docs/orm/prisma-migrate/workflows/baselining).
 
 ### Lokal entwickeln
 
