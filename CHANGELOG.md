@@ -24,6 +24,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `Dockerfile`: Volle `node_modules` im Runner für Prisma-CLI, Entrypoint statt CMD
 
 ### Fixed
+- `docker-entrypoint.sh`: Server startet jetzt auch wenn `prisma migrate deploy` fehlschlägt (z.B. fehlende Baseline) – Fehler wird als Warnung geloggt statt Endlos-Restart-Loop
 - `app/api/auth/login/route.ts`: try-catch Error-Handling verhindert HTML-500-Fehlerseiten bei DB-/Mail-Fehlern
 - `app/api/auth/verify/route.ts`: try-catch Error-Handling verhindert HTML-500-Fehlerseiten bei DB-Fehlern
 - `app/login/page.tsx`: Unterscheidung zwischen Serverfehler und Verbindungsfehler für bessere Fehlermeldungen
