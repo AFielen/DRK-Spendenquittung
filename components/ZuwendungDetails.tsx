@@ -8,7 +8,9 @@ interface ZuwendungDetailsProps {
   spender?: Spender;
   onClose: () => void;
   onDownloadPdf?: () => void;
+  onDownloadSpenderPdf?: () => void;
   downloadingPdf?: boolean;
+  downloadingSpenderPdf?: boolean;
 }
 
 function formatDatum(d: string): string {
@@ -59,7 +61,7 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-export default function ZuwendungDetails({ zuwendung: z, spender, onClose, onDownloadPdf, downloadingPdf }: ZuwendungDetailsProps) {
+export default function ZuwendungDetails({ zuwendung: z, spender, onClose, onDownloadPdf, onDownloadSpenderPdf, downloadingPdf, downloadingSpenderPdf }: ZuwendungDetailsProps) {
   const wert = z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
 
   return (
@@ -116,13 +118,18 @@ export default function ZuwendungDetails({ zuwendung: z, spender, onClose, onDow
           )}
         </div>
 
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <button className="drk-btn-secondary flex-1" onClick={onClose}>
             Schließen
           </button>
           {z.bestaetigungErstellt && onDownloadPdf && (
-            <button className="drk-btn-primary flex-1" disabled={downloadingPdf} onClick={onDownloadPdf}>
-              {downloadingPdf ? 'Generiere...' : 'PDF anzeigen'}
+            <button className="drk-btn-secondary flex-1" disabled={downloadingPdf} onClick={onDownloadPdf}>
+              {downloadingPdf ? 'Generiere...' : 'PDF Doppel'}
+            </button>
+          )}
+          {z.bestaetigungErstellt && onDownloadSpenderPdf && (
+            <button className="drk-btn-primary flex-1" disabled={downloadingSpenderPdf} onClick={onDownloadSpenderPdf}>
+              {downloadingSpenderPdf ? 'Generiere...' : 'PDF für Spender'}
             </button>
           )}
         </div>

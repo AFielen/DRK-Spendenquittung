@@ -32,6 +32,7 @@ function ZuwendungenContent() {
   const [editZuwendung, setEditZuwendung] = useState<Zuwendung | undefined>();
   const [detailsZuwendung, setDetailsZuwendung] = useState<Zuwendung | undefined>();
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingSpenderPdf, setDownloadingSpenderPdf] = useState(false);
 
   const reload = useCallback(async () => {
     const [sp, zw] = await Promise.all([
@@ -71,12 +72,13 @@ function ZuwendungenContent() {
     setDetailsZuwendung(zuwendung);
   }
 
-  async function handleDownloadPdf() {
+  async function downloadPdfForZuwendung(doppel: boolean) {
     if (!detailsZuwendung || !kreisverband) return;
     const spender = spenderList.find((s) => s.id === detailsZuwendung.spenderId);
     if (!spender) return;
 
-    setDownloadingPdf(true);
+    const setLoading = doppel ? setDownloadingPdf : setDownloadingSpenderPdf;
+    setLoading(true);
     try {
       const typ = detailsZuwendung.bestaetigungTyp === 'anlage4' ? 'sachzuwendung'
         : detailsZuwendung.bestaetigungTyp === 'anlage14' ? 'sammelbestaetigung'
@@ -88,7 +90,7 @@ function ZuwendungenContent() {
         spenderId: spender.id,
         zuwendungIds: [detailsZuwendung.id],
         laufendeNr: detailsZuwendung.laufendeNr ?? '',
-        doppel: false,
+        doppel,
       };
 
       if (typ === 'sammelbestaetigung') {
@@ -109,12 +111,21 @@ function ZuwendungenContent() {
 
       const blob = await res.blob();
       const dateiName = spenderAnzeigename(spender).replace(/\s+/g, '_');
-      downloadBlob(blob, `${dateiName}_Bestaetigung.pdf`);
+      const suffix = doppel ? 'Doppel' : 'Bestaetigung';
+      downloadBlob(blob, `${dateiName}_${suffix}.pdf`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Fehler beim PDF-Download');
     } finally {
-      setDownloadingPdf(false);
+      setLoading(false);
     }
+  }
+
+  function handleDownloadPdf() {
+    downloadPdfForZuwendung(true);
+  }
+
+  function handleDownloadSpenderPdf() {
+    downloadPdfForZuwendung(false);
   }
 
   return (
@@ -165,7 +176,9 @@ function ZuwendungenContent() {
           spender={spenderList.find((s) => s.id === detailsZuwendung.spenderId)}
           onClose={() => setDetailsZuwendung(undefined)}
           onDownloadPdf={handleDownloadPdf}
+          onDownloadSpenderPdf={handleDownloadSpenderPdf}
           downloadingPdf={downloadingPdf}
+          downloadingSpenderPdf={downloadingSpenderPdf}
         />
       )}
     </div>
