@@ -16,6 +16,11 @@ model Kreisverband {
   plz                  String
   ort                  String
   vereinsregister      String?
+  telefon              String?
+  email                String?
+  bankName             String?
+  bankIban             String?
+  bankBic              String?
 
   logoBase64           String?  @db.Text
 

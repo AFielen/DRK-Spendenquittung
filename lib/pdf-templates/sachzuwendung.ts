@@ -15,7 +15,17 @@ import {
   SACHSPENDE_UNTERLAGEN,
 } from '@/lib/docx-templates/shared';
 import { createBriefbogenLayout } from './briefbogen';
-import { generatePdfBuffer, formatDatum, formatBetrag, spenderAnschrift } from './pdf-helper';
+import {
+  generatePdfBuffer,
+  formatDatum,
+  formatBetrag,
+  spenderAnschrift,
+  createBorderedBox,
+  createDataRow,
+  createCheckbox,
+  createAusstellerBlock,
+  createSignatureBlock,
+} from './pdf-helper';
 
 export async function generateSachzuwendungPdf(
   verein: Verein,
@@ -31,43 +41,37 @@ export async function generateSachzuwendungPdf(
   for (const zeile of TITEL_SACHZUWENDUNG.split('\n')) {
     content.push({ text: zeile, style: 'title' });
   }
-  content.push({ text: ' ', fontSize: 6 });
+  content.push({ text: ' ', fontSize: 4 });
 
-  // Name und Anschrift
-  content.push({ text: 'Name und Anschrift des Zuwendenden:', fontSize: 10, bold: true });
-  for (const line of spenderAnschrift(spender).split('\n')) {
-    content.push({ text: line, fontSize: 10 });
-  }
-  content.push({ text: ' ', fontSize: 6 });
+  // Aussteller
+  content.push(...createAusstellerBlock(verein));
 
-  // Wert
-  content.push({
-    text: [
-      { text: 'Wert der Zuwendung  - in Ziffern -  ', fontSize: 10 },
-      { text: `${formatBetrag(wert)} €`, fontSize: 10, bold: true },
-      { text: '  - in Buchstaben -  ', fontSize: 10 },
-      { text: betragInWorten(wert), fontSize: 10, bold: true },
-    ],
-  });
+  // Name und Anschrift (bordered box)
+  const adressLines = spenderAnschrift(spender).split('\n').filter((l) => l.trim());
+  content.push(createBorderedBox('Name und Anschrift des Zuwendenden:', adressLines));
 
-  content.push({ text: `Tag der Zuwendung: ${formatDatum(zuwendung.datum)}`, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 6 });
+  // Wert + Buchstaben + Tag (bordered data row)
+  content.push(
+    createDataRow([
+      { label: 'Wert der Zuwendung – in Ziffern', value: `${formatBetrag(wert)} €` },
+      { label: 'in Buchstaben', value: betragInWorten(wert) },
+      { label: 'Tag der Zuwendung', value: formatDatum(zuwendung.datum) },
+    ])
+  );
 
-  // Genaue Bezeichnung
-  content.push({
-    text: 'Genaue Bezeichnung der Sachzuwendung mit Alter, Zustand, Kaufpreis usw.',
-    fontSize: 10,
-    bold: true,
-  });
-
+  // Genaue Bezeichnung (bordered box)
   const beschreibungTeile: string[] = [];
   if (zuwendung.sachBezeichnung) beschreibungTeile.push(zuwendung.sachBezeichnung);
   if (zuwendung.sachAlter) beschreibungTeile.push(`Alter: ${zuwendung.sachAlter}`);
   if (zuwendung.sachZustand) beschreibungTeile.push(`Zustand: ${zuwendung.sachZustand}`);
   if (zuwendung.sachKaufpreis) beschreibungTeile.push(`Kaufpreis: ${formatBetrag(zuwendung.sachKaufpreis)} €`);
 
-  content.push({ text: beschreibungTeile.join('; '), fontSize: 10 });
-  content.push({ text: ' ', fontSize: 6 });
+  content.push(
+    createBorderedBox(
+      'Genaue Bezeichnung der Sachzuwendung mit Alter, Zustand, Kaufpreis usw.',
+      [beschreibungTeile.join('; ') || '–']
+    )
+  );
 
   // Checkboxen Herkunft
   const herkunftItems = [
@@ -78,9 +82,9 @@ export async function generateSachzuwendungPdf(
   ];
 
   for (const item of herkunftItems) {
-    content.push({ text: `${item.checked ? '[X]' : '[ ]'} ${item.text}`, fontSize: 9 });
+    content.push(createCheckbox(item.checked, item.text, 9));
   }
-  content.push({ text: ' ', fontSize: 6 });
+  content.push({ text: ' ', fontSize: 4 });
 
   // Freistellungsstatus
   const zwecke = verein.beguenstigteZwecke.join(', ');
@@ -90,31 +94,41 @@ export async function generateSachzuwendungPdf(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, bescheidDatum, zwecke);
 
-  content.push({ text: `[X] ${freiText}`, fontSize: 9 });
-  content.push({ text: ' ', fontSize: 6 });
+  content.push(createCheckbox(true, freiText, 9));
+  content.push({ text: ' ', fontSize: 4 });
 
-  // Verwendungsbestätigung
+  // Verwendungsbestätigung (bordered box with gray background)
   content.push({
-    text: VERWENDUNGSBESTAETIGUNG_PREFIX + zwecke + VERWENDUNGSBESTAETIGUNG_SUFFIX,
-    fontSize: 10,
-    bold: true,
-  });
-  content.push({ text: ' ', fontSize: 10 });
-  content.push({ text: ' ', fontSize: 10 });
+    table: {
+      widths: ['*'],
+      body: [
+        [
+          {
+            text: VERWENDUNGSBESTAETIGUNG_PREFIX + zwecke + VERWENDUNGSBESTAETIGUNG_SUFFIX,
+            fontSize: 9,
+            bold: true,
+            margin: [4, 4, 4, 4],
+          },
+        ],
+      ],
+    },
+    layout: {
+      hLineWidth: () => 0.5,
+      vLineWidth: () => 0.5,
+      hLineColor: () => '#999999',
+      vLineColor: () => '#999999',
+      fillColor: () => '#f5f5f5',
+    },
+    margin: [0, 0, 0, 6],
+  } as Content);
 
-  // Unterschrift
-  content.push({ text: '________________________________', fontSize: 9 });
-  content.push({ text: '(Ort, Datum und Unterschrift des Zuwendungsempfängers)', fontSize: 9 });
-  content.push({
-    text: `${verein.unterschriftName ?? ''}, ${verein.unterschriftFunktion ?? ''}`,
-    fontSize: 9,
-  });
-  content.push({ text: ' ', fontSize: 6 });
+  // Unterschriftenbereich
+  content.push(...createSignatureBlock(verein));
 
   // Hinweis
   content.push({ text: 'Hinweis:', fontSize: 8, bold: true });
   content.push({ text: HAFTUNGSHINWEIS, fontSize: 8 });
-  content.push({ text: ' ', fontSize: 4 });
+  content.push({ text: ' ', fontSize: 3 });
   content.push({ text: GUELTIGKEITSHINWEIS, fontSize: 8 });
 
   const docDefinition = createBriefbogenLayout(content, {

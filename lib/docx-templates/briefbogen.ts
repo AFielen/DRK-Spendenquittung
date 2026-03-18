@@ -132,27 +132,54 @@ export function createDocxFooter(verein: Verein, laufendeNr?: string): Footer {
     ? `${orgParts.join(' \u00B7 ')}     Lfd. Nr.: ${laufendeNr}`
     : orgParts.join(' \u00B7 ');
 
-  return new Footer({
-    children: [
-      new Paragraph({
-        children: [new TextRun({ text: '', font: 'Arial', size: 4 })],
-        border: {
-          bottom: { style: BorderStyle.SINGLE, size: 2, color: 'e30613' },
-        },
-        spacing: { after: 60 },
-      }),
+  // Contact + bank details line
+  const contactParts: string[] = [];
+  if (verein.telefon) contactParts.push(`Tel. ${verein.telefon}`);
+  if (verein.email) contactParts.push(verein.email);
+  if (verein.bankName) {
+    let bankPart = verein.bankName;
+    if (verein.bankIban) bankPart += ` \u00B7 IBAN ${verein.bankIban}`;
+    if (verein.bankBic) bankPart += ` \u00B7 BIC ${verein.bankBic}`;
+    contactParts.push(bankPart);
+  }
+
+  const footerChildren: Paragraph[] = [
+    new Paragraph({
+      children: [new TextRun({ text: '', font: 'Arial', size: 4 })],
+      border: {
+        bottom: { style: BorderStyle.SINGLE, size: 2, color: 'e30613' },
+      },
+      spacing: { after: 60 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: footerText,
+          font: 'Arial',
+          size: 14,
+          color: '666666',
+        }),
+      ],
+    }),
+  ];
+
+  if (contactParts.length > 0) {
+    footerChildren.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: footerText,
+            text: contactParts.join(' \u00B7 '),
             font: 'Arial',
-            size: 14,
-            color: '666666',
+            size: 12,
+            color: '999999',
           }),
         ],
-      }),
-    ],
-  });
+        spacing: { before: 40 },
+      })
+    );
+  }
+
+  return new Footer({ children: footerChildren });
 }
 
 /**

@@ -27,6 +27,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
   const [plz, setPlz] = useState(existingVerein?.plz ?? '');
   const [ort, setOrt] = useState(existingVerein?.ort ?? '');
   const [vereinsregister, setVereinsregister] = useState(existingVerein?.vereinsregister ?? '');
+  const [telefon, setTelefon] = useState(existingVerein?.telefon ?? '');
+  const [email, setEmail] = useState(existingVerein?.email ?? '');
+  const [bankName, setBankName] = useState(existingVerein?.bankName ?? '');
+  const [bankIban, setBankIban] = useState(existingVerein?.bankIban ?? '');
+  const [bankBic, setBankBic] = useState(existingVerein?.bankBic ?? '');
   const [logoBase64, setLogoBase64] = useState(existingVerein?.logoBase64 ?? '');
 
   // Schritt 2 – Steuerliche Angaben
@@ -105,6 +110,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
       letzterVZ: letzterVZ.trim() || null,
       beguenstigteZwecke,
       vereinsregister: vereinsregister.trim() || null,
+      telefon: telefon.trim() || null,
+      email: email.trim() || null,
+      bankName: bankName.trim() || null,
+      bankIban: bankIban.trim() || null,
+      bankBic: bankBic.trim() || null,
       unterschriftName: unterschriftName.trim(),
       unterschriftFunktion: unterschriftFunktion.trim(),
       logoBase64: logoBase64 || null,
@@ -201,6 +211,58 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 onChange={(e) => setVereinsregister(e.target.value)}
                 placeholder="z.B. Amtsgericht Aachen VR 4535"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="drk-label">Telefon (optional)</label>
+                <input
+                  type="tel"
+                  className="drk-input"
+                  value={telefon}
+                  onChange={(e) => setTelefon(e.target.value)}
+                  placeholder="z.B. 02405 6039-100"
+                />
+              </div>
+              <div>
+                <label className="drk-label">E-Mail (optional)</label>
+                <input
+                  type="email"
+                  className="drk-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="z.B. info@drk-aachen.de"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="drk-label">Bankverbindung (optional – erscheint auf Spendenquittungen)</label>
+              <div className="space-y-3 mt-1">
+                <input
+                  type="text"
+                  className="drk-input"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  placeholder="Name der Bank, z.B. Sparkasse Aachen"
+                />
+                <div className="grid grid-cols-[1fr_8rem] gap-3">
+                  <input
+                    type="text"
+                    className="drk-input"
+                    value={bankIban}
+                    onChange={(e) => setBankIban(e.target.value)}
+                    placeholder="IBAN, z.B. DE10 3905 0000 0023 4256 6"
+                  />
+                  <input
+                    type="text"
+                    className="drk-input"
+                    value={bankBic}
+                    onChange={(e) => setBankBic(e.target.value)}
+                    placeholder="BIC"
+                  />
+                </div>
+              </div>
             </div>
 
             <div>

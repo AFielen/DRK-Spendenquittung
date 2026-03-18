@@ -15,7 +15,17 @@ import {
   GUELTIGKEITSHINWEIS,
 } from '@/lib/docx-templates/shared';
 import { createBriefbogenLayout } from './briefbogen';
-import { generatePdfBuffer, formatDatum, formatBetrag, spenderAnschrift } from './pdf-helper';
+import {
+  generatePdfBuffer,
+  formatDatum,
+  formatBetrag,
+  spenderAnschrift,
+  createBorderedBox,
+  createDataRow,
+  createCheckbox,
+  createAusstellerBlock,
+  createSignatureBlock,
+} from './pdf-helper';
 
 export async function generateSammelbestaetigungPdf(
   verein: Verein,
@@ -33,31 +43,29 @@ export async function generateSammelbestaetigungPdf(
   for (const zeile of TITEL_SAMMELBESTAETIGUNG.split('\n')) {
     content.push({ text: zeile, style: 'title' });
   }
-  content.push({ text: ' ', fontSize: 6 });
+  content.push({ text: ' ', fontSize: 4 });
 
-  // Name und Anschrift
-  content.push({ text: 'Name und Anschrift des Zuwendenden:', fontSize: 10, bold: true });
-  for (const line of spenderAnschrift(spender).split('\n')) {
-    content.push({ text: line, fontSize: 10 });
-  }
-  content.push({ text: ' ', fontSize: 6 });
+  // Aussteller
+  content.push(...createAusstellerBlock(verein));
 
-  // Gesamtbetrag
-  content.push({
-    text: [
-      { text: 'Gesamtbetrag der Zuwendung  - in Ziffern -  ', fontSize: 10 },
-      { text: `${formatBetrag(gesamtbetrag)} €`, fontSize: 10, bold: true },
-      { text: '  - in Buchstaben -  ', fontSize: 10 },
-      { text: betragInWorten(gesamtbetrag), fontSize: 10, bold: true },
-    ],
-  });
+  // Name und Anschrift (bordered box)
+  const adressLines = spenderAnschrift(spender).split('\n').filter((l) => l.trim());
+  content.push(createBorderedBox('Name und Anschrift des Zuwendenden:', adressLines));
+
+  // Gesamtbetrag + Buchstaben (bordered data row)
+  content.push(
+    createDataRow([
+      { label: 'Gesamtbetrag der Zuwendung – in Ziffern', value: `${formatBetrag(gesamtbetrag)} €` },
+      { label: 'in Buchstaben', value: betragInWorten(gesamtbetrag) },
+    ])
+  );
 
   // Zeitraum
   content.push({
     text: `Zeitraum der Sammelbestätigung: ${formatDatum(zeitraumVon)} bis ${formatDatum(zeitraumBis)}`,
     fontSize: 10,
-  });
-  content.push({ text: ' ', fontSize: 6 });
+    margin: [0, 0, 0, 6],
+  } as Content);
 
   // Freistellungsstatus
   const zwecke = verein.beguenstigteZwecke.join(', ');
@@ -67,46 +75,55 @@ export async function generateSammelbestaetigungPdf(
       ? freistellungTextA(verein.finanzamt, verein.steuernummer, bescheidDatum, verein.letzterVZ || '', zwecke)
       : freistellungTextB(verein.finanzamt, verein.steuernummer, bescheidDatum, zwecke);
 
-  content.push({ text: `[X] ${freiText}`, fontSize: 9 });
-  content.push({ text: ' ', fontSize: 6 });
+  content.push(createCheckbox(true, freiText, 9));
+  content.push({ text: ' ', fontSize: 4 });
 
-  // Verwendungsbestätigung
+  // Verwendungsbestätigung (bordered box with gray background)
   content.push({
-    text: VERWENDUNGSBESTAETIGUNG_PREFIX + zwecke + VERWENDUNGSBESTAETIGUNG_SUFFIX,
-    fontSize: 10,
-    bold: true,
-  });
-  content.push({ text: ' ', fontSize: 6 });
+    table: {
+      widths: ['*'],
+      body: [
+        [
+          {
+            text: VERWENDUNGSBESTAETIGUNG_PREFIX + zwecke + VERWENDUNGSBESTAETIGUNG_SUFFIX,
+            fontSize: 9,
+            bold: true,
+            margin: [4, 4, 4, 4],
+          },
+        ],
+      ],
+    },
+    layout: {
+      hLineWidth: () => 0.5,
+      vLineWidth: () => 0.5,
+      hLineColor: () => '#999999',
+      vLineColor: () => '#999999',
+      fillColor: () => '#f5f5f5',
+    },
+    margin: [0, 0, 0, 4],
+  } as Content);
 
   // Mitgliedsbeitrag-Hinweis
   content.push({
     text: 'Nur für steuerbegünstigte Einrichtungen, bei denen die Mitgliedsbeiträge steuerlich nicht abziehbar sind:',
     fontSize: 8,
     italics: true,
-  });
-  content.push({ text: `[ ] ${MITGLIEDSBEITRAG_HINWEIS}`, fontSize: 9 });
-  content.push({ text: ' ', fontSize: 6 });
+    margin: [0, 0, 0, 1],
+  } as Content);
+  content.push(createCheckbox(false, MITGLIEDSBEITRAG_HINWEIS, 8));
+  content.push({ text: ' ', fontSize: 4 });
 
   // Sammelbestätigungs-Pflicht-Texte
-  content.push({ text: SAMMEL_DOPPELBESTAETIGUNG, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 4 });
-  content.push({ text: SAMMEL_VERZICHTHINWEIS, fontSize: 10 });
-  content.push({ text: ' ', fontSize: 10 });
-  content.push({ text: ' ', fontSize: 10 });
+  content.push({ text: SAMMEL_DOPPELBESTAETIGUNG, fontSize: 9, margin: [0, 0, 0, 3] } as Content);
+  content.push({ text: SAMMEL_VERZICHTHINWEIS, fontSize: 9, margin: [0, 0, 0, 4] } as Content);
 
   // Unterschrift
-  content.push({ text: '________________________________', fontSize: 9 });
-  content.push({ text: '(Ort, Datum und Unterschrift des Zuwendungsempfängers)', fontSize: 9 });
-  content.push({
-    text: `${verein.unterschriftName ?? ''}, ${verein.unterschriftFunktion ?? ''}`,
-    fontSize: 9,
-  });
-  content.push({ text: ' ', fontSize: 6 });
+  content.push(...createSignatureBlock(verein));
 
   // Hinweis
   content.push({ text: 'Hinweis:', fontSize: 8, bold: true });
   content.push({ text: HAFTUNGSHINWEIS, fontSize: 8 });
-  content.push({ text: ' ', fontSize: 4 });
+  content.push({ text: ' ', fontSize: 3 });
   content.push({ text: GUELTIGKEITSHINWEIS, fontSize: 8 });
 
   // Page break — Anlage

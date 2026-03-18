@@ -38,6 +38,11 @@ export interface Verein {
 
   // Optional
   vereinsregister?: string | null;
+  telefon?: string | null;
+  email?: string | null;
+  bankName?: string | null;
+  bankIban?: string | null;
+  bankBic?: string | null;
   unterschriftName: string;
   unterschriftFunktion: string;
 
