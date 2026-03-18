@@ -9,6 +9,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **PDF für Spender:** Neuer Button „PDF für Spender" im Zuwendungsdetails-Dialog – erzeugt Bestätigung ohne DOPPEL-Vermerk direkt aus der Zuwendungsübersicht (#21)
+- `ZuwendungDetails.tsx`: Props `onDownloadSpenderPdf` und `downloadingSpenderPdf` für separaten Spender-PDF-Download
 - **Vereins-Kontaktdaten:** Neue Felder `telefon`, `email`, `bankName`, `bankIban`, `bankBic` auf `Kreisverband`-Modell (#14)
 - `VereinsSetupWizard.tsx`: Eingabefelder für Telefon, E-Mail und Bankverbindung in Schritt 1
 - `prisma/migrations/20260318_add_kontaktdaten_bankverbindung`: DB-Migration für Kontakt- und Bankfelder
