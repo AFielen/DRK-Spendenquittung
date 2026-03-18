@@ -9,6 +9,11 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Neue Spende Wizard:** 4-Schritt-Wizard auf dem Dashboard für den kompletten Spendenprozess (Spender → Zuwendung → Bestätigung → Fertig) (#22)
+- `SpendeWizard.tsx`: Mehrstufiger Wizard mit Spender-Auswahl/Neuanlage, Zuwendungserfassung (Geld/Sach), optionaler Sofort-Einzelbestätigung mit PDF
+- Dashboard: „Neue Spende"-Button öffnet Wizard-Modal statt Navigation zu /zuwendungen
+- Inline-Spenderanlage mit Duplikaterkennung (Name + PLZ)
+- Freistellungsbescheid-Prüfung vor Bestätigungserstellung im Wizard
 - **PDF für Spender:** Neuer Button „PDF für Spender" im Zuwendungsdetails-Dialog – erzeugt Bestätigung ohne DOPPEL-Vermerk direkt aus der Zuwendungsübersicht (#21)
 - `ZuwendungDetails.tsx`: Props `onDownloadSpenderPdf` und `downloadingSpenderPdf` für separaten Spender-PDF-Download
 - **Vereins-Kontaktdaten:** Neue Felder `telefon`, `email`, `bankName`, `bankIban`, `bankBic` auf `Kreisverband`-Modell (#14)
