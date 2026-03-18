@@ -30,7 +30,14 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        setError('Serverfehler. Bitte prüfen Sie die Server-Logs.');
+        return;
+      }
 
       if (!res.ok) {
         setError(data.error || 'Fehler beim Senden.');
@@ -39,7 +46,7 @@ export default function LoginPage() {
 
       setStep('code');
     } catch {
-      setError('Verbindungsfehler. Bitte versuchen Sie es erneut.');
+      setError('Verbindungsfehler. Server nicht erreichbar.');
     } finally {
       setLoading(false);
     }
@@ -90,7 +97,14 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: fullCode }),
       });
-      const data = await res.json();
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        setError('Serverfehler. Bitte prüfen Sie die Server-Logs.');
+        return;
+      }
 
       if (!res.ok) {
         setError(data.error || 'Ungültiger Code.');
@@ -101,7 +115,7 @@ export default function LoginPage() {
 
       window.location.href = '/';
     } catch {
-      setError('Verbindungsfehler. Bitte versuchen Sie es erneut.');
+      setError('Verbindungsfehler. Server nicht erreichbar.');
     } finally {
       setLoading(false);
     }

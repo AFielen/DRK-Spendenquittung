@@ -20,6 +20,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - **Briefbogen-Footer (PDF + DOCX):** Kontaktdaten (Telefon, E-Mail) und Bankverbindung (Bank, IBAN, BIC) integriert (#14)
 - `app/api/kreisverband/route.ts`: PUT-Handler um neue Kontakt-/Bankfelder erweitert
 - `app/api/dokumente/pdf/route.ts`: `mapKreisverband()` um neue Felder erweitert
+- **Docker:** Automatische DB-Migrationen beim Container-Start via `docker-entrypoint.sh` – `git pull && docker compose up --build` reicht für Updates
+- `Dockerfile`: Volle `node_modules` im Runner für Prisma-CLI, Entrypoint statt CMD
+
+### Fixed
+- `app/api/auth/login/route.ts`: try-catch Error-Handling verhindert HTML-500-Fehlerseiten bei DB-/Mail-Fehlern
+- `app/api/auth/verify/route.ts`: try-catch Error-Handling verhindert HTML-500-Fehlerseiten bei DB-Fehlern
+- `app/login/page.tsx`: Unterscheidung zwischen Serverfehler und Verbindungsfehler für bessere Fehlermeldungen
 
 ### Added
 - **Spender-Archivierung:** Spender mit Zuwendungen werden archiviert statt gelöscht – Daten bleiben erhalten (#9)
