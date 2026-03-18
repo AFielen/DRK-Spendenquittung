@@ -8,22 +8,24 @@ import FreistellungsBlocker from '@/components/FreistellungsBlocker';
 import StatistikKarten from '@/components/StatistikKarten';
 import ZweckbindungsStatus from '@/components/ZweckbindungsStatus';
 import Fristwarnung from '@/components/Fristwarnung';
-import type { Verein, Zuwendung } from '@/lib/types';
+import SpendeWizard from '@/components/SpendeWizard';
+import type { Verein, Spender, Zuwendung } from '@/lib/types';
 import { apiGet } from '@/lib/api-client';
 
 function DashboardContent() {
   const { kreisverband } = useAuth();
-  const [spenderCount, setSpenderCount] = useState(0);
+  const [spenderList, setSpenderList] = useState<Spender[]>([]);
   const [zuwendungen, setZuwendungen] = useState<Zuwendung[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   const reload = useCallback(async () => {
     try {
       const [spenderData, zuwendungenData] = await Promise.all([
-        apiGet<{ id: string }[]>('/api/spender'),
+        apiGet<Spender[]>('/api/spender'),
         apiGet<Zuwendung[]>('/api/zuwendungen'),
       ]);
-      setSpenderCount(spenderData.length);
+      setSpenderList(spenderData);
       setZuwendungen(zuwendungenData.map((z) => ({
         ...z,
         betrag: Number(z.betrag),
@@ -50,7 +52,7 @@ function DashboardContent() {
   };
 
   // Wenn noch keine Spender vorhanden
-  if (spenderCount === 0) {
+  if (spenderList.length === 0) {
     return (
       <div className="min-h-[calc(100vh-200px)] py-8 px-4" style={{ background: 'var(--bg)' }}>
         <div className="max-w-2xl mx-auto space-y-6">
@@ -102,7 +104,7 @@ function DashboardContent() {
         )}
 
         {/* Statistik-Karten */}
-        <StatistikKarten spenderCount={spenderCount} zuwendungen={zuwendungen} />
+        <StatistikKarten spenderCount={spenderList.length} zuwendungen={zuwendungen} />
 
         {/* Zweckbindungs-Status */}
         <ZweckbindungsStatus zuwendungen={zuwendungen} onUpdate={reload} />
@@ -116,13 +118,13 @@ function DashboardContent() {
             Schnellzugriff
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <Link
-              href="/zuwendungen"
+            <button
+              onClick={() => setShowWizard(true)}
               className="p-3 rounded-lg text-center text-sm font-semibold transition-colors hover:shadow-md"
               style={{ background: 'var(--drk)', color: '#fff' }}
             >
-              Neue Zuwendung
-            </Link>
+              Neue Spende
+            </button>
             <Link
               href="/bestaetigung"
               className="p-3 rounded-lg text-center text-sm font-semibold transition-colors hover:shadow-md"
@@ -154,6 +156,15 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {showWizard && (
+        <SpendeWizard
+          spenderList={spenderList}
+          verein={verein}
+          onComplete={() => { setShowWizard(false); reload(); }}
+          onCancel={() => setShowWizard(false)}
+        />
+      )}
     </div>
   );
 }
