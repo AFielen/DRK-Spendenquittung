@@ -53,6 +53,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
   const [unterschriftName, setUnterschriftName] = useState(existingVerein?.unterschriftName ?? '');
   const [unterschriftFunktion, setUnterschriftFunktion] = useState(existingVerein?.unterschriftFunktion ?? '');
 
+  // Validierung: zeigt Fehler erst nach Klick auf "Weiter"
+  const [versuchteWeiter1, setVersuchteWeiter1] = useState(false);
+  const [versuchteWeiter2, setVersuchteWeiter2] = useState(false);
+  const [versuchteWeiter3, setVersuchteWeiter3] = useState(false);
+
   const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -165,7 +170,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="z.B. DRK Kreisverband StädteRegion Aachen e.V."
+                style={versuchteWeiter1 && !name.trim() ? { borderColor: 'var(--error, #dc2626)' } : undefined}
               />
+              {versuchteWeiter1 && !name.trim() && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Pflichtfeld</div>
+              )}
             </div>
 
             <div>
@@ -296,11 +305,19 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
           </div>
 
+          {versuchteWeiter1 && !canProceedStep1 && (
+            <div className="text-sm mt-2" style={{ color: 'var(--error, #dc2626)' }}>
+              Bitte füllen Sie alle Pflichtfelder (*) aus.
+            </div>
+          )}
+
           <div className="flex justify-end mt-6">
             <button
               className="drk-btn-primary"
-              disabled={!canProceedStep1}
-              onClick={() => setSchritt(2)}
+              onClick={() => {
+                setVersuchteWeiter1(true);
+                if (canProceedStep1) setSchritt(2);
+              }}
             >
               Weiter
             </button>
@@ -327,7 +344,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 value={finanzamt}
                 onChange={(e) => setFinanzamt(e.target.value)}
                 placeholder="z.B. Aachen-Stadt"
+                style={versuchteWeiter2 && !finanzamt.trim() ? { borderColor: 'var(--error, #dc2626)' } : undefined}
               />
+              {versuchteWeiter2 && !finanzamt.trim() && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Pflichtfeld</div>
+              )}
             </div>
 
             <div>
@@ -341,7 +362,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 value={steuernummer}
                 onChange={(e) => setSteuernummer(e.target.value)}
                 placeholder="z.B. 201/5909/1234"
+                style={versuchteWeiter2 && !steuernummer.trim() ? { borderColor: 'var(--error, #dc2626)' } : undefined}
               />
+              {versuchteWeiter2 && !steuernummer.trim() && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Pflichtfeld</div>
+              )}
             </div>
 
             <div>
@@ -399,7 +424,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 className="drk-input"
                 value={freistellungDatum}
                 onChange={(e) => setFreistellungDatum(e.target.value)}
+                style={versuchteWeiter2 && !freistellungDatum ? { borderColor: 'var(--error, #dc2626)' } : undefined}
               />
+              {versuchteWeiter2 && !freistellungDatum && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Pflichtfeld</div>
+              )}
 
               {freistellungStatus?.status === 'abgelaufen' && (
                 <div
@@ -471,6 +500,9 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                     </label>
                   ))}
               </div>
+              {versuchteWeiter2 && beguenstigteZwecke.length === 0 && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Mindestens ein Zweck muss ausgewählt sein.</div>
+              )}
               <div className="flex gap-2 mt-2">
                 <input
                   type="text"
@@ -492,14 +524,22 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
           </div>
 
+          {versuchteWeiter2 && !canProceedStep2 && (
+            <div className="text-sm mt-2" style={{ color: 'var(--error, #dc2626)' }}>
+              Bitte füllen Sie alle Pflichtfelder (*) aus.
+            </div>
+          )}
+
           <div className="flex justify-between mt-6">
             <button className="drk-btn-secondary" onClick={() => setSchritt(1)}>
               Zurück
             </button>
             <button
               className="drk-btn-primary"
-              disabled={!canProceedStep2}
-              onClick={() => setSchritt(3)}
+              onClick={() => {
+                setVersuchteWeiter2(true);
+                if (canProceedStep2) setSchritt(3);
+              }}
             >
               Weiter
             </button>
@@ -526,7 +566,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 value={unterschriftName}
                 onChange={(e) => setUnterschriftName(e.target.value)}
                 placeholder="z.B. Max Mustermann"
+                style={versuchteWeiter3 && !unterschriftName.trim() ? { borderColor: 'var(--error, #dc2626)' } : undefined}
               />
+              {versuchteWeiter3 && !unterschriftName.trim() && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Pflichtfeld</div>
+              )}
             </div>
 
             <div>
@@ -540,7 +584,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
                 value={unterschriftFunktion}
                 onChange={(e) => setUnterschriftFunktion(e.target.value)}
                 placeholder="z.B. Vorstandsvorsitzender, Schatzmeister"
+                style={versuchteWeiter3 && !unterschriftFunktion.trim() ? { borderColor: 'var(--error, #dc2626)' } : undefined}
               />
+              {versuchteWeiter3 && !unterschriftFunktion.trim() && (
+                <div className="text-xs mt-1" style={{ color: 'var(--error, #dc2626)' }}>Pflichtfeld</div>
+              )}
             </div>
 
             <div
@@ -552,14 +600,22 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             </div>
           </div>
 
+          {versuchteWeiter3 && !canFinish && (
+            <div className="text-sm mt-2" style={{ color: 'var(--error, #dc2626)' }}>
+              Bitte füllen Sie alle Pflichtfelder (*) aus.
+            </div>
+          )}
+
           <div className="flex justify-between mt-6">
             <button className="drk-btn-secondary" onClick={() => setSchritt(2)}>
               Zurück
             </button>
             <button
               className="drk-btn-primary"
-              disabled={!canFinish}
-              onClick={handleSpeichern}
+              onClick={() => {
+                setVersuchteWeiter3(true);
+                if (canFinish) handleSpeichern();
+              }}
             >
               Einrichtung abschließen
             </button>

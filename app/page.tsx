@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import AuthGuard from '@/components/AuthGuard';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
+import SetupBanner from '@/components/SetupBanner';
 import StatistikKarten from '@/components/StatistikKarten';
 import ZweckbindungsStatus from '@/components/ZweckbindungsStatus';
 import Fristwarnung from '@/components/Fristwarnung';
 import SpendeWizard from '@/components/SpendeWizard';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
+import { pruefSetupVollstaendigkeit } from '@/lib/setup-check';
 import { apiGet } from '@/lib/api-client';
 
 function DashboardContent() {
@@ -51,11 +53,14 @@ function DashboardContent() {
     unterschriftFunktion: kreisverband.unterschriftFunktion,
   };
 
+  const setupStatus = pruefSetupVollstaendigkeit(verein);
+
   // Wenn noch keine Spender vorhanden
   if (spenderList.length === 0) {
     return (
       <div className="min-h-[calc(100vh-200px)] py-8 px-4" style={{ background: 'var(--bg)' }}>
         <div className="max-w-2xl mx-auto space-y-6">
+          <SetupBanner verein={verein} />
           <FreistellungsBlocker verein={verein} />
           <div className="drk-card drk-fade-in">
             <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
@@ -81,6 +86,9 @@ function DashboardContent() {
   return (
     <div className="min-h-[calc(100vh-200px)] py-8 px-4" style={{ background: 'var(--bg)' }}>
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Setup-Vollständigkeit */}
+        <SetupBanner verein={verein} />
+
         {/* Freistellungs-Status */}
         <FreistellungsBlocker verein={verein} />
 
@@ -121,7 +129,13 @@ function DashboardContent() {
             <button
               onClick={() => setShowWizard(true)}
               className="p-3 rounded-lg text-center text-sm font-semibold transition-colors hover:shadow-md"
-              style={{ background: 'var(--drk)', color: '#fff' }}
+              style={{
+                background: setupStatus.vollstaendig ? 'var(--drk)' : 'var(--border)',
+                color: setupStatus.vollstaendig ? '#fff' : 'var(--text-muted)',
+                cursor: setupStatus.vollstaendig ? 'pointer' : 'not-allowed',
+              }}
+              disabled={!setupStatus.vollstaendig}
+              title={!setupStatus.vollstaendig ? 'Einrichtung muss erst abgeschlossen werden' : undefined}
             >
               Neue Spende
             </button>
