@@ -1,7 +1,7 @@
 import type { Verein } from './types';
 
 export interface FreistellungStatus {
-  status: 'gueltig' | 'warnung' | 'abgelaufen';
+  status: 'gueltig' | 'warnung' | 'kritisch' | 'abgelaufen';
   ablaufDatum: string;
   restMonate: number;
 }
@@ -25,6 +25,10 @@ export function pruefFreistellung(verein: Verein): FreistellungStatus {
 
   if (diffMs <= 0) {
     return { status: 'abgelaufen', ablaufDatum, restMonate: 0 };
+  }
+
+  if (restMonate < 3) {
+    return { status: 'kritisch', ablaufDatum, restMonate };
   }
 
   if (restMonate < 6) {

@@ -9,6 +9,19 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Pflichtfeld-Validierung:** Robustes Validierungssystem für alle rechtlich notwendigen Vereinsdaten (#30)
+- `lib/setup-check.ts`: Neue Utility `pruefSetupVollstaendigkeit()` prüft Vollständigkeit aller Pflichtfelder in 3 Schritten (Stammdaten, Steuerliche Angaben, Unterschrift)
+- `components/SetupBanner.tsx`: Dashboard-Banner und Vollbild-Blocker bei unvollständiger Einrichtung mit Fortschrittsanzeige und Auflistung fehlender Felder
+- **Kritischer Bescheid-Status:** Neuer Status `'kritisch'` in `pruefFreistellung()` für Bescheide die in weniger als 3 Monaten ablaufen – rot hervorgehoben auf Dashboard und Bestätigungsseiten (#30)
+
+### Changed
+- `FreistellungsBlocker.tsx`: Unterstützt neuen `'kritisch'`-Status mit roter Warnung und Link zur Einrichtung
+- `VereinsSetupWizard.tsx`: Inline-Validierung mit roten Rahmen und Fehlermeldungen bei leeren Pflichtfeldern nach Klick auf „Weiter"
+- `app/page.tsx`: Dashboard zeigt `SetupBanner` bei unvollständiger Einrichtung, „Neue Spende"-Button deaktiviert wenn Setup fehlt
+- `app/bestaetigung/page.tsx`: Vollbild-Blocker wenn Einrichtung unvollständig, `'kritisch'`-Status-Warnung
+- `SpendeWizard.tsx`: Bestätigungs-Option deaktiviert bei unvollständiger Einrichtung, Warnung bei kritischem Bescheid-Status
+- `lib/freistellung-check.ts`: Neue Schwellenwerte – `'warnung'` ab < 6 Monate, `'kritisch'` ab < 3 Monate
+
 - **Neue Spende Wizard:** 4-Schritt-Wizard auf dem Dashboard für den kompletten Spendenprozess (Spender → Zuwendung → Bestätigung → Fertig) (#22)
 - `SpendeWizard.tsx`: Mehrstufiger Wizard mit Spender-Auswahl/Neuanlage, Zuwendungserfassung (Geld/Sach), optionaler Sofort-Einzelbestätigung mit PDF
 - Dashboard: „Neue Spende"-Button öffnet Wizard-Modal statt Navigation zu /zuwendungen

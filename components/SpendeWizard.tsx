@@ -6,6 +6,7 @@ import type { Spender, Verein, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { apiPost } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
+import { pruefSetupVollstaendigkeit } from '@/lib/setup-check';
 
 interface SpendeWizardProps {
   spenderList: Spender[];
@@ -99,6 +100,7 @@ export default function SpendeWizard({
   const effectiveBetrag = art === 'sach' ? parsedSachWert : parsedBetrag;
 
   const freistellungStatus = pruefFreistellung(verein);
+  const setupStatus = pruefSetupVollstaendigkeit(verein);
 
   const filteredSpender = useMemo(() => {
     if (!spenderSuche) return spenderList.filter((s) => !s.archiviert);
@@ -1264,7 +1266,7 @@ export default function SpendeWizard({
 
               <label
                 className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                  freistellungStatus.status === 'abgelaufen'
+                  freistellungStatus.status === 'abgelaufen' || !setupStatus.vollstaendig
                     ? 'opacity-50 cursor-not-allowed'
                     : 'cursor-pointer'
                 }`}
@@ -1279,7 +1281,7 @@ export default function SpendeWizard({
                   className="mt-0.5"
                   checked={abschlussWahl === 'bestaetigung'}
                   onChange={() => setAbschlussWahl('bestaetigung')}
-                  disabled={freistellungStatus.status === 'abgelaufen'}
+                  disabled={freistellungStatus.status === 'abgelaufen' || !setupStatus.vollstaendig}
                 />
                 <div>
                   <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
@@ -1291,6 +1293,20 @@ export default function SpendeWizard({
                 </div>
               </label>
             </div>
+
+            {/* Setup-Vollständigkeits-Warnung */}
+            {!setupStatus.vollstaendig && (
+              <div
+                className="p-3 rounded-lg text-sm"
+                style={{
+                  background: '#fff7ed',
+                  border: '1px solid #fdba74',
+                  color: '#9a3412',
+                }}
+              >
+                Einrichtung unvollständig ({setupStatus.fehlendeSchritte.map((s) => s.label).join(', ')}). Bestätigungen können erst nach Abschluss der Einrichtung erstellt werden.
+              </div>
+            )}
 
             {/* Freistellung warnings */}
             {freistellungStatus.status === 'abgelaufen' && (
@@ -1304,6 +1320,20 @@ export default function SpendeWizard({
               >
                 Freistellungsbescheid abgelaufen. Bestätigungen können erst nach Erneuerung erstellt
                 werden.
+              </div>
+            )}
+
+            {freistellungStatus.status === 'kritisch' && abschlussWahl === 'bestaetigung' && (
+              <div
+                className="p-3 rounded-lg text-sm"
+                style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fca5a5',
+                  color: '#991b1b',
+                }}
+              >
+                Dringend: Freistellungsbescheid läuft am {freistellungStatus.ablaufDatum} ab (noch{' '}
+                {freistellungStatus.restMonate} {freistellungStatus.restMonate === 1 ? 'Monat' : 'Monate'}).
               </div>
             )}
 

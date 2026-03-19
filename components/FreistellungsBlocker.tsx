@@ -57,6 +57,25 @@ export default function FreistellungsBlocker({ verein, blockContent = false }: F
     );
   }
 
+  if (status.status === 'kritisch') {
+    return (
+      <div
+        className="p-4 rounded-xl mb-4"
+        style={{ background: '#fef2f2', border: '1px solid #fca5a5' }}
+      >
+        <div className="text-sm font-bold" style={{ color: '#991b1b' }}>
+          🔴 Bescheid läuft am {status.ablaufDatum} ab (noch {status.restMonate} {status.restMonate === 1 ? 'Monat' : 'Monate'})
+        </div>
+        <p className="text-sm mt-1" style={{ color: '#991b1b' }}>
+          Dringend: Bitte kümmern Sie sich umgehend um die Verlängerung beim Finanzamt.{' '}
+          <Link href="/einrichtung" className="underline font-semibold">
+            Bescheiddaten aktualisieren →
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   if (status.status === 'warnung') {
     return (
       <div

@@ -26,8 +26,10 @@ import { generateSachzuwendung } from '@/lib/docx-templates/sachzuwendung';
 import { generateSammelbestaetigung } from '@/lib/docx-templates/sammelbestaetigung';
 import { generateVereinfachterNachweis } from '@/lib/docx-templates/vereinfachter-nachweis';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
+import SetupBanner from '@/components/SetupBanner';
 import UnterschriftHinweis from '@/components/UnterschriftHinweis';
 import FormatToggle, { type ExportFormat } from '@/components/FormatToggle';
+import { pruefSetupVollstaendigkeit } from '@/lib/setup-check';
 
 type Tab = 'einzel' | 'sammel' | 'vereinfacht';
 
@@ -102,6 +104,15 @@ function BestaetigungContent() {
     ...kreisverband,
     freistellungsart: kreisverband.freistellungsart as Verein['freistellungsart'],
   };
+
+  const setupStatus = pruefSetupVollstaendigkeit(verein);
+  if (!setupStatus.vollstaendig) {
+    return (
+      <div style={{ background: 'var(--bg)' }}>
+        <SetupBanner verein={verein} blockContent />
+      </div>
+    );
+  }
 
   const freistellungStatus = pruefFreistellung(verein);
   if (freistellungStatus.status === 'abgelaufen') {
@@ -277,7 +288,7 @@ function BestaetigungContent() {
   return (
     <div className="py-8 px-4 overflow-x-hidden" style={{ background: 'var(--bg)' }}>
       <div className="max-w-4xl mx-auto">
-        {freistellungStatus.status === 'warnung' && <FreistellungsBlocker verein={verein} />}
+        {(freistellungStatus.status === 'warnung' || freistellungStatus.status === 'kritisch') && <FreistellungsBlocker verein={verein} />}
 
         <div className="drk-card">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
