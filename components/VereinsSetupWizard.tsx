@@ -40,9 +40,11 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
   const [freistellungsart, setFreistellungsart] = useState<Verein['freistellungsart']>(
     existingVerein?.freistellungsart ?? 'freistellungsbescheid'
   );
-  const [freistellungDatum, setFreistellungDatum] = useState(existingVerein?.freistellungDatum ?? '');
+  const [freistellungDatum, setFreistellungDatum] = useState(
+    existingVerein?.freistellungDatum ? existingVerein.freistellungDatum.split('T')[0] : ''
+  );
   const [letzterVZ, setLetzterVZ] = useState(
-    existingVerein?.letzterVZ ?? ''
+    existingVerein?.letzterVZ ? existingVerein.letzterVZ.split('T')[0] : ''
   );
   const [beguenstigteZwecke, setBeguenstigteZwecke] = useState<string[]>(
     existingVerein?.beguenstigteZwecke ?? [DRK_ZWECKE[0]]

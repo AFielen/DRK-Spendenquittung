@@ -14,6 +14,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `components/SetupBanner.tsx`: Dashboard-Banner und Vollbild-Blocker bei unvollständiger Einrichtung mit Fortschrittsanzeige und Auflistung fehlender Felder
 - **Kritischer Bescheid-Status:** Neuer Status `'kritisch'` in `pruefFreistellung()` für Bescheide die in weniger als 3 Monaten ablaufen – rot hervorgehoben auf Dashboard und Bestätigungsseiten (#30)
 
+### Fixed
+- `VereinsSetupWizard.tsx`: Freistellungsdatum und letzter Veranlagungszeitraum werden nach Speichern wieder korrekt angezeigt – ISO-DateTime-String wird auf `YYYY-MM-DD` gekürzt für HTML-Date-Input (#32)
+
 ### Changed
 - `FreistellungsBlocker.tsx`: Unterstützt neuen `'kritisch'`-Status mit roter Warnung und Link zur Einrichtung
 - `VereinsSetupWizard.tsx`: Inline-Validierung mit roten Rahmen und Fehlermeldungen bei leeren Pflichtfeldern nach Klick auf „Weiter"
