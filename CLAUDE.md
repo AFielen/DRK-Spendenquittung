@@ -420,6 +420,24 @@ Für das exakte Format: READMEs in https://github.com/AFielen/abstimmung und htt
 
 ---
 
+## Claude Code Skills & Agents
+
+Dieses Repository enthält Skills und Agents im `.claude/`-Ordner für autonome Subagenten.
+
+### Skill-Kategorien
+
+- **Coding skills** (`coding-workflow`, `commit-push-pr`, `pr-description`, `code-simplifier`, `code-review`): Repository-Arbeit, Git, PRs, Code-Qualität
+- **Data skills** (`data-triage`, `data-analyst`, `data-model-explorer`): Datenbank-Queries, Metriken, Analyse
+- **Preset skills** (`coding-presets`): Prompt-Vorlagen für Bugs, Features, Reviews, Refactoring, Audits
+- **Repo skills** (`repo-skills`): Skill-Discovery nach Repo-Clone
+- **DRK PostgreSQL** (`drk-postgres`): PostgreSQL & Prisma Best Practices
+
+### Nutzung
+
+Skills werden automatisch geladen wenn ein autonomer Subagent eine passende Aufgabe erhält. Die `INSTRUCTIONS.md` in `.claude/skills/` definiert das Verhalten autonomer Subagenten.
+
+---
+
 ## Kontakt
 
 DRK Kreisverband StädteRegion Aachen e.V.
