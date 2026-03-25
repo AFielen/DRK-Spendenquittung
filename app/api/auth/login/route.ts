@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { sendMagicCode } from '@/lib/mail';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+// Max 5 Login-Code-Anfragen pro E-Mail pro Minute
+const LOGIN_RATE_LIMIT = 5;
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +14,15 @@ export async function POST(req: NextRequest) {
 
     if (!email) {
       return NextResponse.json({ error: 'E-Mail-Adresse erforderlich.' }, { status: 400 });
+    }
+
+    // Rate Limiting: Verhindert E-Mail-Flooding
+    const rl = checkRateLimit(`auth:login:${email}`, LOGIN_RATE_LIMIT);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Zu viele Anfragen. Bitte warten Sie einen Moment.' },
+        { status: 429 },
+      );
     }
 
     const nutzer = await prisma.nutzer.findUnique({ where: { email } });

@@ -4,6 +4,10 @@ import { prisma } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { sendMagicCode } from '@/lib/mail';
 import { isValidDrkEmail } from '@/lib/domain-check';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+// Max 5 Registrierungs-Code-Anfragen pro E-Mail pro Minute
+const REG_RATE_LIMIT = 5;
 
 function slugify(name: string): string {
   return name
@@ -56,6 +60,15 @@ async function handleSendCode(body: Record<string, unknown>) {
     );
   }
 
+  // Rate Limiting: Verhindert E-Mail-Flooding
+  const rl = checkRateLimit(`auth:reg:${email}`, REG_RATE_LIMIT);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Zu viele Anfragen. Bitte warten Sie einen Moment.' },
+      { status: 429 },
+    );
+  }
+
   // Prüfe ob E-Mail bereits als Nutzer existiert
   const existing = await prisma.nutzer.findUnique({ where: { email } });
   if (existing) {
@@ -66,6 +79,7 @@ async function handleSendCode(body: Record<string, unknown>) {
   }
 
   const code = crypto.randomInt(100000, 999999).toString();
+  const codeHash = crypto.createHash('sha256').update(code).digest('hex');
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 Minuten
 
   // Abgelaufene Codes aufräumen + neuen Code speichern (upsert)
@@ -75,8 +89,8 @@ async function handleSendCode(body: Record<string, unknown>) {
 
   await prisma.registrierungCode.upsert({
     where: { email },
-    update: { name, code, expiresAt },
-    create: { email, name, code, expiresAt },
+    update: { name, code: codeHash, expiresAt },
+    create: { email, name, code: codeHash, expiresAt },
   });
 
   await sendMagicCode(email, code);
@@ -101,10 +115,11 @@ async function handleVerifyAndCreate(body: Record<string, unknown>) {
     );
   }
 
-  // Code verifizieren
+  // Code verifizieren (SHA-256 Hash-Vergleich)
   const regCode = await prisma.registrierungCode.findUnique({ where: { email } });
+  const codeHash = crypto.createHash('sha256').update(code).digest('hex');
 
-  if (!regCode || regCode.code !== code) {
+  if (!regCode || regCode.code !== codeHash) {
     return NextResponse.json({ error: 'Ungültiger Code.' }, { status: 401 });
   }
 

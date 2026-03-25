@@ -1,5 +1,5 @@
-const WINDOW_MS = 60_000; // 1 Minute
-const MAX_REQUESTS = 100;
+const DEFAULT_WINDOW_MS = 60_000; // 1 Minute
+const DEFAULT_MAX_REQUESTS = 100;
 
 interface RateLimitEntry {
   count: number;
@@ -23,23 +23,27 @@ export interface RateLimitResult {
   resetAt: number;
 }
 
-export function checkRateLimit(identifier: string): RateLimitResult {
+export function checkRateLimit(
+  identifier: string,
+  maxRequests: number = DEFAULT_MAX_REQUESTS,
+  windowMs: number = DEFAULT_WINDOW_MS,
+): RateLimitResult {
   const now = Date.now();
   let entry = store.get(identifier);
 
   if (!entry || entry.resetAt <= now) {
-    entry = { count: 0, resetAt: now + WINDOW_MS };
+    entry = { count: 0, resetAt: now + windowMs };
     store.set(identifier, entry);
   }
 
   entry.count++;
 
-  const remaining = Math.max(0, MAX_REQUESTS - entry.count);
-  const allowed = entry.count <= MAX_REQUESTS;
+  const remaining = Math.max(0, maxRequests - entry.count);
+  const allowed = entry.count <= maxRequests;
 
   return {
     allowed,
-    limit: MAX_REQUESTS,
+    limit: maxRequests,
     remaining,
     resetAt: entry.resetAt,
   };
