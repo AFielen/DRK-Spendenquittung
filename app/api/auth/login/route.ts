@@ -14,23 +14,18 @@ export async function POST(req: NextRequest) {
 
     const nutzer = await prisma.nutzer.findUnique({ where: { email } });
 
-    if (!nutzer) {
-      return NextResponse.json(
-        { error: 'Kein Konto mit dieser E-Mail-Adresse gefunden.' },
-        { status: 404 },
-      );
+    if (nutzer) {
+      const code = crypto.randomInt(100000, 999999).toString();
+      const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+      const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 Minuten
+
+      await prisma.nutzer.update({
+        where: { id: nutzer.id },
+        data: { magicCode: codeHash, magicCodeExpiry: expiry, magicCodeVersuche: 0 },
+      });
+
+      await sendMagicCode(email, code);
     }
-
-    const code = crypto.randomInt(100000, 999999).toString();
-    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
-    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 Minuten
-
-    await prisma.nutzer.update({
-      where: { id: nutzer.id },
-      data: { magicCode: codeHash, magicCodeExpiry: expiry, magicCodeVersuche: 0 },
-    });
-
-    await sendMagicCode(email, code);
 
     // Opportunistisches Cleanup: Abgelaufene Magic Codes und Registrierungscodes löschen
     const now = new Date();
@@ -44,6 +39,7 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
+    // Generische Antwort – verhindert User Enumeration
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Auth login error:', error);

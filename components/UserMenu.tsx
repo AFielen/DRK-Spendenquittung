@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthProvider';
 import Link from 'next/link';
+import { ShieldIcon } from './icons';
 
 export default function UserMenu() {
   const { nutzer, kreisverband, logout } = useAuth();
@@ -36,6 +37,8 @@ export default function UserMenu() {
         style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}
         title={nutzer.name}
         aria-label={`Benutzermenü: ${nutzer.name}`}
+        aria-expanded={open}
+        aria-haspopup="menu"
       >
         {initials}
       </button>
@@ -61,18 +64,16 @@ export default function UserMenu() {
               </div>
             )}
           </div>
-          <div className="p-2">
+          <div className="p-2" role="menu">
             {nutzer.isSuperadmin && (
               <Link
                 href="/admin"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gray-100"
+                className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-lg transition-colors drk-hover-bg"
                 style={{ color: 'var(--text)' }}
+                role="menuitem"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
+                <ShieldIcon />
                 Admin-Bereich
               </Link>
             )}
@@ -81,8 +82,9 @@ export default function UserMenu() {
                 setOpen(false);
                 logout();
               }}
-              className="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-gray-100"
+              className="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors drk-hover-bg"
               style={{ color: 'var(--drk)' }}
+              role="menuitem"
             >
               Abmelden
             </button>

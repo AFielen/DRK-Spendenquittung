@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { Spender, Verein, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { apiPost } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
 import { pruefSetupVollstaendigkeit } from '@/lib/setup-check';
+import { useWizardState } from '@/lib/use-spende-wizard';
 
 interface SpendeWizardProps {
   spenderList: Spender[];
@@ -35,64 +36,26 @@ export default function SpendeWizard({
   onComplete,
   onCancel,
 }: SpendeWizardProps) {
-  // ── Wizard state ──
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  // ── Wizard state (useReducer-basiert) ──
+  const {
+    state: w,
+    setStep, setSaving, setError, setMode, setSpenderId, setSpenderSuche,
+    setDropdownOpen, setHighlightedIndex, setDuplicateWarning,
+    updateSpenderForm, updateZuwendungForm, setAbschlussWahl,
+    setCreatedSpender, setBestaetigungErstellt, setBestaetigungWarnung,
+    selectSpender: selectSpenderAction, reset,
+  } = useWizardState();
 
-  // ── Step 1: Spender ──
-  const [mode, setMode] = useState<'select' | 'create'>('select');
-  const [spenderId, setSpenderId] = useState('');
-  const [spenderSuche, setSpenderSuche] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // Inline spender fields
-  const [istFirma, setIstFirma] = useState(false);
-  const [firmenname, setFirmenname] = useState('');
-  const [anrede, setAnrede] = useState('');
-  const [vorname, setVorname] = useState('');
-  const [nachname, setNachname] = useState('');
-  const [strasse, setStrasse] = useState('');
-  const [plz, setPlz] = useState('');
-  const [ort, setOrt] = useState('');
-  const [steuerIdNr, setSteuerIdNr] = useState('');
-  const [duplicateWarning, setDuplicateWarning] = useState<Spender | null>(null);
-
-  // ── Step 2: Zuwendung ──
-  const [art, setArt] = useState<'geld' | 'sach'>('geld');
-  const [verwendung, setVerwendung] = useState<'spende' | 'mitgliedsbeitrag'>('spende');
-  const [betrag, setBetrag] = useState('');
-  const [datum, setDatum] = useState(new Date().toISOString().split('T')[0]);
-  const [zugangsweg, setZugangsweg] = useState('');
-  const [verzicht, setVerzicht] = useState(false);
-  const [bemerkung, setBemerkung] = useState('');
-  const [zweckgebunden, setZweckgebunden] = useState(false);
-  const [zweckbindung, setZweckbindung] = useState('');
-
-  // Sach fields
-  const [sachBezeichnung, setSachBezeichnung] = useState('');
-  const [sachAlter, setSachAlter] = useState('');
-  const [sachZustand, setSachZustand] = useState('');
-  const [sachKaufpreis, setSachKaufpreis] = useState('');
-  const [sachWert, setSachWert] = useState('');
-  const [sachHerkunft, setSachHerkunft] = useState<'privatvermoegen' | 'betriebsvermoegen' | 'keine_angabe'>('privatvermoegen');
-  const [sachBewertungsgrundlage, setSachBewertungsgrundlage] = useState<'rechnung' | 'eigene_ermittlung' | 'gutachten' | null>(null);
-  const [sachWertermittlung, setSachWertermittlung] = useState('');
-  const [sachEntnahmewert, setSachEntnahmewert] = useState('');
-  const [sachUmsatzsteuer, setSachUmsatzsteuer] = useState('');
-  const [sachUnterlagenVorhanden, setSachUnterlagenVorhanden] = useState(false);
-
-  // ── Step 3: Abschluss ──
-  const [abschlussWahl, setAbschlussWahl] = useState<'spendenbuch' | 'bestaetigung'>('spendenbuch');
-
-  // ── Step 4: Erfolg ──
-  const [createdSpender, setCreatedSpender] = useState<Spender | null>(null);
-  const [bestaetigungErstellt, setBestaetigungErstellt] = useState(false);
-  const [bestaetigungWarnung, setBestaetigungWarnung] = useState('');
+  // Destructure for convenience
+  const { step, saving, error, mode, spenderId, spenderSuche, dropdownOpen, highlightedIndex, duplicateWarning } = w;
+  const { istFirma, firmenname, anrede, vorname, nachname, strasse, plz, ort, steuerIdNr } = w.spenderForm;
+  const { art, verwendung, betrag, datum, zugangsweg, verzicht, bemerkung, zweckgebunden, zweckbindung } = w.zuwendungForm;
+  const { sachBezeichnung, sachAlter, sachZustand, sachKaufpreis, sachWert, sachHerkunft, sachBewertungsgrundlage, sachWertermittlung, sachEntnahmewert, sachUmsatzsteuer, sachUnterlagenVorhanden } = w.zuwendungForm;
+  const { abschlussWahl, createdSpender, bestaetigungErstellt, bestaetigungWarnung } = w;
 
   // ── Computed ──
   const parsedBetrag = parseFloat(betrag) || 0;
@@ -135,11 +98,9 @@ export default function SpendeWizard({
   }, [highlightedIndex]);
 
   const selectSpender = useCallback((s: Spender) => {
-    setSpenderId(s.id);
+    selectSpenderAction(s);
     setSpenderSuche(spenderAnzeigename(s));
-    setDropdownOpen(false);
-    setHighlightedIndex(-1);
-  }, []);
+  }, [selectSpenderAction, setSpenderSuche]);
 
   const handleSpenderKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -154,11 +115,11 @@ export default function SpendeWizard({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setHighlightedIndex((prev) => Math.min(prev + 1, filteredSpender.length - 1));
+          setHighlightedIndex(Math.min(highlightedIndex + 1, filteredSpender.length - 1));
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+          setHighlightedIndex(Math.max(highlightedIndex - 1, 0));
           break;
         case 'Enter':
           e.preventDefault();
@@ -320,47 +281,7 @@ export default function SpendeWizard({
   };
 
   // ── Reset for "another donation" ──
-  const handleReset = () => {
-    setStep(1);
-    setError('');
-    setMode('select');
-    setSpenderId('');
-    setSpenderSuche('');
-    setIstFirma(false);
-    setFirmenname('');
-    setAnrede('');
-    setVorname('');
-    setNachname('');
-    setStrasse('');
-    setPlz('');
-    setOrt('');
-    setSteuerIdNr('');
-    setDuplicateWarning(null);
-    setArt('geld');
-    setVerwendung('spende');
-    setBetrag('');
-    setDatum(new Date().toISOString().split('T')[0]);
-    setZugangsweg('');
-    setVerzicht(false);
-    setBemerkung('');
-    setZweckgebunden(false);
-    setZweckbindung('');
-    setSachBezeichnung('');
-    setSachAlter('');
-    setSachZustand('');
-    setSachKaufpreis('');
-    setSachWert('');
-    setSachHerkunft('privatvermoegen');
-    setSachBewertungsgrundlage(null);
-    setSachWertermittlung('');
-    setSachEntnahmewert('');
-    setSachUmsatzsteuer('');
-    setSachUnterlagenVorhanden(false);
-    setAbschlussWahl('spendenbuch');
-    setCreatedSpender(null);
-    setBestaetigungErstellt(false);
-    setBestaetigungWarnung('');
-  };
+  const handleReset = () => reset();
 
   // ── Display name helper ──
   const getSpenderDisplayName = () => {
@@ -598,7 +519,7 @@ export default function SpendeWizard({
                         border: '1px solid var(--border)',
                         borderRadius: '0.5rem 0 0 0.5rem',
                       }}
-                      onClick={() => setIstFirma(false)}
+                      onClick={() => updateSpenderForm('istFirma', false)}
                     >
                       Privatperson
                     </button>
@@ -611,7 +532,7 @@ export default function SpendeWizard({
                         border: '1px solid var(--border)',
                         borderRadius: '0 0.5rem 0.5rem 0',
                       }}
-                      onClick={() => setIstFirma(true)}
+                      onClick={() => updateSpenderForm('istFirma', true)}
                     >
                       Firma / Organisation
                     </button>
@@ -626,7 +547,7 @@ export default function SpendeWizard({
                         type="text"
                         className="drk-input"
                         value={firmenname}
-                        onChange={(e) => setFirmenname(e.target.value)}
+                        onChange={(e) => updateSpenderForm('firmenname', e.target.value)}
                         placeholder="z.B. Mustermann GmbH"
                       />
                     </div>
@@ -637,7 +558,7 @@ export default function SpendeWizard({
                           type="text"
                           className="drk-input"
                           value={vorname}
-                          onChange={(e) => setVorname(e.target.value)}
+                          onChange={(e) => updateSpenderForm('vorname', e.target.value)}
                         />
                       </div>
                       <div>
@@ -646,7 +567,7 @@ export default function SpendeWizard({
                           type="text"
                           className="drk-input"
                           value={nachname}
-                          onChange={(e) => setNachname(e.target.value)}
+                          onChange={(e) => updateSpenderForm('nachname', e.target.value)}
                         />
                       </div>
                     </div>
@@ -658,7 +579,7 @@ export default function SpendeWizard({
                       <select
                         className="drk-input"
                         value={anrede}
-                        onChange={(e) => setAnrede(e.target.value)}
+                        onChange={(e) => updateSpenderForm('anrede', e.target.value)}
                       >
                         <option value="">– Keine –</option>
                         <option value="Herr">Herr</option>
@@ -672,7 +593,7 @@ export default function SpendeWizard({
                           type="text"
                           className="drk-input"
                           value={vorname}
-                          onChange={(e) => setVorname(e.target.value)}
+                          onChange={(e) => updateSpenderForm('vorname', e.target.value)}
                         />
                       </div>
                       <div>
@@ -681,7 +602,7 @@ export default function SpendeWizard({
                           type="text"
                           className="drk-input"
                           value={nachname}
-                          onChange={(e) => setNachname(e.target.value)}
+                          onChange={(e) => updateSpenderForm('nachname', e.target.value)}
                         />
                       </div>
                     </div>
@@ -694,7 +615,7 @@ export default function SpendeWizard({
                     type="text"
                     className="drk-input"
                     value={strasse}
-                    onChange={(e) => setStrasse(e.target.value)}
+                    onChange={(e) => updateSpenderForm('strasse', e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-[5rem_1fr] gap-3">
@@ -704,7 +625,7 @@ export default function SpendeWizard({
                       type="text"
                       className="drk-input"
                       value={plz}
-                      onChange={(e) => setPlz(e.target.value)}
+                      onChange={(e) => updateSpenderForm('plz', e.target.value)}
                     />
                   </div>
                   <div>
@@ -713,7 +634,7 @@ export default function SpendeWizard({
                       type="text"
                       className="drk-input"
                       value={ort}
-                      onChange={(e) => setOrt(e.target.value)}
+                      onChange={(e) => updateSpenderForm('ort', e.target.value)}
                     />
                   </div>
                 </div>
@@ -725,7 +646,7 @@ export default function SpendeWizard({
                     type="text"
                     className="drk-input"
                     value={steuerIdNr}
-                    onChange={(e) => setSteuerIdNr(e.target.value)}
+                    onChange={(e) => updateSpenderForm('steuerIdNr', e.target.value)}
                   />
                 </div>
               </>
@@ -767,7 +688,7 @@ export default function SpendeWizard({
                     color: art === 'geld' ? '#fff' : 'var(--text)',
                     border: '1px solid var(--border)',
                   }}
-                  onClick={() => setArt('geld')}
+                  onClick={() => updateZuwendungForm('art', 'geld')}
                 >
                   Geldspende
                 </button>
@@ -779,7 +700,7 @@ export default function SpendeWizard({
                     color: art === 'sach' ? '#fff' : 'var(--text)',
                     border: '1px solid var(--border)',
                   }}
-                  onClick={() => setArt('sach')}
+                  onClick={() => updateZuwendungForm('art', 'sach')}
                 >
                   Sachspende
                 </button>
@@ -797,7 +718,7 @@ export default function SpendeWizard({
                       min="0.01"
                       className="drk-input"
                       value={betrag}
-                      onChange={(e) => setBetrag(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('betrag', e.target.value)}
                     />
                   </div>
                   <div>
@@ -806,7 +727,7 @@ export default function SpendeWizard({
                       type="date"
                       className="drk-input"
                       value={datum}
-                      onChange={(e) => setDatum(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('datum', e.target.value)}
                     />
                   </div>
                 </div>
@@ -816,7 +737,7 @@ export default function SpendeWizard({
                   <select
                     className="drk-input"
                     value={zugangsweg}
-                    onChange={(e) => setZugangsweg(e.target.value)}
+                    onChange={(e) => updateZuwendungForm('zugangsweg', e.target.value)}
                   >
                     <option value="">– Keine Angabe –</option>
                     <option value="ueberweisung">Überweisung</option>
@@ -837,7 +758,7 @@ export default function SpendeWizard({
                         type="radio"
                         name="wizard-verwendung"
                         checked={verwendung === 'spende'}
-                        onChange={() => setVerwendung('spende')}
+                        onChange={() => updateZuwendungForm('verwendung', 'spende')}
                       />
                       <span className="text-sm" style={{ color: 'var(--text)' }}>
                         Spende
@@ -848,7 +769,7 @@ export default function SpendeWizard({
                         type="radio"
                         name="wizard-verwendung"
                         checked={verwendung === 'mitgliedsbeitrag'}
-                        onChange={() => setVerwendung('mitgliedsbeitrag')}
+                        onChange={() => updateZuwendungForm('verwendung', 'mitgliedsbeitrag')}
                       />
                       <span className="text-sm" style={{ color: 'var(--text)' }}>
                         Beitrag
@@ -862,7 +783,7 @@ export default function SpendeWizard({
                     <input
                       type="checkbox"
                       checked={verzicht}
-                      onChange={(e) => setVerzicht(e.target.checked)}
+                      onChange={(e) => updateZuwendungForm('verzicht', e.target.checked)}
                     />
                     <span className="text-sm" style={{ color: 'var(--text)' }}>
                       Verzicht auf Erstattung von Aufwendungen
@@ -876,7 +797,7 @@ export default function SpendeWizard({
                     className="drk-input"
                     rows={2}
                     value={bemerkung}
-                    onChange={(e) => setBemerkung(e.target.value)}
+                    onChange={(e) => updateZuwendungForm('bemerkung', e.target.value)}
                     placeholder="z.B. für die Jugendarbeit..."
                   />
                 </div>
@@ -886,7 +807,7 @@ export default function SpendeWizard({
                     <input
                       type="checkbox"
                       checked={zweckgebunden}
-                      onChange={(e) => setZweckgebunden(e.target.checked)}
+                      onChange={(e) => updateZuwendungForm('zweckgebunden', e.target.checked)}
                     />
                     <span className="text-sm" style={{ color: 'var(--text)' }}>
                       Zweckgebunden
@@ -898,7 +819,7 @@ export default function SpendeWizard({
                         type="text"
                         className="drk-input"
                         value={zweckbindung}
-                        onChange={(e) => setZweckbindung(e.target.value)}
+                        onChange={(e) => updateZuwendungForm('zweckbindung', e.target.value)}
                         placeholder="z.B. Jugendarbeit, Katastrophenhilfe..."
                       />
                     </div>
@@ -914,7 +835,7 @@ export default function SpendeWizard({
                     type="text"
                     className="drk-input"
                     value={sachBezeichnung}
-                    onChange={(e) => setSachBezeichnung(e.target.value)}
+                    onChange={(e) => updateZuwendungForm('sachBezeichnung', e.target.value)}
                     placeholder="z.B. Laptop Dell Latitude 5520"
                   />
                 </div>
@@ -926,7 +847,7 @@ export default function SpendeWizard({
                       type="text"
                       className="drk-input"
                       value={sachAlter}
-                      onChange={(e) => setSachAlter(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('sachAlter', e.target.value)}
                       placeholder="z.B. ca. 3 Jahre"
                     />
                   </div>
@@ -936,7 +857,7 @@ export default function SpendeWizard({
                       type="text"
                       className="drk-input"
                       value={sachZustand}
-                      onChange={(e) => setSachZustand(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('sachZustand', e.target.value)}
                       placeholder="z.B. gut erhalten"
                     />
                   </div>
@@ -950,7 +871,7 @@ export default function SpendeWizard({
                       step="0.01"
                       className="drk-input"
                       value={sachKaufpreis}
-                      onChange={(e) => setSachKaufpreis(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('sachKaufpreis', e.target.value)}
                     />
                   </div>
                   <div>
@@ -961,7 +882,7 @@ export default function SpendeWizard({
                       min="0.01"
                       className="drk-input"
                       value={sachWert}
-                      onChange={(e) => setSachWert(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('sachWert', e.target.value)}
                     />
                   </div>
                 </div>
@@ -972,7 +893,7 @@ export default function SpendeWizard({
                     type="date"
                     className="drk-input"
                     value={datum}
-                    onChange={(e) => setDatum(e.target.value)}
+                    onChange={(e) => updateZuwendungForm('datum', e.target.value)}
                   />
                 </div>
 
@@ -992,7 +913,7 @@ export default function SpendeWizard({
                           type="radio"
                           name="wizard-herkunft"
                           checked={sachHerkunft === value}
-                          onChange={() => setSachHerkunft(value)}
+                          onChange={() => updateZuwendungForm('sachHerkunft', value)}
                         />
                         <span className="text-sm" style={{ color: 'var(--text)' }}>
                           {label}
@@ -1011,7 +932,7 @@ export default function SpendeWizard({
                         step="0.01"
                         className="drk-input"
                         value={sachEntnahmewert}
-                        onChange={(e) => setSachEntnahmewert(e.target.value)}
+                        onChange={(e) => updateZuwendungForm('sachEntnahmewert', e.target.value)}
                       />
                     </div>
                     <div>
@@ -1021,7 +942,7 @@ export default function SpendeWizard({
                         step="0.01"
                         className="drk-input"
                         value={sachUmsatzsteuer}
-                        onChange={(e) => setSachUmsatzsteuer(e.target.value)}
+                        onChange={(e) => updateZuwendungForm('sachUmsatzsteuer', e.target.value)}
                       />
                     </div>
                   </div>
@@ -1043,7 +964,7 @@ export default function SpendeWizard({
                           type="radio"
                           name="wizard-bewertungsgrundlage"
                           checked={sachBewertungsgrundlage === value}
-                          onChange={() => setSachBewertungsgrundlage(value)}
+                          onChange={() => updateZuwendungForm('sachBewertungsgrundlage', value)}
                         />
                         <span className="text-sm" style={{ color: 'var(--text)' }}>
                           {label}
@@ -1064,7 +985,7 @@ export default function SpendeWizard({
                       className="drk-input"
                       rows={2}
                       value={sachWertermittlung}
-                      onChange={(e) => setSachWertermittlung(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('sachWertermittlung', e.target.value)}
                       placeholder="z.B. Vergleich mit eBay-Kleinanzeigen..."
                     />
                   ) : (
@@ -1072,7 +993,7 @@ export default function SpendeWizard({
                       type="text"
                       className="drk-input"
                       value={sachWertermittlung}
-                      onChange={(e) => setSachWertermittlung(e.target.value)}
+                      onChange={(e) => updateZuwendungForm('sachWertermittlung', e.target.value)}
                       placeholder="z.B. Rechnung vom 15.03.2024"
                     />
                   )}
@@ -1096,7 +1017,7 @@ export default function SpendeWizard({
                     <input
                       type="checkbox"
                       checked={sachUnterlagenVorhanden}
-                      onChange={(e) => setSachUnterlagenVorhanden(e.target.checked)}
+                      onChange={(e) => updateZuwendungForm('sachUnterlagenVorhanden', e.target.checked)}
                     />
                     <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                       Geeignete Unterlagen zur Wertermittlung liegen vor *
@@ -1117,7 +1038,7 @@ export default function SpendeWizard({
                         type="radio"
                         name="wizard-verwendung-sach"
                         checked={verwendung === 'spende'}
-                        onChange={() => setVerwendung('spende')}
+                        onChange={() => updateZuwendungForm('verwendung', 'spende')}
                       />
                       <span className="text-sm" style={{ color: 'var(--text)' }}>
                         Spende
@@ -1128,7 +1049,7 @@ export default function SpendeWizard({
                         type="radio"
                         name="wizard-verwendung-sach"
                         checked={verwendung === 'mitgliedsbeitrag'}
-                        onChange={() => setVerwendung('mitgliedsbeitrag')}
+                        onChange={() => updateZuwendungForm('verwendung', 'mitgliedsbeitrag')}
                       />
                       <span className="text-sm" style={{ color: 'var(--text)' }}>
                         Beitrag
@@ -1143,7 +1064,7 @@ export default function SpendeWizard({
                     className="drk-input"
                     rows={2}
                     value={bemerkung}
-                    onChange={(e) => setBemerkung(e.target.value)}
+                    onChange={(e) => updateZuwendungForm('bemerkung', e.target.value)}
                     placeholder="z.B. für die Jugendarbeit..."
                   />
                 </div>
@@ -1153,7 +1074,7 @@ export default function SpendeWizard({
                     <input
                       type="checkbox"
                       checked={zweckgebunden}
-                      onChange={(e) => setZweckgebunden(e.target.checked)}
+                      onChange={(e) => updateZuwendungForm('zweckgebunden', e.target.checked)}
                     />
                     <span className="text-sm" style={{ color: 'var(--text)' }}>
                       Zweckgebunden
@@ -1165,7 +1086,7 @@ export default function SpendeWizard({
                         type="text"
                         className="drk-input"
                         value={zweckbindung}
-                        onChange={(e) => setZweckbindung(e.target.value)}
+                        onChange={(e) => updateZuwendungForm('zweckbindung', e.target.value)}
                         placeholder="z.B. Jugendarbeit, Katastrophenhilfe..."
                       />
                     </div>

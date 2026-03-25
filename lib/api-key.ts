@@ -44,7 +44,7 @@ export async function validateApiKey(request: NextRequest): Promise<ApiKeyContex
   prisma.apiKey.update({
     where: { id: apiKey.id },
     data: { letzteNutzung: new Date() },
-  }).catch(() => { /* ignorieren */ });
+  }).catch((err) => { console.error('API-Key letzteNutzung Update fehlgeschlagen:', err); });
 
   return {
     kreisverbandId: apiKey.kreisverbandId,

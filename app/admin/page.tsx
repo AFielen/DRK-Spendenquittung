@@ -90,7 +90,7 @@ export default function AdminDashboard() {
               {kvList.map((kv) => (
                 <tr
                   key={kv.id}
-                  className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="border-b drk-hover-bg transition-colors cursor-pointer"
                   style={{ borderColor: 'var(--border)' }}
                 >
                   <td className="py-2.5 px-3">

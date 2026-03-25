@@ -35,19 +35,20 @@ export async function PUT(req: NextRequest, { params }: Params) {
   const body = await req.json();
 
   const istFirma = body.istFirma === true;
+  const trim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
   const spender = await prisma.spender.update({
     where: { id },
     data: {
       istFirma,
-      firmenname: istFirma ? body.firmenname : null,
-      vorname: body.vorname || null,
-      nachname: istFirma ? (body.nachname || body.firmenname) : body.nachname,
-      strasse: body.strasse,
-      plz: body.plz,
-      ort: body.ort,
-      anrede: body.anrede ?? null,
-      steuerIdNr: body.steuerIdNr ?? null,
+      firmenname: istFirma ? trim(body.firmenname) : null,
+      vorname: trim(body.vorname) || null,
+      nachname: istFirma ? (trim(body.nachname) || trim(body.firmenname)) : trim(body.nachname),
+      strasse: trim(body.strasse),
+      plz: trim(body.plz),
+      ort: trim(body.ort),
+      anrede: trim(body.anrede) || null,
+      steuerIdNr: trim(body.steuerIdNr) || null,
     },
   });
 

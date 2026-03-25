@@ -61,13 +61,23 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   const istFirma = body.istFirma === true;
+  const trim = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+
+  const firmenname = trim(body.firmenname);
+  const vorname = trim(body.vorname);
+  const nachname = trim(body.nachname);
+  const strasse = trim(body.strasse);
+  const plz = trim(body.plz);
+  const ort = trim(body.ort);
+  const anrede = trim(body.anrede) || null;
+  const steuerIdNr = trim(body.steuerIdNr) || null;
 
   if (istFirma) {
-    if (!body.firmenname || !body.strasse || !body.plz || !body.ort) {
+    if (!firmenname || !strasse || !plz || !ort) {
       return NextResponse.json({ error: 'Pflichtfelder für Firmen: Firmenname, Straße, PLZ, Ort.' }, { status: 400 });
     }
   } else {
-    if (!body.vorname || !body.nachname || !body.strasse || !body.plz || !body.ort) {
+    if (!vorname || !nachname || !strasse || !plz || !ort) {
       return NextResponse.json({ error: 'Pflichtfelder: Vorname, Nachname, Straße, PLZ, Ort.' }, { status: 400 });
     }
   }
@@ -75,14 +85,14 @@ export async function POST(req: NextRequest) {
   const spender = await prisma.spender.create({
     data: {
       istFirma,
-      firmenname: istFirma ? body.firmenname : null,
-      vorname: body.vorname || null,
-      nachname: istFirma ? (body.nachname || body.firmenname) : body.nachname,
-      strasse: body.strasse,
-      plz: body.plz,
-      ort: body.ort,
-      anrede: body.anrede ?? null,
-      steuerIdNr: body.steuerIdNr ?? null,
+      firmenname: istFirma ? firmenname : null,
+      vorname: vorname || null,
+      nachname: istFirma ? (nachname || firmenname) : nachname,
+      strasse,
+      plz,
+      ort,
+      anrede,
+      steuerIdNr,
       kreisverbandId: session.kreisverbandId,
     },
   });

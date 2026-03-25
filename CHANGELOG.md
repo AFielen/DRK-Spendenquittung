@@ -8,6 +8,25 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **SpendeWizard Refactoring:** 30+ `useState`-Hooks durch `useReducer`-Hook in `lib/use-spende-wizard.ts` ersetzt – bessere Wartbarkeit und einheitlicher Reset
+- **Navigation SVGs:** Inline-SVGs aus `Navigation.tsx` und `AdminNav.tsx` als wiederverwendbare Icon-Komponenten in `components/icons/NavIcons.tsx` extrahiert (HomeIcon, UsersIcon, DollarIcon, BookIcon, FileTextIcon, ActivityIcon, SettingsIcon, ShieldIcon)
+- **Dark Mode Hover:** `hover:bg-gray-100`/`hover:bg-gray-50` durch neue `.drk-hover-bg` CSS-Klasse in `globals.css` ersetzt (5 Dateien: Navigation, AdminNav, UserMenu, admin/page)
+- **Dark Mode CSS:** Input/Select Dark-Mode-Styles konsolidiert
+- **PROJECT.md:** Template-Platzhalter durch echte Projektdaten ersetzt
+
+### Fixed
+- **Security – User Enumeration:** Login-Endpoint gibt bei unbekannter E-Mail generische Antwort statt spezifischer Fehlermeldung (`api/auth/login/route.ts`)
+- **Security – Input Sanitierung:** `.trim()` auf alle String-Felder in Spender POST/PUT Endpoints angewendet (`api/spender/route.ts`, `api/spender/[id]/route.ts`)
+- **Security – Error Logging:** API-Key `letzteNutzung`-Update loggt Fehler statt sie zu schlucken (`lib/api-key.ts`)
+- Template-Placeholder `APP_TITEL` in `not-found.tsx` durch korrekten App-Namen ersetzt
+
+### Removed
+- `lib/i18n.ts` entfernt (toter Code – wurde in keiner Komponente importiert)
+
+### Improved
+- **Barrierefreiheit:** `aria-expanded`, `aria-haspopup="menu"` und `role="menu"`/`role="menuitem"` zu `UserMenu.tsx` hinzugefügt
+
 ### Added
 - `.claude/`-Ordner mit Agents und Skills aus dem DRK App Template (code-review, code-simplifier, coding-presets, coding-workflow, commit-push-pr, data-analyst, data-triage, data-workflow, drk-postgres, pr-description, repo-skills, data-model-explorer Agent)
 - `drk-postgres`-Skill auf Prisma ORM angepasst (statt Drizzle ORM) inkl. `prisma-schema-patterns.md` und `prisma-migrations.md`
