@@ -9,6 +9,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `.claude/`-Ordner mit Agents und Skills aus dem DRK App Template (code-review, code-simplifier, coding-presets, coding-workflow, commit-push-pr, data-analyst, data-triage, data-workflow, drk-postgres, pr-description, repo-skills, data-model-explorer Agent)
+- `drk-postgres`-Skill auf Prisma ORM angepasst (statt Drizzle ORM) inkl. `prisma-schema-patterns.md` und `prisma-migrations.md`
+- Claude Code Skills & Agents Abschnitt in `CLAUDE.md`
 - **Pflichtfeld-Validierung:** Robustes Validierungssystem für alle rechtlich notwendigen Vereinsdaten (#30)
 - `lib/setup-check.ts`: Neue Utility `pruefSetupVollstaendigkeit()` prüft Vollständigkeit aller Pflichtfelder in 3 Schritten (Stammdaten, Steuerliche Angaben, Unterschrift)
 - `components/SetupBanner.tsx`: Dashboard-Banner und Vollbild-Blocker bei unvollständiger Einrichtung mit Fortschrittsanzeige und Auflistung fehlender Felder
