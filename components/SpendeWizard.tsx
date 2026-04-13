@@ -8,26 +8,13 @@ import { apiPost } from '@/lib/api-client';
 import { pruefFreistellung } from '@/lib/freistellung-check';
 import { pruefSetupVollstaendigkeit } from '@/lib/setup-check';
 import { useWizardState } from '@/lib/use-spende-wizard';
+import { downloadBlob } from '@/lib/download';
 
 interface SpendeWizardProps {
   spenderList: Spender[];
   verein: Verein;
   onComplete: () => void;
   onCancel: () => void;
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 1000);
 }
 
 export default function SpendeWizard({
@@ -339,10 +326,7 @@ export default function SpendeWizard({
 
         {/* Error banner */}
         {error && (
-          <div
-            className="mb-4 p-3 rounded-lg text-sm"
-            style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}
-          >
+          <div className="drk-error-box mb-4" role="alert">
             {error}
           </div>
         )}

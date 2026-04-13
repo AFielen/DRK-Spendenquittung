@@ -1,7 +1,10 @@
 'use client';
 
+import { useRef } from 'react';
 import type { Spender, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 
 interface ZuwendungDetailsProps {
   zuwendung: Zuwendung;
@@ -11,15 +14,6 @@ interface ZuwendungDetailsProps {
   onDownloadSpenderPdf?: () => void;
   downloadingPdf?: boolean;
   downloadingSpenderPdf?: boolean;
-}
-
-function formatDatum(d: string): string {
-  const [y, m, day] = d.substring(0, 10).split('-');
-  return `${day}.${m}.${y}`;
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 const ZUGANGSWEG_LABELS: Record<string, string> = {
@@ -63,16 +57,22 @@ function Row({ label, value }: { label: string; value?: string | null }) {
 
 export default function ZuwendungDetails({ zuwendung: z, spender, onClose, onDownloadPdf, onDownloadSpenderPdf, downloadingPdf, downloadingSpenderPdf }: ZuwendungDetailsProps) {
   const wert = z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, onClose);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="fixed inset-0 bg-black/40" onClick={onClose} />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="zd-dialog-title"
         className="relative w-full sm:max-w-lg sm:rounded-xl rounded-t-xl p-6 max-h-[85vh] overflow-y-auto"
         style={{ background: 'var(--bg-card)' }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
+          <h3 id="zd-dialog-title" className="text-xl font-bold" style={{ color: 'var(--text)' }}>
             Zuwendung — Details
           </h3>
           {z.bestaetigungErstellt && (

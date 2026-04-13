@@ -9,20 +9,7 @@ import ZuwendungDetails from '@/components/ZuwendungDetails';
 import type { Zuwendung, Spender, Verein } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 1000);
-}
+import { downloadBlob } from '@/lib/download';
 
 function ZuwendungenContent() {
   const { kreisverband } = useAuth();

@@ -11,6 +11,7 @@ import {
   BorderStyle,
 } from 'docx';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
 import { betragInWorten } from './betrag-in-worten';
 import { createDocxHeader, createDocxFooter, createDoppelParagraph } from './briefbogen';
 import {
@@ -26,16 +27,6 @@ import {
   SACHSPENDE_KEINE_ANGABE,
   SACHSPENDE_UNTERLAGEN,
 } from './shared';
-
-function formatDatum(iso: string): string {
-  const dateOnly = iso.substring(0, 10);
-  const [y, m, d] = dateOnly.split('-');
-  return `${d}.${m}.${y}`;
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 function spenderAnschrift(spender: Spender): string {
   if (spender.istFirma && spender.firmenname) {

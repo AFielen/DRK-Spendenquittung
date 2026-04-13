@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 
 interface UnterschriftHinweisProps {
   onDownload: (mitDoppel: boolean) => void;
@@ -9,17 +10,23 @@ interface UnterschriftHinweisProps {
 
 export default function UnterschriftHinweis({ onDownload, onCancel }: UnterschriftHinweisProps) {
   const [mitDoppel, setMitDoppel] = useState(true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, onCancel);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="fixed inset-0 bg-black/40" onClick={onCancel} />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="uh-dialog-title"
         className="relative w-full sm:max-w-md sm:rounded-xl rounded-t-xl p-6"
         style={{ background: 'var(--bg-card)' }}
       >
         <div className="text-center mb-4">
-          <div className="text-3xl mb-2">✍️</div>
-          <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>
+          <div className="text-3xl mb-2" aria-hidden="true">✍️</div>
+          <h3 id="uh-dialog-title" className="text-lg font-bold" style={{ color: 'var(--text)' }}>
             Unterschrift erforderlich
           </h3>
         </div>

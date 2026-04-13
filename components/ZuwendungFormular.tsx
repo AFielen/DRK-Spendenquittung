@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import type { Spender, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 
 interface ZuwendungFormularProps {
   spenderList: Spender[];
@@ -18,6 +19,8 @@ export default function ZuwendungFormular({
   onCancel,
 }: ZuwendungFormularProps) {
   const [step, setStep] = useState(1);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, onCancel);
 
   const [spenderId, setSpenderId] = useState(zuwendung?.spenderId ?? '');
   const [spenderSuche, setSpenderSuche] = useState(() => {
@@ -68,6 +71,14 @@ export default function ZuwendungFormular({
   const [sachUnterlagenVorhanden, setSachUnterlagenVorhanden] = useState(
     zuwendung?.sachUnterlagenVorhanden ?? false
   );
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const markTouched = (field: string) =>
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  const fieldError = (field: string, value: string) =>
+    touched[field] && value.trim().length === 0;
+  const numFieldError = (field: string, value: number) =>
+    touched[field] && value <= 0;
 
   const filteredSpender = useMemo(() => {
     if (!spenderSuche) return spenderList;
@@ -211,12 +222,16 @@ export default function ZuwendungFormular({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="fixed inset-0 bg-black/40" onClick={onCancel} />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="zf-dialog-title"
         className="relative w-full sm:max-w-lg sm:rounded-xl rounded-t-xl p-6"
         style={{ background: 'var(--bg-card)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
+          <h3 id="zf-dialog-title" className="text-xl font-bold" style={{ color: 'var(--text)' }}>
             {zuwendung ? 'Zuwendung bearbeiten' : 'Neue Zuwendung'}
           </h3>
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -329,11 +344,13 @@ export default function ZuwendungFormular({
             </div>
 
             {/* Art-Toggle */}
-            <div>
-              <label className="drk-label">Art der Zuwendung</label>
-              <div className="flex gap-0 mt-1">
+            <fieldset>
+              <legend className="drk-label">Art der Zuwendung</legend>
+              <div className="flex gap-0 mt-1" role="radiogroup">
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={art === 'geld'}
                   className="flex-1 py-2 px-4 text-sm font-semibold rounded-l-lg transition-colors"
                   style={{
                     background: art === 'geld' ? 'var(--drk)' : 'var(--bg)',
@@ -346,6 +363,8 @@ export default function ZuwendungFormular({
                 </button>
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={art === 'sach'}
                   className="flex-1 py-2 px-4 text-sm font-semibold rounded-r-lg transition-colors"
                   style={{
                     background: art === 'sach' ? 'var(--drk)' : 'var(--bg)',
@@ -357,18 +376,44 @@ export default function ZuwendungFormular({
                   Sachspende
                 </button>
               </div>
-            </div>
+            </fieldset>
 
             {art === 'geld' ? (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="drk-label">Betrag (€) *</label>
-                    <input type="number" step="0.01" min="0.01" className="drk-input" value={betrag} onChange={(e) => setBetrag(e.target.value)} />
+                    <label className="drk-label" htmlFor="zf-betrag">Betrag (€) *</label>
+                    <input
+                      id="zf-betrag"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      className={`drk-input ${numFieldError('betrag', parsedBetrag) ? 'drk-input-error' : ''}`}
+                      value={betrag}
+                      onChange={(e) => setBetrag(e.target.value)}
+                      onBlur={() => markTouched('betrag')}
+                      aria-required="true"
+                      aria-invalid={numFieldError('betrag', parsedBetrag) || undefined}
+                    />
+                    {numFieldError('betrag', parsedBetrag) && (
+                      <div className="drk-field-error">Bitte Betrag eingeben</div>
+                    )}
                   </div>
                   <div>
-                    <label className="drk-label">Datum *</label>
-                    <input type="date" className="drk-input" value={datum} onChange={(e) => setDatum(e.target.value)} />
+                    <label className="drk-label" htmlFor="zf-datum">Datum *</label>
+                    <input
+                      id="zf-datum"
+                      type="date"
+                      className={`drk-input ${fieldError('datum', datum) ? 'drk-input-error' : ''}`}
+                      value={datum}
+                      onChange={(e) => setDatum(e.target.value)}
+                      onBlur={() => markTouched('datum')}
+                      aria-required="true"
+                      aria-invalid={fieldError('datum', datum) || undefined}
+                    />
+                    {fieldError('datum', datum) && (
+                      <div className="drk-field-error">Pflichtfeld</div>
+                    )}
                   </div>
                 </div>
 
@@ -391,9 +436,9 @@ export default function ZuwendungFormular({
                   )}
                 </div>
 
-                <div>
-                  <label className="drk-label">Verwendung</label>
-                  <div className="flex gap-4 mt-1">
+                <fieldset>
+                  <legend className="drk-label">Verwendung</legend>
+                  <div className="flex gap-4 mt-1" role="radiogroup">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="verwendung" checked={verwendung === 'spende'} onChange={() => setVerwendung('spende')} />
                       <span className="text-sm" style={{ color: 'var(--text)' }}>Spende</span>
@@ -403,40 +448,79 @@ export default function ZuwendungFormular({
                       <span className="text-sm" style={{ color: 'var(--text)' }}>Beitrag</span>
                     </label>
                   </div>
-                </div>
+                </fieldset>
               </>
             ) : (
               <>
                 <div>
-                  <label className="drk-label">Bezeichnung des Gegenstands *</label>
-                  <input type="text" className="drk-input" value={sachBezeichnung} onChange={(e) => setSachBezeichnung(e.target.value)} placeholder="z.B. Laptop Dell Latitude 5520" />
+                  <label className="drk-label" htmlFor="zf-sachbez">Bezeichnung des Gegenstands *</label>
+                  <input
+                    id="zf-sachbez"
+                    type="text"
+                    className={`drk-input ${fieldError('sachBezeichnung', sachBezeichnung) ? 'drk-input-error' : ''}`}
+                    value={sachBezeichnung}
+                    onChange={(e) => setSachBezeichnung(e.target.value)}
+                    onBlur={() => markTouched('sachBezeichnung')}
+                    placeholder="z.B. Laptop Dell Latitude 5520"
+                    aria-required="true"
+                    aria-invalid={fieldError('sachBezeichnung', sachBezeichnung) || undefined}
+                  />
+                  {fieldError('sachBezeichnung', sachBezeichnung) && (
+                    <div className="drk-field-error">Pflichtfeld</div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="drk-label">Alter</label>
-                    <input type="text" className="drk-input" value={sachAlter} onChange={(e) => setSachAlter(e.target.value)} placeholder="z.B. ca. 3 Jahre" />
+                    <label className="drk-label" htmlFor="zf-sachalter">Alter</label>
+                    <input id="zf-sachalter" type="text" className="drk-input" value={sachAlter} onChange={(e) => setSachAlter(e.target.value)} placeholder="z.B. ca. 3 Jahre" />
                   </div>
                   <div>
-                    <label className="drk-label">Zustand</label>
-                    <input type="text" className="drk-input" value={sachZustand} onChange={(e) => setSachZustand(e.target.value)} placeholder="z.B. gut erhalten" />
+                    <label className="drk-label" htmlFor="zf-sachzustand">Zustand</label>
+                    <input id="zf-sachzustand" type="text" className="drk-input" value={sachZustand} onChange={(e) => setSachZustand(e.target.value)} placeholder="z.B. gut erhalten" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="drk-label">Kaufpreis (€, optional)</label>
-                    <input type="number" step="0.01" className="drk-input" value={sachKaufpreis} onChange={(e) => setSachKaufpreis(e.target.value)} />
+                    <label className="drk-label" htmlFor="zf-sachkp">Kaufpreis (€, optional)</label>
+                    <input id="zf-sachkp" type="number" step="0.01" className="drk-input" value={sachKaufpreis} onChange={(e) => setSachKaufpreis(e.target.value)} />
                   </div>
                   <div>
-                    <label className="drk-label">Wert (€) *</label>
-                    <input type="number" step="0.01" min="0.01" className="drk-input" value={sachWert} onChange={(e) => setSachWert(e.target.value)} />
+                    <label className="drk-label" htmlFor="zf-sachwert">Wert (€) *</label>
+                    <input
+                      id="zf-sachwert"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      className={`drk-input ${numFieldError('sachWert', parsedSachWert) ? 'drk-input-error' : ''}`}
+                      value={sachWert}
+                      onChange={(e) => setSachWert(e.target.value)}
+                      onBlur={() => markTouched('sachWert')}
+                      aria-required="true"
+                      aria-invalid={numFieldError('sachWert', parsedSachWert) || undefined}
+                    />
+                    {numFieldError('sachWert', parsedSachWert) && (
+                      <div className="drk-field-error">Bitte Wert eingeben</div>
+                    )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="drk-label">Datum *</label>
-                  <input type="date" className="drk-input" value={datum} onChange={(e) => setDatum(e.target.value)} />
+                  <label className="drk-label" htmlFor="zf-sachdatum">Datum *</label>
+                  <input
+                    id="zf-sachdatum"
+                    type="date"
+                    className={`drk-input ${fieldError('datum', datum) ? 'drk-input-error' : ''}`}
+                    value={datum}
+                    onChange={(e) => setDatum(e.target.value)}
+                    onBlur={() => markTouched('datum')}
+                    aria-required="true"
+                    aria-invalid={fieldError('datum', datum) || undefined}
+                  />
+                  {fieldError('datum', datum) && (
+                    <div className="drk-field-error">Pflichtfeld</div>
+                  )}
                 </div>
               </>
             )}
@@ -505,9 +589,9 @@ export default function ZuwendungFormular({
 
         {step === 2 && art === 'sach' && (
           <div className="space-y-4">
-            <div>
-              <label className="drk-label">Herkunft</label>
-              <div className="space-y-2 mt-1">
+            <fieldset>
+              <legend className="drk-label">Herkunft</legend>
+              <div className="space-y-2 mt-1" role="radiogroup">
                 {([['privatvermoegen', 'Privatvermögen'], ['betriebsvermoegen', 'Betriebsvermögen'], ['keine_angabe', 'Keine Angabe des Zuwendenden']] as const).map(([value, label]) => (
                   <label key={value} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="herkunft" checked={sachHerkunft === value} onChange={() => setSachHerkunft(value)} />
@@ -515,7 +599,7 @@ export default function ZuwendungFormular({
                   </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {sachHerkunft === 'betriebsvermoegen' && (
               <>
@@ -535,9 +619,9 @@ export default function ZuwendungFormular({
               </>
             )}
 
-            <div>
-              <label className="drk-label">Bewertungsgrundlage</label>
-              <div className="space-y-2 mt-1">
+            <fieldset>
+              <legend className="drk-label">Bewertungsgrundlage</legend>
+              <div className="space-y-2 mt-1" role="radiogroup">
                 {([['rechnung', 'Originalrechnung / Kaufbeleg vorhanden'], ['eigene_ermittlung', 'Eigene Wertermittlung (Vergleichsrecherche)'], ['gutachten', 'Gutachten / Sachverständiger']] as const).map(([value, label]) => (
                   <label key={value} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="bewertungsgrundlage" checked={sachBewertungsgrundlage === value} onChange={() => setSachBewertungsgrundlage(value)} />
@@ -545,7 +629,7 @@ export default function ZuwendungFormular({
                   </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {sachBewertungsgrundlage === 'eigene_ermittlung' ? (
               <>

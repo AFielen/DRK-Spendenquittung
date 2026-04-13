@@ -2,6 +2,7 @@
 
 import type { Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
 
 interface FristwarnungProps {
   zuwendungen: Zuwendung[];
@@ -14,16 +15,6 @@ interface FristEintrag {
   fristEnde: Date;
   restTage: number;
   ampel: AmpelStatus;
-}
-
-function formatDatum(d: string): string {
-  const dateOnly = d.substring(0, 10);
-  const [y, m, day] = dateOnly.split('-');
-  return `${day}.${m}.${y}`;
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function berechneFristEnde(datum: string): Date {

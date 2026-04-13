@@ -25,6 +25,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    ports:
+      - "3000:3000"
     networks:
       - caddy-net
       - sq-internal
@@ -33,6 +35,7 @@ services:
       - HOSTNAME=0.0.0.0
       - DATABASE_URL=postgres://postgres:postgres@db:5432/spendenquittung
       - SESSION_SECRET=${SESSION_SECRET}
+      - IRON_SESSION_PASSWORD=${SESSION_SECRET}
       - MAILJET_API_KEY=${MAILJET_API_KEY}
       - MAILJET_SECRET_KEY=${MAILJET_SECRET_KEY}
       - MAIL_FROM=${MAIL_FROM:-noreply@drk-spendenquittung.de}

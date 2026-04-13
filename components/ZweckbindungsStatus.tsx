@@ -3,21 +3,12 @@
 import { useState } from 'react';
 import type { Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
 import { apiPost } from '@/lib/api-client';
 
 interface ZweckbindungsStatusProps {
   zuwendungen: Zuwendung[];
   onUpdate: () => void;
-}
-
-function formatDatum(d: string): string {
-  const dateOnly = d.substring(0, 10);
-  const [y, m, day] = dateOnly.split('-');
-  return `${day}.${m}.${y}`;
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function alterInTagen(datum: string): number {
