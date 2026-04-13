@@ -69,13 +69,11 @@ async function handleSendCode(body: Record<string, unknown>) {
     );
   }
 
-  // Prüfe ob E-Mail bereits als Nutzer existiert
+  // Prüfe ob E-Mail bereits als Nutzer existiert — generische Antwort zur
+  // Vermeidung von User-Enumeration (Angreifer erfährt nicht, ob Konto existiert)
   const existing = await prisma.nutzer.findUnique({ where: { email } });
   if (existing) {
-    return NextResponse.json(
-      { error: 'Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.' },
-      { status: 409 },
-    );
+    return NextResponse.json({ success: true });
   }
 
   const code = crypto.randomInt(100000, 999999).toString();

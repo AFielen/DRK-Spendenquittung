@@ -24,6 +24,22 @@ export async function PUT(req: NextRequest) {
 
   const body = await req.json();
 
+  // Pflichtfelder validieren
+  if (!body.name || !body.finanzamt || !body.steuernummer || !body.freistellungsart || !body.freistellungDatum || !body.unterschriftName || !body.unterschriftFunktion) {
+    return NextResponse.json({ error: 'Pflichtfelder: Name, Finanzamt, Steuernummer, Freistellungsart, Freistellungsdatum, Unterschrift (Name + Funktion).' }, { status: 400 });
+  }
+
+  const ERLAUBTE_FREISTELLUNGSARTEN = ['freistellungsbescheid', 'feststellungsbescheid'];
+  if (!ERLAUBTE_FREISTELLUNGSARTEN.includes(body.freistellungsart)) {
+    return NextResponse.json({ error: `Ungültige Freistellungsart. Erlaubt: ${ERLAUBTE_FREISTELLUNGSARTEN.join(', ')}` }, { status: 400 });
+  }
+
+  // Logo-Größe limitieren (max 500 KB Base64 ≈ ~375 KB Bild)
+  const MAX_LOGO_SIZE = 500 * 1024;
+  if (body.logoBase64 && body.logoBase64.length > MAX_LOGO_SIZE) {
+    return NextResponse.json({ error: 'Logo zu groß. Maximal 500 KB erlaubt.' }, { status: 400 });
+  }
+
   const kv = await prisma.kreisverband.update({
     where: { id: session.kreisverbandId },
     data: {

@@ -1,5 +1,6 @@
 /** Format ISO date string as German DD.MM.YYYY */
-export function formatDatum(iso: string): string {
+export function formatDatum(iso: string | null | undefined): string {
+  if (!iso) return '–';
   const dateOnly = iso.substring(0, 10);
   const [y, m, d] = dateOnly.split('-');
   return `${d}.${m}.${y}`;

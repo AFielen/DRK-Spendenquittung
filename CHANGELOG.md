@@ -9,6 +9,25 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `lib/i18n.ts`: i18n-Grundgerüst mit `I18nProvider`, `useI18n` Hook und DE-Texten (EN als Follow-up)
+
+### Fixed
+- **KRITISCH – Steuerbelege:** `betragInWorten()` Floating-Point-Rundungsfehler bei Cent-Beträgen behoben (`lib/docx-templates/betrag-in-worten.ts`)
+- **KRITISCH – Autorisierung:** Gefahrenzone (Massenlöschung) nur noch für Admins zugänglich, nicht mehr für Schatzmeister (`api/einstellungen/gefahrenzone`)
+- **KRITISCH – Datenintegrität:** `bestaetigen`-Endpoint nutzt jetzt Transaktion für Duplikat-Prüfung der laufenden Nummer, No-Op-Code entfernt, aktuelle Zuwendung korrekt ausgeschlossen (`api/zuwendungen/[id]/bestaetigen`)
+- **KRITISCH – API-Sicherheit:** V1-API Spender-DELETE verhindert jetzt Löschung bei bestätigten Zuwendungsbestätigungen (steuerliche Aufbewahrungspflicht) (`api/v1/spender/[id]`)
+- **KRITISCH – Rollenvalidierung:** Nutzer-Erstellung validiert `rolle` gegen erlaubte Werte (`admin`, `schatzmeister`, `lesezugriff`) (`api/nutzer`)
+- **Security – User-Enumeration:** Registrierungs-Endpoint gibt bei existierender E-Mail generische Antwort statt spezifischer Fehlermeldung (`api/auth/registrierung`)
+- **Auth:** `lib/auth.ts` liest jetzt `IRON_SESSION_PASSWORD` oder `SESSION_SECRET` — behebt Dev-Modus-Fallback bei `.env` ohne `IRON_SESSION_PASSWORD`
+- **Null Safety:** `formatDatum()` crasht nicht mehr bei null/undefined Input (`lib/format.ts`)
+- **Validierung:** Kreisverband PUT validiert jetzt Pflichtfelder, Freistellungsart-Enum und Logo-Größe (max 500 KB) (`api/kreisverband`)
+- **CSV-Import:** Unterstützt jetzt Quoted Fields (z.B. `"Smith, Jr."`), nutzt Transaktion statt sequentieller Creates, Limit auf 5000 Zeilen (`api/spender/import`)
+- **Performance:** Spender-Liste filtert Zuwendungen jetzt serverseitig nach aktuellem Jahr statt alle in JS zu laden (`api/spender`)
+
+### Changed
+- `PROJECT.md`: Rate-Limiter als Known Limitation dokumentiert, Logo-Upload-Limit als erledigt markiert, i18n-Status aktualisiert
+
+### Added (vorheriger Stand)
 - `app/error.tsx`: Next.js Error Boundary – fängt unbehandelte Renderfehler mit "Erneut versuchen" und "Zur Startseite"
 - `app/global-error.tsx`: Root-Layout-Fallback mit eigenständigem `<html>`/`<body>` für kritische Fehler
 - `lib/format.ts`: Zentrale `formatBetrag()` und `formatDatum()` Utilities (eliminiert Duplikate in 21+ Dateien)

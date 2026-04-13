@@ -84,6 +84,17 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       );
     }
 
+    // Bestätigte Zuwendungen dürfen nicht gelöscht werden (steuerliche Aufbewahrungspflicht)
+    const bestaetigte = await prisma.zuwendung.count({
+      where: { spenderId: id, bestaetigungErstellt: true },
+    });
+    if (bestaetigte > 0) {
+      return NextResponse.json(
+        { error: { code: 'HAS_CONFIRMED', message: `Spender hat ${bestaetigte} bestätigte Zuwendungsbestätigung(en). Löschen nicht möglich.` } },
+        { status: 409 },
+      );
+    }
+
     await prisma.spender.delete({ where: { id } });
 
     return NextResponse.json({ success: true });

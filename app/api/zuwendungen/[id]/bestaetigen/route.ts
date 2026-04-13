@@ -34,33 +34,43 @@ export async function POST(req: NextRequest, { params }: Params) {
     );
   }
 
-  // Duplikat-Prüfung: laufendeNr darf nur innerhalb derselben Sammelbestätigung mehrfach vorkommen
-  const duplicate = await prisma.zuwendung.findFirst({
-    where: {
-      kreisverbandId: session.kreisverbandId,
-      laufendeNr: body.laufendeNr,
-      bestaetigungErstellt: true,
-      // Bei Sammelbestätigung (anlage14) ist gleiche laufendeNr erlaubt
-      ...(body.bestaetigungTyp !== 'anlage14' ? {} : {}),
-    },
-  });
+  // Duplikat-Prüfung + Update in Transaktion (verhindert Race-Condition)
+  try {
+    const zuwendung = await prisma.$transaction(async (tx) => {
+      // laufendeNr darf nicht doppelt vergeben sein (außer bei Sammelbestätigungen)
+      if (body.bestaetigungTyp !== 'anlage14') {
+        const duplicate = await tx.zuwendung.findFirst({
+          where: {
+            kreisverbandId: session.kreisverbandId,
+            laufendeNr: body.laufendeNr,
+            bestaetigungErstellt: true,
+            bestaetigungTyp: { not: 'anlage14' },
+            id: { not: id },
+          },
+        });
 
-  if (duplicate && body.bestaetigungTyp !== 'anlage14' && duplicate.bestaetigungTyp !== 'anlage14') {
-    return NextResponse.json(
-      { error: `Laufende Nummer ${body.laufendeNr} ist bereits vergeben.` },
-      { status: 409 },
-    );
+        if (duplicate) {
+          throw new Error(`DUPLICATE:Laufende Nummer ${body.laufendeNr} ist bereits vergeben.`);
+        }
+      }
+
+      return tx.zuwendung.update({
+        where: { id },
+        data: {
+          bestaetigungErstellt: true,
+          bestaetigungDatum: new Date(),
+          bestaetigungTyp: body.bestaetigungTyp,
+          laufendeNr: body.laufendeNr,
+        },
+      });
+    });
+
+    return NextResponse.json(zuwendung);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '';
+    if (msg.startsWith('DUPLICATE:')) {
+      return NextResponse.json({ error: msg.slice('DUPLICATE:'.length) }, { status: 409 });
+    }
+    return NextResponse.json({ error: 'Interner Fehler beim Bestätigen.' }, { status: 500 });
   }
-
-  const zuwendung = await prisma.zuwendung.update({
-    where: { id },
-    data: {
-      bestaetigungErstellt: true,
-      bestaetigungDatum: new Date(),
-      bestaetigungTyp: body.bestaetigungTyp,
-      laufendeNr: body.laufendeNr,
-    },
-  });
-
-  return NextResponse.json(zuwendung);
 }

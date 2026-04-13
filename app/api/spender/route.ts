@@ -9,6 +9,10 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const includeArchived = searchParams.get('includeArchived') === 'true';
 
+  const currentYear = new Date().getFullYear();
+  const jahresStart = new Date(`${currentYear}-01-01T00:00:00.000Z`);
+  const jahresEnde = new Date(`${currentYear + 1}-01-01T00:00:00.000Z`);
+
   const spender = await prisma.spender.findMany({
     where: {
       kreisverbandId: session.kreisverbandId,
@@ -17,18 +21,15 @@ export async function GET(req: NextRequest) {
     include: {
       _count: { select: { zuwendungen: true } },
       zuwendungen: {
-        select: { betrag: true, datum: true },
+        where: { datum: { gte: jahresStart, lt: jahresEnde } },
+        select: { betrag: true },
       },
     },
     orderBy: { nachname: 'asc' },
   });
 
-  // Berechne Jahressumme für jeden Spender
-  const currentYear = new Date().getFullYear();
   const result = spender.map((s) => {
-    const jahresSumme = s.zuwendungen
-      .filter((z) => new Date(z.datum).getFullYear() === currentYear)
-      .reduce((sum, z) => sum + Number(z.betrag), 0);
+    const jahresSumme = s.zuwendungen.reduce((sum, z) => sum + Number(z.betrag), 0);
 
     return {
       id: s.id,
