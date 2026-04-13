@@ -158,7 +158,7 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
 
       {/* Schritt 1 – Stammdaten */}
       {schritt === 1 && (
-        <div className="drk-card drk-fade-in">
+        <div data-tour="setup-basisdaten" className="drk-card drk-fade-in">
           <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text)' }}>
             Schritt 1: Stammdaten
           </h3>
@@ -329,7 +329,7 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
 
       {/* Schritt 2 – Steuerliche Angaben */}
       {schritt === 2 && (
-        <div className="drk-card drk-fade-in">
+        <div data-tour="setup-steuer" className="drk-card drk-fade-in">
           <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text)' }}>
             Schritt 2: Steuerliche Angaben
           </h3>
@@ -548,7 +548,7 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
 
       {/* Schritt 3 – Unterschrift */}
       {schritt === 3 && (
-        <div className="drk-card drk-fade-in">
+        <div data-tour="setup-unterschrift" className="drk-card drk-fade-in">
           <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text)' }}>
             Schritt 3: Unterschrift
           </h3>

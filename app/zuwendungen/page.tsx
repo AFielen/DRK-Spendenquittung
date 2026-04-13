@@ -120,10 +120,11 @@ function ZuwendungenContent() {
       <div className="max-w-4xl mx-auto">
         <div className="drk-card">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
+            <h2 data-tour="zuwendung-titel" className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
               Zuwendungen
             </h2>
             <button
+              data-tour="btn-neue-zuwendung"
               className="drk-btn-primary text-sm"
               onClick={() => {
                 setEditZuwendung(undefined);
@@ -134,14 +135,16 @@ function ZuwendungenContent() {
             </button>
           </div>
 
-          <ZuwendungTabelle
-            zuwendungen={zuwendungen}
-            spenderList={spenderList}
-            verein={kreisverband ? { ...kreisverband, freistellungsart: kreisverband.freistellungsart as Verein['freistellungsart'] } : undefined}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onShowDetails={handleShowDetails}
-          />
+          <div data-tour="zuwendung-tabelle">
+            <ZuwendungTabelle
+              zuwendungen={zuwendungen}
+              spenderList={spenderList}
+              verein={kreisverband ? { ...kreisverband, freistellungsart: kreisverband.freistellungsart as Verein['freistellungsart'] } : undefined}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onShowDetails={handleShowDetails}
+            />
+          </div>
         </div>
       </div>
 

@@ -287,6 +287,7 @@ function BestaetigungContent() {
             {tabs.map((t) => (
               <button
                 key={t.key}
+                data-tour={t.key === 'einzel' ? 'tab-einzel' : t.key === 'sammel' ? 'tab-sammel' : 'tab-vereinfacht'}
                 className="py-2.5 px-3 text-sm font-semibold transition-colors"
                 style={{
                   background: tab === t.key ? 'var(--drk)' : 'var(--bg)',
@@ -301,7 +302,7 @@ function BestaetigungContent() {
 
           {tab === 'einzel' && (
             <div className="space-y-4">
-              <div>
+              <div data-tour="bestaetigung-spender">
                 <label className="drk-label">Spender auswählen</label>
                 <select
                   className="drk-input"
@@ -348,7 +349,9 @@ function BestaetigungContent() {
               )}
 
               {selectedZuwendung && (
-                <button className="drk-btn-primary" disabled={downloading} onClick={() => setShowUnterschrift(true)}>{downloading ? 'Generiere...' : `${format.toUpperCase()} herunterladen`}</button>
+                <div data-tour="bestaetigung-download">
+                  <button className="drk-btn-primary" disabled={downloading} onClick={() => setShowUnterschrift(true)}>{downloading ? 'Generiere...' : `${format.toUpperCase()} herunterladen`}</button>
+                </div>
               )}
             </div>
           )}

@@ -92,6 +92,7 @@ function EinrichtungContent() {
               Vereinsdaten
             </button>
             <button
+              data-tour="tab-nutzer"
               className="flex-1 py-2 px-4 text-sm font-semibold"
               style={{
                 background: tab === 'nutzer' ? 'var(--drk)' : 'var(--bg-card)',
@@ -108,7 +109,9 @@ function EinrichtungContent() {
 
         {tab === 'verein' && (
           isAdmin ? (
-            <VereinsSetupWizard existingVerein={verein} onSaved={refresh} />
+            <div data-tour="setup-wizard">
+              <VereinsSetupWizard existingVerein={verein} onSaved={refresh} />
+            </div>
           ) : (
             <div className="drk-card">
               <p className="text-sm" style={{ color: 'var(--text-light)' }}>

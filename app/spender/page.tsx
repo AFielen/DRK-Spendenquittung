@@ -51,14 +51,15 @@ function SpenderContent() {
       <div className="max-w-4xl mx-auto">
         <div className="drk-card">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
+            <h2 data-tour="spender-titel" className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
               Spenderverwaltung
             </h2>
             <div className="flex gap-2">
-              <button className="drk-btn-secondary text-sm" onClick={() => setShowCsv(true)}>
+              <button data-tour="btn-csv-import" className="drk-btn-secondary text-sm" onClick={() => setShowCsv(true)}>
                 CSV-Import
               </button>
               <button
+                data-tour="btn-neuer-spender"
                 className="drk-btn-primary text-sm"
                 onClick={() => {
                   setEditSpender(undefined);
@@ -70,13 +71,15 @@ function SpenderContent() {
             </div>
           </div>
 
-          <SpenderTabelle
-            spender={spender}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            showArchived={showArchived}
-            onToggleArchived={() => setShowArchived((v) => !v)}
-          />
+          <div data-tour="spender-tabelle">
+            <SpenderTabelle
+              spender={spender}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              showArchived={showArchived}
+              onToggleArchived={() => setShowArchived((v) => !v)}
+            />
+          </div>
         </div>
       </div>
 
