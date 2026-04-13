@@ -53,11 +53,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ein Nutzer mit dieser E-Mail existiert bereits.' }, { status: 409 });
   }
 
+  const ERLAUBTE_ROLLEN = ['admin', 'schatzmeister', 'lesezugriff'];
+  const rolle = body.rolle || 'schatzmeister';
+  if (!ERLAUBTE_ROLLEN.includes(rolle)) {
+    return NextResponse.json({ error: `Ungültige Rolle. Erlaubt: ${ERLAUBTE_ROLLEN.join(', ')}` }, { status: 400 });
+  }
+
   const nutzer = await prisma.nutzer.create({
     data: {
       email: body.email.toLowerCase().trim(),
       name: body.name,
-      rolle: body.rolle || 'schatzmeister',
+      rolle,
       kreisverbandId: session.kreisverbandId,
     },
   });

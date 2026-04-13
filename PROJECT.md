@@ -22,9 +22,12 @@ Zuwendungsbestätigungen nach BMF-Muster für DRK-Verbände erstellen, verwalten
 - **pdfmake + docx** – Server-seitige Dokumentgenerierung nach BMF-Muster
 
 ## Offene Punkte
-- [ ] i18n (DE/EN) durchgängig implementieren oder bewusst weglassen
+- [ ] i18n: Grundgerüst (`lib/i18n.ts`) vorhanden, nur DE-Texte. EN-Übersetzung als Follow-up
 - [ ] E2E-Tests einrichten
-- [ ] Logo-Upload Größenlimitierung
+- [x] Logo-Upload Größenlimitierung (500 KB, validiert in `api/kreisverband`)
+
+## Bekannte Limitierungen
+- **Rate Limiter:** Verwendet In-Memory `Map` — Zustand geht bei Server-Restart verloren und wird nicht zwischen mehreren Instanzen geteilt. Für Single-Instance-Deployment (Docker) ausreichend, für horizontale Skalierung müsste auf Redis o.ä. umgestellt werden.
 
 ## Changelog
 Siehe `CHANGELOG.md`

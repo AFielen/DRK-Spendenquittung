@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession, requireSchreibrecht } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
+/** CSV-Zeile parsen mit Unterstützung für Quoted Fields */
+function parseCsvLine(line: string, delimiter: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        current += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === delimiter) {
+      fields.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current);
+  return fields;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Nicht angemeldet.' }, { status: 401 });
@@ -14,15 +44,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'CSV-Daten erforderlich.' }, { status: 400 });
   }
 
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+  const MAX_CSV_LINES = 5000;
+  const lines = csv.split(/\r?\n/).filter((l: string) => l.trim());
   if (lines.length < 2) {
     return NextResponse.json({ error: 'CSV muss mindestens eine Kopfzeile und eine Datenzeile enthalten.' }, { status: 400 });
+  }
+  if (lines.length > MAX_CSV_LINES + 1) {
+    return NextResponse.json({ error: `CSV darf maximal ${MAX_CSV_LINES} Datenzeilen enthalten.` }, { status: 400 });
   }
 
   // Delimiter erkennen
   const headerLine = lines[0];
   const delimiter = headerLine.includes(';') ? ';' : ',';
-  const headers = headerLine.split(delimiter).map((h) => h.trim().toLowerCase());
+  const headers = parseCsvLine(headerLine, delimiter).map((h: string) => h.trim().toLowerCase());
 
   // Pflichtfelder finden
   const idxVorname = headers.findIndex((h) => h === 'vorname');
@@ -50,8 +84,12 @@ export async function POST(req: NextRequest) {
   let duplikate = 0;
   const fehler: string[] = [];
 
+  // Alle Zeilen parsen und validieren
+  interface SpenderRow { vorname: string; nachname: string; strasse: string; plz: string; ort: string; anrede: string | null; steuerIdNr: string | null }
+  const toCreate: SpenderRow[] = [];
+
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(delimiter).map((c) => c.trim());
+    const cols = parseCsvLine(lines[i], delimiter).map((c: string) => c.trim());
 
     const vorname = cols[idxVorname] || '';
     const nachname = cols[idxNachname] || '';
@@ -70,21 +108,29 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    await prisma.spender.create({
-      data: {
-        vorname,
-        nachname,
-        strasse,
-        plz,
-        ort,
-        anrede: idxAnrede !== -1 ? cols[idxAnrede] || null : null,
-        steuerIdNr: idxSteuerIdNr !== -1 ? cols[idxSteuerIdNr] || null : null,
-        kreisverbandId: session.kreisverbandId,
-      },
+    toCreate.push({
+      vorname,
+      nachname,
+      strasse,
+      plz,
+      ort,
+      anrede: idxAnrede !== -1 ? cols[idxAnrede] || null : null,
+      steuerIdNr: idxSteuerIdNr !== -1 ? cols[idxSteuerIdNr] || null : null,
     });
     existingKeys.add(key);
-    erstellt++;
   }
+
+  // Alle Spender in einer Transaktion erstellen
+  if (toCreate.length > 0) {
+    await prisma.$transaction(
+      toCreate.map((row) =>
+        prisma.spender.create({
+          data: { ...row, kreisverbandId: session.kreisverbandId },
+        }),
+      ),
+    );
+  }
+  erstellt = toCreate.length;
 
   return NextResponse.json({ erstellt, duplikate, fehler });
 }

@@ -89,7 +89,7 @@ function zahlwort(n: number): string {
 
 export function betragInWorten(betrag: number): string {
   const euro = Math.floor(betrag);
-  const cent = Math.round((betrag - euro) * 100);
+  const cent = Math.round(betrag * 100) % 100;
 
   let result = zahlwort(euro) + ' Euro';
 

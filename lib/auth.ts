@@ -10,7 +10,7 @@ export interface SessionData {
 }
 
 function getSessionOptions(): SessionOptions {
-  const pw = process.env.IRON_SESSION_PASSWORD;
+  const pw = process.env.IRON_SESSION_PASSWORD || process.env.SESSION_SECRET;
   if (!pw && process.env.NODE_ENV === 'production') {
     throw new Error('IRON_SESSION_PASSWORD muss in Production gesetzt sein.');
   }
