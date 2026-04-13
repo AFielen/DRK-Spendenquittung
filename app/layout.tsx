@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { RedCrossIcon } from '@/components/icons';
 import AuthProvider from '@/components/AuthProvider';
 import AppShell from '@/components/AppShell';
+import HilfeSystem from '@/components/HilfeSystem';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <AuthProvider>
           <AppShell>{children}</AppShell>
+          <HilfeSystem />
         </AuthProvider>
 
         {/* ── DRK Footer ── */}
