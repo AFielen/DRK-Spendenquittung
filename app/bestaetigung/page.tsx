@@ -1,20 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  // Delay cleanup so mobile browsers can start the download
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 1000);
-}
+import { downloadBlob } from '@/lib/download';
+import { formatDatum, formatBetrag } from '@/lib/format';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/components/AuthProvider';
 import type { Verein, Spender, Zuwendung } from '@/lib/types';
@@ -53,15 +41,6 @@ async function downloadPdfFromApi(
   }
   const blob = await res.blob();
   downloadBlob(blob, filename);
-}
-
-function formatDatum(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function BestaetigungContent() {
@@ -299,7 +278,7 @@ function BestaetigungContent() {
           </div>
 
           {downloadError && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
+            <div className="drk-error-box mb-4" role="alert">
               {downloadError}
             </div>
           )}

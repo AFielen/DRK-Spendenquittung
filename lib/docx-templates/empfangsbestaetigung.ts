@@ -12,17 +12,8 @@ import {
 } from 'docx';
 import type { Verein, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
 import { createDocxHeader, createDocxFooter } from './briefbogen';
-
-function formatDatum(iso: string): string {
-  const dateOnly = iso.substring(0, 10);
-  const [y, m, d] = dateOnly.split('-');
-  return `${d}.${m}.${y}`;
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 const BEWERTUNGSGRUNDLAGE_LABELS: Record<string, string> = {
   rechnung: 'Originalrechnung / Kaufbeleg',

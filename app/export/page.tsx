@@ -14,6 +14,7 @@ import { generateSachzuwendung } from '@/lib/docx-templates/sachzuwendung';
 import { generateSammelbestaetigung } from '@/lib/docx-templates/sammelbestaetigung';
 import { generateVereinfachterNachweis } from '@/lib/docx-templates/vereinfachter-nachweis';
 import { erstelleEmpfangsbestaetigung } from '@/lib/docx-templates/empfangsbestaetigung';
+import { formatBetrag } from '@/lib/format';
 import FreistellungsBlocker from '@/components/FreistellungsBlocker';
 import FormatToggle, { type ExportFormat } from '@/components/FormatToggle';
 
@@ -32,10 +33,6 @@ async function fetchPdfBlob(
   });
   if (!res.ok) throw new Error('PDF-Generierung fehlgeschlagen');
   return res.blob();
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function ExportContent() {

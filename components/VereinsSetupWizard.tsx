@@ -433,10 +433,7 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
               )}
 
               {freistellungStatus?.status === 'abgelaufen' && (
-                <div
-                  className="mt-2 p-3 rounded-lg text-sm"
-                  style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#991b1b' }}
-                >
+                <div className="drk-error-box mt-2">
                   ⚠️ Dieser Bescheid ist abgelaufen. Sie dürfen keine Zuwendungsbestätigungen
                   ausstellen, bis Sie aktuelle Bescheiddaten Ihres Finanzamts eingepflegt haben.
                 </div>

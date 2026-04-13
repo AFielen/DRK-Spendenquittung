@@ -26,17 +26,7 @@ export async function generatePdfBuffer(docDefinition: TDocumentDefinitions): Pr
   return doc.getBuffer();
 }
 
-/** Format ISO date to DD.MM.YYYY */
-export function formatDatum(iso: string): string {
-  const dateOnly = iso.substring(0, 10);
-  const [y, m, d] = dateOnly.split('-');
-  return `${d}.${m}.${y}`;
-}
-
-/** Format number as German currency string */
-export function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+export { formatDatum, formatBetrag } from '@/lib/format';
 
 // ── Design Helpers for Certificate Templates ──
 

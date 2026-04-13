@@ -8,7 +8,23 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- `app/error.tsx`: Next.js Error Boundary – fängt unbehandelte Renderfehler mit "Erneut versuchen" und "Zur Startseite"
+- `app/global-error.tsx`: Root-Layout-Fallback mit eigenständigem `<html>`/`<body>` für kritische Fehler
+- `lib/format.ts`: Zentrale `formatBetrag()` und `formatDatum()` Utilities (eliminiert Duplikate in 21+ Dateien)
+- `lib/download.ts`: Zentrale `downloadBlob()` Utility (eliminiert Duplikate in 3 Dateien)
+- `lib/use-focus-trap.ts`: Custom Hook für Keyboard-Focus-Trap in Modals (Tab-Zyklus, Escape-Key, Fokus-Wiederherstellung)
+- `middleware.ts`: Auth-Middleware als Defense-in-Depth – prüft Session-Cookie-Präsenz für geschützte API-Routes
+- `.drk-error-box` CSS-Klasse in `globals.css` für einheitliches Error-Styling
+- `.drk-input-error` und `.drk-field-error` CSS-Klassen für Formular-Validierungs-Feedback
+
 ### Changed
+- **Formular-Validierung:** `SpenderFormular.tsx` und `ZuwendungFormular.tsx` zeigen jetzt Inline-Fehlermeldungen bei leeren Pflichtfeldern (touched-Pattern mit `onBlur`)
+- **Accessibility – Focus Trap:** `SpenderFormular`, `ZuwendungFormular`, `ZuwendungDetails`, `UnterschriftHinweis` haben jetzt `role="dialog"`, `aria-modal`, `aria-labelledby` und Focus-Trap via `useFocusTrap`
+- **Accessibility – ARIA:** `aria-required`, `aria-invalid`, `aria-describedby` auf allen Pflichtfeldern; `role="alert"` auf Fehlermeldungen; `fieldset`/`legend` und `role="radiogroup"` für Toggle-Gruppen
+- **Error-Styling-Migration:** Hardcoded `#fef2f2`/`#991b1b` Inline-Styles durch `.drk-error-box` Klasse ersetzt (4 Dateien)
+- **Code-Deduplizierung:** Lokale `formatBetrag`/`formatDatum`/`downloadBlob` durch Imports aus `lib/format.ts` und `lib/download.ts` ersetzt (~20 Dateien)
+- `lib/pdf-templates/pdf-helper.ts`: Re-exportiert `formatBetrag`/`formatDatum` aus `lib/format.ts` statt eigener Definition
 - **SpendeWizard Refactoring:** 30+ `useState`-Hooks durch `useReducer`-Hook in `lib/use-spende-wizard.ts` ersetzt – bessere Wartbarkeit und einheitlicher Reset
 - **Navigation SVGs:** Inline-SVGs aus `Navigation.tsx` und `AdminNav.tsx` als wiederverwendbare Icon-Komponenten in `components/icons/NavIcons.tsx` extrahiert (HomeIcon, UsersIcon, DollarIcon, BookIcon, FileTextIcon, ActivityIcon, SettingsIcon, ShieldIcon)
 - **Dark Mode Hover:** `hover:bg-gray-100`/`hover:bg-gray-50` durch neue `.drk-hover-bg` CSS-Klasse in `globals.css` ersetzt (5 Dateien: Navigation, AdminNav, UserMenu, admin/page)
