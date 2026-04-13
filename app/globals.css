@@ -224,11 +224,50 @@ details summary:focus-visible {
   animation: backdropFadeIn 200ms ease-out;
 }
 
+/* ── Hilfe-Drawer ── */
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.drk-drawer-enter {
+  animation: drawerSlideIn 200ms ease-out;
+}
+
+/* ── Guided Tour ── */
+.drk-tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  pointer-events: none;
+}
+
+.drk-tour-spotlight {
+  position: relative;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+.drk-tour-tooltip {
+  position: absolute;
+  z-index: 10000;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 1.25rem;
+  max-width: 320px;
+  width: max-content;
+  animation: fadeIn 200ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drk-fade-in,
   .drk-slide-up,
   .drk-sheet-enter,
-  .drk-backdrop-enter {
+  .drk-backdrop-enter,
+  .drk-drawer-enter,
+  .drk-tour-tooltip {
     animation: none;
   }
 }
