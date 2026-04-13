@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import type { Spender, Zuwendung, Verein } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
 import { apiGet } from '@/lib/api-client';
 import { erstelleEmpfangsbestaetigung } from '@/lib/docx-templates/empfangsbestaetigung';
 import { saveAs } from 'file-saver';
@@ -73,14 +74,6 @@ export default function ZuwendungTabelle({
       setDownloadingEB(null);
     }
   };
-
-  const formatDatum = (d: string) => {
-    const [y, m, day] = d.substring(0, 10).split('-');
-    return `${day}.${m}.${y}`;
-  };
-
-  const formatBetrag = (n: number) =>
-    n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (zuwendungen.length === 0) {
     return (
@@ -163,10 +156,18 @@ export default function ZuwendungTabelle({
                   <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
                     {spender ? spenderAnzeigename(spender) : '–'}
                   </td>
-                  <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
-                    {z.art === 'geld' ? 'Geld' : 'Sach'}
+                  <td className="py-2 px-3">
+                    <span
+                      className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{
+                        background: z.art === 'geld' ? 'var(--info-bg)' : 'var(--warning-bg)',
+                        color: z.art === 'geld' ? 'var(--info-text)' : 'var(--warning-text)',
+                      }}
+                    >
+                      {z.art === 'geld' ? 'Geld' : 'Sach'}
+                    </span>
                   </td>
-                  <td className="py-2 px-3 text-right" style={{ color: 'var(--text)' }}>
+                  <td className="py-2 px-3 text-right font-semibold" style={{ color: 'var(--text)' }}>
                     {formatBetrag(wert)} €
                   </td>
                   <td className="py-2 px-3" style={{ color: 'var(--text-light)' }}>
@@ -284,8 +285,8 @@ export default function ZuwendungTabelle({
                 <span
                   className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                   style={{
-                    background: z.bestaetigungErstellt ? '#dcfce7' : '#fef3c7',
-                    color: z.bestaetigungErstellt ? '#166534' : '#92400e',
+                    background: z.bestaetigungErstellt ? 'var(--success-bg)' : 'var(--warning-bg)',
+                    color: z.bestaetigungErstellt ? 'var(--success)' : 'var(--warning-text)',
                   }}
                 >
                   {z.bestaetigungErstellt ? 'Bestätigt' : 'Offen'}

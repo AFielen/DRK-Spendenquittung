@@ -36,16 +36,16 @@ function SpendenbuchContent() {
 
   return (
     <div className="py-8 px-4" style={{ background: 'var(--bg)' }}>
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto">
         <div className="drk-card">
           <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
             Spendenbuch
           </h2>
-          <p className="text-sm mb-4" style={{ color: 'var(--text-light)' }}>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-light)' }}>
             Chronologisches Journal aller Zuwendungen — sortiert nach Eingangsdatum.
           </p>
+          <Spendenbuch zuwendungen={zuwendungen} />
         </div>
-        <Spendenbuch zuwendungen={zuwendungen} />
       </div>
     </div>
   );
