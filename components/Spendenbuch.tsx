@@ -3,30 +3,21 @@
 import { useState, useMemo } from 'react';
 import type { Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
+import { formatDatum, formatBetrag } from '@/lib/format';
 
 interface SpendenbuchProps {
   zuwendungen: Zuwendung[];
 }
 
-const ZUGANGSWEG_LABELS: Record<string, { icon: string; label: string }> = {
-  ueberweisung: { icon: '🏦', label: 'Überweisung' },
-  bar: { icon: '💵', label: 'Bar' },
-  online: { icon: '🌐', label: 'Online' },
-  paypal: { icon: '💳', label: 'PayPal' },
-  lastschrift: { icon: '🔄', label: 'Lastschrift' },
-  scheck: { icon: '📝', label: 'Scheck' },
-  sonstig: { icon: '📦', label: 'Sonstig' },
+const ZUGANGSWEG_LABELS: Record<string, string> = {
+  ueberweisung: 'Überweisung',
+  bar: 'Bar',
+  online: 'Online',
+  paypal: 'PayPal',
+  lastschrift: 'Lastschrift',
+  scheck: 'Scheck',
+  sonstig: 'Sonstig',
 };
-
-function formatDatum(d: string): string {
-  const dateOnly = d.substring(0, 10);
-  const [y, m, day] = dateOnly.split('-');
-  return `${day}.${m}.${y}`;
-}
-
-function formatBetrag(n: number): string {
-  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
   const [filterJahr, setFilterJahr] = useState('');
@@ -119,35 +110,35 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border)' }}>
-              <th className="text-left py-2 px-2" style={{ color: 'var(--text)' }}>Lfd. Nr.</th>
-              <th className="text-left py-2 px-2" style={{ color: 'var(--text)' }}>Datum</th>
-              <th className="text-left py-2 px-2" style={{ color: 'var(--text)' }}>Spender</th>
-              <th className="text-left py-2 px-2" style={{ color: 'var(--text)' }}>Art</th>
-              <th className="text-left py-2 px-2" style={{ color: 'var(--text)' }}>Zugangsweg</th>
-              <th className="text-right py-2 px-2" style={{ color: 'var(--text)' }}>Betrag</th>
-              <th className="text-left py-2 px-2" style={{ color: 'var(--text)' }}>Zweck / Bemerkung</th>
-              <th className="text-center py-2 px-2" style={{ color: 'var(--text)' }}>Status</th>
+              <th className="text-left py-2 px-3" style={{ color: 'var(--text)' }}>Lfd. Nr.</th>
+              <th className="text-left py-2 px-3" style={{ color: 'var(--text)' }}>Datum</th>
+              <th className="text-left py-2 px-3" style={{ color: 'var(--text)' }}>Spender</th>
+              <th className="text-left py-2 px-3" style={{ color: 'var(--text)' }}>Art</th>
+              <th className="text-left py-2 px-3" style={{ color: 'var(--text)' }}>Zugangsweg</th>
+              <th className="text-right py-2 px-3" style={{ color: 'var(--text)' }}>Betrag</th>
+              <th className="text-left py-2 px-3" style={{ color: 'var(--text)' }}>Zweck / Bemerkung</th>
+              <th className="text-center py-2 px-3" style={{ color: 'var(--text)' }}>Status</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((z, index) => {
               const wert = Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag);
-              const zugangInfo = z.zugangsweg ? ZUGANGSWEG_LABELS[z.zugangsweg] : null;
+              const zugangLabel = z.zugangsweg ? ZUGANGSWEG_LABELS[z.zugangsweg] : null;
               const bemerkungKurz = z.bemerkung && z.bemerkung.length > 50
                 ? z.bemerkung.substring(0, 50) + '…'
                 : z.bemerkung;
               return (
                 <tr key={z.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td className="py-2 px-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <td className="py-2 px-3 text-xs" style={{ color: 'var(--text-muted)' }}>
                     {z.laufendeNr ?? (filtered.length - index)}
                   </td>
-                  <td className="py-2 px-2" style={{ color: 'var(--text)' }}>
+                  <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
                     {formatDatum(z.datum)}
                   </td>
-                  <td className="py-2 px-2" style={{ color: 'var(--text)' }}>
+                  <td className="py-2 px-3" style={{ color: 'var(--text)' }}>
                     {z.spender ? spenderAnzeigename(z.spender) : '–'}
                   </td>
-                  <td className="py-2 px-2">
+                  <td className="py-2 px-3">
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{
@@ -158,16 +149,16 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
                       {z.art === 'geld' ? 'Geld' : 'Sach'}
                     </span>
                   </td>
-                  <td className="py-2 px-2 text-sm" style={{ color: 'var(--text-light)' }}>
-                    {zugangInfo ? `${zugangInfo.icon} ${zugangInfo.label}` : '–'}
+                  <td className="py-2 px-3 text-sm" style={{ color: 'var(--text-light)' }}>
+                    {zugangLabel ?? '–'}
                   </td>
-                  <td className="py-2 px-2 text-right font-semibold" style={{ color: 'var(--text)' }}>
+                  <td className="py-2 px-3 text-right font-semibold" style={{ color: 'var(--text)' }}>
                     {formatBetrag(wert)} €
                   </td>
-                  <td className="py-2 px-2 text-sm max-w-[200px]" style={{ color: 'var(--text-muted)' }} title={z.bemerkung ?? undefined}>
+                  <td className="py-2 px-3 text-sm max-w-[200px]" style={{ color: 'var(--text-muted)' }} title={z.bemerkung ?? undefined}>
                     {bemerkungKurz || '–'}
                   </td>
-                  <td className="py-2 px-2 text-center">
+                  <td className="py-2 px-3 text-center">
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                       style={{
@@ -175,7 +166,7 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
                         color: z.bestaetigungErstellt ? 'var(--success)' : 'var(--warning-text)',
                       }}
                     >
-                      {z.bestaetigungErstellt ? '✅ Quittiert' : '⏳ Offen'}
+                      {z.bestaetigungErstellt ? 'Bestätigt' : 'Offen'}
                     </span>
                   </td>
                 </tr>
@@ -184,10 +175,10 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
           </tbody>
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--border)' }}>
-              <td colSpan={5} className="py-2 px-2 font-bold" style={{ color: 'var(--text)' }}>
+              <td colSpan={5} className="py-2 px-3 font-bold" style={{ color: 'var(--text)' }}>
                 Gesamt ({filtered.length} Zuwendungen)
               </td>
-              <td className="py-2 px-2 text-right font-bold" style={{ color: 'var(--text)' }}>
+              <td className="py-2 px-3 text-right font-bold" style={{ color: 'var(--text)' }}>
                 {formatBetrag(stats.gesamtSumme)} €
               </td>
               <td colSpan={2} />
@@ -200,7 +191,7 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
       <div className="md:hidden space-y-3">
         {filtered.map((z) => {
           const wert = Number(z.art === 'sach' ? (z.sachWert ?? 0) : z.betrag);
-          const zugangInfo = z.zugangsweg ? ZUGANGSWEG_LABELS[z.zugangsweg] : null;
+          const zugangLabel = z.zugangsweg ? ZUGANGSWEG_LABELS[z.zugangsweg] : null;
           return (
             <div
               key={z.id}
@@ -214,11 +205,11 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
                 <span
                   className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                   style={{
-                    background: z.bestaetigungErstellt ? '#dcfce7' : '#fef3c7',
-                    color: z.bestaetigungErstellt ? '#166534' : '#92400e',
+                    background: z.bestaetigungErstellt ? 'var(--success-bg)' : 'var(--warning-bg)',
+                    color: z.bestaetigungErstellt ? 'var(--success)' : 'var(--warning-text)',
                   }}
                 >
-                  {z.bestaetigungErstellt ? '✅ Quittiert' : '⏳ Offen'}
+                  {z.bestaetigungErstellt ? 'Bestätigt' : 'Offen'}
                 </span>
               </div>
               <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
@@ -229,15 +220,15 @@ export default function Spendenbuch({ zuwendungen }: SpendenbuchProps) {
                 <span
                   className="inline-block px-1.5 py-0.5 rounded text-xs font-semibold"
                   style={{
-                    background: z.art === 'geld' ? '#dbeafe' : '#fef3c7',
-                    color: z.art === 'geld' ? '#1e40af' : '#92400e',
+                    background: z.art === 'geld' ? 'var(--info-bg)' : 'var(--warning-bg)',
+                    color: z.art === 'geld' ? 'var(--info-text)' : 'var(--warning-text)',
                   }}
                 >
                   {z.art === 'geld' ? 'Geld' : 'Sach'}
                 </span>
-                {zugangInfo && (
+                {zugangLabel && (
                   <span className="ml-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                    · {zugangInfo.icon} {zugangInfo.label}
+                    · {zugangLabel}
                   </span>
                 )}
               </div>
