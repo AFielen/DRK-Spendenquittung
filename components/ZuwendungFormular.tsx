@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import type { Spender, Zuwendung } from '@/lib/types';
 import { spenderAnzeigename } from '@/lib/types';
 import { useFocusTrap } from '@/lib/use-focus-trap';
+import HilfeHint from './HilfeHint';
 
 interface ZuwendungFormularProps {
   spenderList: Spender[];
@@ -487,7 +488,10 @@ export default function ZuwendungFormular({
                     <input id="zf-sachkp" type="number" step="0.01" className="drk-input" value={sachKaufpreis} onChange={(e) => setSachKaufpreis(e.target.value)} />
                   </div>
                   <div>
-                    <label className="drk-label" htmlFor="zf-sachwert">Wert (€) *</label>
+                    <label className="drk-label" htmlFor="zf-sachwert">
+                      Wert (€) *
+                      <HilfeHint text="Der geschätzte aktuelle Wert des Gegenstands. Muss nachvollziehbar sein." faqId="sachspenden-steuer" beispiel="z.B. 250,00 €" />
+                    </label>
                     <input
                       id="zf-sachwert"
                       type="number"

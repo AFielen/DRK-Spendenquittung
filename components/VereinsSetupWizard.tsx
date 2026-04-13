@@ -356,7 +356,7 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             <div>
               <label className="drk-label">
                 Steuernummer *
-                <HilfeHint text="Die Steuernummer Ihres Vereins (nicht die Steuer-ID). Sie steht auf dem Freistellungsbescheid und hat üblicherweise das Format: 201/5909/1234." />
+                <HilfeHint text="Die Steuernummer Ihres Vereins (nicht die Steuer-ID). Sie steht auf dem Freistellungsbescheid und hat üblicherweise das Format: 201/5909/1234." beispiel="z.B. 201/5940/1234" />
               </label>
               <input
                 type="text"
@@ -419,7 +419,7 @@ export default function VereinsSetupWizard({ existingVerein, onSaved }: { existi
             <div>
               <label className="drk-label">
                 Datum des Bescheids *
-                <HilfeHint text="Das Datum, an dem Ihr Freistellungs- oder Feststellungsbescheid ausgestellt wurde. Es steht ganz oben auf dem Bescheid. Anhand dieses Datums wird geprüft, ob der Bescheid noch gültig ist." />
+                <HilfeHint text="Das Datum, an dem Ihr Freistellungs- oder Feststellungsbescheid ausgestellt wurde. Es steht ganz oben auf dem Bescheid. Anhand dieses Datums wird geprüft, ob der Bescheid noch gültig ist." faqId="freistellung-gueltigkeit" beispiel="z.B. 15.03.2023" />
               </label>
               <input
                 type="date"

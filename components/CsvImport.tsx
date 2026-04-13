@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { apiPost } from '@/lib/api-client';
+import HilfeHint from './HilfeHint';
 
 interface CsvImportProps {
   onImportDone: () => void;
@@ -69,6 +70,10 @@ export default function CsvImport({ onImportDone, onCancel }: CsvImportProps) {
                 CSV-Datei mit den Spalten: Vorname, Nachname, Strasse, PLZ, Ort
                 (optional: Anrede, SteuerIdNr). Trennzeichen: Semikolon oder Komma.
               </p>
+
+              <div className="mb-3">
+                <HilfeHint text="CSV mit Semikolon oder Komma als Trennzeichen. Pflicht: Vorname, Nachname, Strasse, PLZ, Ort." faqId="csv-import" beispiel="Vorname;Nachname;Strasse;PLZ;Ort" />
+              </div>
 
               <input
                 type="file"

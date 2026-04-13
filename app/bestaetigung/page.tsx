@@ -18,6 +18,7 @@ import SetupBanner from '@/components/SetupBanner';
 import UnterschriftHinweis from '@/components/UnterschriftHinweis';
 import FormatToggle, { type ExportFormat } from '@/components/FormatToggle';
 import { pruefSetupVollstaendigkeit } from '@/lib/setup-check';
+import HilfeHint from '@/components/HilfeHint';
 
 type Tab = 'einzel' | 'sammel' | 'vereinfacht';
 
@@ -282,6 +283,10 @@ function BestaetigungContent() {
               {downloadError}
             </div>
           )}
+
+          <div className="mb-4">
+            <HilfeHint text="Einzelbestätigung für eine Zuwendung, Sammelbestätigung für mehrere im Zeitraum, Vereinfacht für Beträge bis 300 €." faqId="vereinfacht" />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 mb-6 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {tabs.map((t) => (
